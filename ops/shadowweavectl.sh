@@ -5,7 +5,7 @@ APP_NAME="shadowweave"
 BACKEND_SERVICE="shadowweave-backend"
 WEB_SERVICE="shadowweave-web"
 
-SHADOWWEAVE_REPO="${SHADOWWEAVE_REPO:-longxingze0925/Shadowweave}"
+SHADOWWEAVE_REPO="${SHADOWWEAVE_REPO:-longxingze0925/yingzhi-AI}"
 SHADOWWEAVE_REF="${SHADOWWEAVE_REF:-main}"
 INSTALL_DIR="${SHADOWWEAVE_INSTALL_DIR:-/opt/shadowweave}"
 CONFIG_DIR="${SHADOWWEAVE_CONFIG_DIR:-/etc/shadowweave}"
@@ -349,7 +349,7 @@ Usage:
   shadowweavectl.sh logs
 
 Common env:
-  SHADOWWEAVE_REPO=longxingze0925/Shadowweave
+  SHADOWWEAVE_REPO=longxingze0925/yingzhi-AI
   SHADOWWEAVE_REF=main
   SHADOWWEAVE_INSTALL_DIR=/opt/shadowweave
   SHADOWWEAVE_STATE_DIR=/var/lib/shadowweave

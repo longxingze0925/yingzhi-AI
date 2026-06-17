@@ -41,19 +41,17 @@ cargo run        # 默认 mock EntitleHub：http://127.0.0.1:18777
 推荐生产部署走 GitHub Actions 构建镜像，服务器只拉 GHCR 镜像运行：
 
 ```bash
-ENTITLEHUB_SERVER_KEY='ehsk_xxx' \
-SHADOWWEAVE_REPO='your-github-user/your-repo' \
-bash <(curl -Ls https://raw.githubusercontent.com/your-github-user/your-repo/main/ops/install-image.sh)
+bash <(curl -Ls https://raw.githubusercontent.com/longxingze0925/yingzhi-AI/main/ops/install.sh)
 ```
 
-如果 GHCR 镜像是私有的，服务器需要提供一个只有 `read:packages` 权限的 GitHub token：
+运行后会进入交互安装，提示填写 EntitleHub Server Key；不填写则按 mock 模式启动。默认拉取 GHCR 上已经构建好的 `yingzhi-AI-web` / `yingzhi-AI-backend` 镜像。
+
+如果 GHCR 镜像是私有的，执行前提供一个只有 `read:packages` 权限的 GitHub token：
 
 ```bash
-GHCR_USERNAME='your-github-user' \
+GHCR_USERNAME='longxingze0925' \
 GHCR_TOKEN='github_pat_xxx' \
-ENTITLEHUB_SERVER_KEY='ehsk_xxx' \
-SHADOWWEAVE_REPO='your-github-user/your-repo' \
-bash <(curl -Ls https://raw.githubusercontent.com/your-github-user/your-repo/main/ops/install-image.sh)
+bash <(curl -Ls https://raw.githubusercontent.com/longxingze0925/yingzhi-AI/main/ops/install.sh)
 ```
 
 后续更新：
@@ -69,7 +67,7 @@ sudo bash /opt/shadowweave/update-image.sh
 ```bash
 ENTITLEHUB_SERVER_KEY='ehsk_xxx' \
 SHADOWWEAVE_DOMAIN='your-domain.com' \
-bash <(curl -Ls https://raw.githubusercontent.com/longxingze0925/Shadowweave/main/ops/install.sh)
+bash <(curl -Ls https://raw.githubusercontent.com/longxingze0925/yingzhi-AI/main/ops/install.sh) source
 ```
 
 如果仓库名或分支不同：
@@ -79,7 +77,7 @@ SHADOWWEAVE_REPO='your-github-user/your-repo' \
 SHADOWWEAVE_REF='main' \
 ENTITLEHUB_SERVER_KEY='ehsk_xxx' \
 SHADOWWEAVE_DOMAIN='your-domain.com' \
-bash <(curl -Ls https://raw.githubusercontent.com/your-github-user/your-repo/main/ops/install.sh)
+bash <(curl -Ls https://raw.githubusercontent.com/your-github-user/your-repo/main/ops/install.sh) source
 ```
 
 常用维护命令：

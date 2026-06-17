@@ -2,7 +2,7 @@
 set -Eeuo pipefail
 
 APP_NAME="shadowweave"
-SHADOWWEAVE_REPO="${SHADOWWEAVE_REPO:-longxingze0925/Shadowweave}"
+SHADOWWEAVE_REPO="${SHADOWWEAVE_REPO:-longxingze0925/yingzhi-AI}"
 SHADOWWEAVE_REF="${SHADOWWEAVE_REF:-main}"
 SHADOWWEAVE_RAW_BASE="${SHADOWWEAVE_RAW_BASE:-https://raw.githubusercontent.com/${SHADOWWEAVE_REPO}/${SHADOWWEAVE_REF}}"
 INSTALL_DIR="${SHADOWWEAVE_INSTALL_DIR:-/opt/shadowweave}"
