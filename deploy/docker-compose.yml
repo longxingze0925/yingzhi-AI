@@ -1,0 +1,50 @@
+services:
+  backend:
+    image: ${SHADOWWEAVE_BACKEND_IMAGE}
+    container_name: shadowweave-backend
+    restart: unless-stopped
+    environment:
+      HOST: 0.0.0.0
+      PORT: 18777
+      ENTITLEHUB_BASE_URL: ${ENTITLEHUB_BASE_URL:-https://ht.0000.icu}
+      ENTITLEHUB_SERVER_KEY: ${ENTITLEHUB_SERVER_KEY:-}
+      ENTITLEHUB_MOCK: ${ENTITLEHUB_MOCK:-false}
+      DEMO_ENTITLEHUB_CUSTOMER_ID: ${DEMO_ENTITLEHUB_CUSTOMER_ID:-00000000-0000-0000-0000-000000000001}
+      SHADOWWEAVE_SESSION_COOKIE: ${SHADOWWEAVE_SESSION_COOKIE:-shadowweave_session}
+      SHADOWWEAVE_SESSION_TTL_SECONDS: ${SHADOWWEAVE_SESSION_TTL_SECONDS:-604800}
+      RUST_LOG: ${RUST_LOG:-shadowweave_backend=info,backend=info,tower_http=info}
+    expose:
+      - "18777"
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:18777/healthz"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  web:
+    image: ${SHADOWWEAVE_WEB_IMAGE}
+    container_name: shadowweave-web
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      HOSTNAME: 0.0.0.0
+      PORT: 3000
+    expose:
+      - "3000"
+    depends_on:
+      backend:
+        condition: service_healthy
+
+  nginx:
+    image: nginx:1.27-alpine
+    container_name: shadowweave-nginx
+    restart: unless-stopped
+    ports:
+      - "${SHADOWWEAVE_HTTP_PORT:-80}:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on:
+      - web
+      - backend
+

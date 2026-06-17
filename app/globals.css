@@ -1,0 +1,173 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* 亮色主题 —— Apple 极简，纯白留白 + 克制蓝 */
+    --background: 0 0% 100%;
+    --foreground: 0 0% 9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 9%;
+
+    --primary: 211 100% 45%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 240 5% 96%;
+    --secondary-foreground: 0 0% 12%;
+
+    --muted: 240 5% 96%;
+    --muted-foreground: 240 4% 46%;
+
+    --accent: 240 5% 95%;
+    --accent-foreground: 0 0% 12%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 240 6% 90%;
+    --input: 240 6% 88%;
+    --ring: 211 100% 45%;
+
+    --brand-violet: 211 100% 45%;
+    --brand-fuchsia: 211 100% 50%;
+    --brand-cyan: 199 90% 48%;
+
+    --radius: 0.85rem;
+  }
+
+  .dark {
+    /* 暗色主题 —— Apple 暗色，纯黑底 + 明亮蓝 */
+    --background: 0 0% 4%;
+    --foreground: 0 0% 96%;
+
+    --card: 240 5% 9%;
+    --card-foreground: 0 0% 96%;
+
+    --popover: 240 5% 8%;
+    --popover-foreground: 0 0% 96%;
+
+    --primary: 211 100% 56%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 240 4% 14%;
+    --secondary-foreground: 0 0% 92%;
+
+    --muted: 240 4% 13%;
+    --muted-foreground: 240 5% 64%;
+
+    --accent: 240 4% 16%;
+    --accent-foreground: 0 0% 96%;
+
+    --destructive: 0 70% 55%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 240 4% 17%;
+    --input: 240 4% 20%;
+    --ring: 211 100% 56%;
+
+    --brand-violet: 211 100% 56%;
+    --brand-fuchsia: 211 100% 60%;
+    --brand-cyan: 199 90% 54%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+  ::selection {
+    background-color: hsl(var(--brand-violet) / 0.3);
+  }
+  /* 细滚动条 */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground) / 0.25);
+    border-radius: 9999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.4);
+  }
+}
+
+@layer components {
+  /* 品牌强调文字（实心，不用渐变） */
+  .text-gradient {
+    color: hsl(var(--primary));
+  }
+
+  /* 品牌实心色（替代渐变，保留类名以联动全站） */
+  .bg-brand-gradient {
+    background-color: hsl(var(--primary));
+  }
+
+  /* 玻璃拟态面板 */
+  .glass {
+    @apply border border-black/[0.06] bg-white/70 backdrop-blur-xl;
+  }
+  .dark .glass {
+    @apply border-white/[0.08] bg-white/[0.04];
+  }
+
+  /* 细描边卡片（极克制，仅一道发丝边） */
+  .glow-border {
+    position: relative;
+  }
+  .glow-border::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(
+      160deg,
+      hsl(var(--primary) / 0.2),
+      hsl(var(--border) / 0.6) 35%,
+      hsl(var(--border) / 0.6)
+    );
+    -webkit-mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+}
+
+@layer utilities {
+  /* 噪点纹理遮罩 */
+  .noise {
+    position: relative;
+  }
+  .noise::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.035;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  .mask-fade-b {
+    -webkit-mask-image: linear-gradient(to bottom, #000 60%, transparent);
+    mask-image: linear-gradient(to bottom, #000 60%, transparent);
+  }
+  .mask-fade-x {
+    -webkit-mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent);
+    mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent);
+  }
+}
