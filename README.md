@@ -44,7 +44,7 @@ cargo run        # 默认 mock EntitleHub：http://127.0.0.1:18777
 bash <(curl -Ls https://raw.githubusercontent.com/longxingze0925/yingzhi-AI/main/ops/install.sh)
 ```
 
-运行后会进入交互安装，提示填写 EntitleHub Server Key；不填写则按 mock 模式启动。默认拉取 GHCR 上已经构建好的 `yingzhi-AI-web` / `yingzhi-AI-backend` 镜像。
+运行后会进入影织安装 / 运维菜单；首次安装会提示填写 EntitleHub Server Key，不填写则按 mock 模式启动。默认拉取 GHCR 上已经构建好的 `yingzhi-AI-web` / `yingzhi-AI-backend` 镜像。
 
 如果 GHCR 镜像是私有的，执行前提供一个只有 `read:packages` 权限的 GitHub token：
 
@@ -54,11 +54,18 @@ GHCR_TOKEN='github_pat_xxx' \
 bash <(curl -Ls https://raw.githubusercontent.com/longxingze0925/yingzhi-AI/main/ops/install.sh)
 ```
 
-后续更新：
+后续仍然执行同一条命令即可进入菜单；也可以在服务器上直接执行控制脚本：
 
 ```bash
-sudo bash /opt/shadowweave/update-image.sh
+sudo bash /opt/shadowweave/yingzhictl.sh update
+sudo bash /opt/shadowweave/yingzhictl.sh status
+sudo bash /opt/shadowweave/yingzhictl.sh logs
+sudo bash /opt/shadowweave/yingzhictl.sh restart
+sudo bash /opt/shadowweave/yingzhictl.sh change-key
+sudo bash /opt/shadowweave/yingzhictl.sh smoke
 ```
+
+安装器会等待后端和前端健康检查通过后再判定成功；如果检查失败，会自动输出 backend / web / nginx 最近日志，方便定位镜像、Key、端口或反代问题。
 
 ## 源码一键安装
 
