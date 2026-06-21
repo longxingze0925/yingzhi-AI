@@ -4,16 +4,11 @@ set -Eeuo pipefail
 SHADOWWEAVE_REPO="${SHADOWWEAVE_REPO:-longxingze0925/yingzhi-AI}"
 SHADOWWEAVE_REF="${SHADOWWEAVE_REF:-main}"
 SHADOWWEAVE_RAW_BASE="${SHADOWWEAVE_RAW_BASE:-https://raw.githubusercontent.com/${SHADOWWEAVE_REPO}/${SHADOWWEAVE_REF}}"
-INSTALL_MODE="${1:-menu}"
+TARGET_SCRIPT="yingzhictl.sh"
 
-if [[ "$INSTALL_MODE" == "source" ]]; then
+if [[ "${1:-}" == "source" ]]; then
   shift || true
   TARGET_SCRIPT="shadowweavectl.sh"
-else
-  if [[ "$INSTALL_MODE" == "image" ]]; then
-    set -- install "${@:2}"
-  fi
-  TARGET_SCRIPT="yingzhictl.sh"
 fi
 
 script_dir=""

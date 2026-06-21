@@ -46,6 +46,16 @@ bash <(curl -Ls https://raw.githubusercontent.com/longxingze0925/yingzhi-AI/main
 
 运行后会进入影织安装 / 运维菜单；首次安装会提示填写 EntitleHub Server Key，不填写则按 mock 模式启动。默认拉取 GHCR 上已经构建好的 `yingzhi-AI-web` / `yingzhi-AI-backend` 镜像。
 
+安装访问方式和 EntitleHub 安装器保持一致：
+
+1. 不使用域名，仅本机访问
+2. 不使用域名，使用服务器 IP 访问
+3. 使用域名，自动申请 HTTPS 证书
+4. 使用域名，使用自有证书
+5. 已有反向代理 / 负载均衡
+
+域名模式使用 Caddy 作为入口代理，自动证书模式会监听服务器 `80/443` 并由 Caddy 申请和续期证书；自有证书模式会把 `fullchain.pem` 和 `privkey.pem` 复制到安装目录。外部反向代理模式不启动 Caddy，只把 backend/web 绑定到本机端口并生成 `reverse-proxy.nginx.example.conf`。
+
 如果 GHCR 镜像是私有的，执行前提供一个只有 `read:packages` 权限的 GitHub token：
 
 ```bash
@@ -54,22 +64,19 @@ GHCR_TOKEN='github_pat_xxx' \
 bash <(curl -Ls https://raw.githubusercontent.com/longxingze0925/yingzhi-AI/main/ops/install.sh)
 ```
 
-后续仍然执行同一条命令即可进入菜单；也可以在服务器上直接执行控制脚本：
+后续仍然执行同一条命令即可进入菜单；安装器也会写入本地命令：
 
 ```bash
-sudo bash /opt/shadowweave/yingzhictl.sh update
+sudo yingzhi
+sudo shadowweave
 sudo bash /opt/shadowweave/yingzhictl.sh status
-sudo bash /opt/shadowweave/yingzhictl.sh logs
-sudo bash /opt/shadowweave/yingzhictl.sh restart
-sudo bash /opt/shadowweave/yingzhictl.sh change-key
-sudo bash /opt/shadowweave/yingzhictl.sh smoke
 ```
 
-安装器会等待后端和前端健康检查通过后再判定成功；如果检查失败，会自动输出 backend / web / nginx 最近日志，方便定位镜像、Key、端口或反代问题。
+菜单包含更新、状态、日志、证书管理、修改 EntitleHub Server Key、诊断、重启和卸载。安装器会等待后端和前端健康检查通过后再判定成功；如果检查失败，会自动输出 backend / web / caddy 最近日志，方便定位镜像、Key、DNS、证书、端口或反代问题。
 
 ## 源码一键安装
 
-备用方案：服务器直接拉源码并本机编译。服务器建议使用 Debian/Ubuntu，脚本会安装 Node.js 20、Rust、构建前后端、写入 systemd 服务，并默认用 Nginx 做同域反代。
+备用方案：服务器直接拉源码并本机编译。服务器建议使用 Debian/Ubuntu，脚本会安装 Node.js 20、Rust、构建前后端、写入 systemd 服务，并默认用 Nginx 做同域反代。当前生产推荐优先使用上面的镜像一键安装。
 
 ```bash
 ENTITLEHUB_SERVER_KEY='ehsk_xxx' \
