@@ -34,6 +34,13 @@ const API_BASE =
 const DEFAULT_API_TIMEOUT_MS = 8000;
 const DEMO_FALLBACK_ENABLED = process.env.NEXT_PUBLIC_DEMO_FALLBACK === "1";
 
+function apiUrl(path: string) {
+  if (API_BASE.endsWith("/api") && path.startsWith("/api/")) {
+    return `${API_BASE}${path.slice(4)}`;
+  }
+  return `${API_BASE}${path}`;
+}
+
 type BackendJobStatus =
   | "queued"
   | "running"
@@ -211,7 +218,7 @@ async function api<T>(path: string, init: ApiInit = {}): Promise<T> {
 
   let res: Response;
   try {
-    res = await fetch(`${API_BASE}${path}`, {
+    res = await fetch(apiUrl(path), {
       ...requestInit,
       credentials: "include",
       signal: controller.signal,
