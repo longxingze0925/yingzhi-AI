@@ -1193,7 +1193,7 @@ export function PromptDock({
                   modelsError
                     ? "模型加载失败"
                     : !modelsLoading && models.length === 0
-                      ? "EntitleHub 暂未配置该类型模型"
+                      ? "AiSaaS 暂未配置该类型模型"
                       : referenceValidationError
                         ? referenceValidationError
                       : isFramesMode

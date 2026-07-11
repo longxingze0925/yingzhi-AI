@@ -82,7 +82,7 @@ export function GenerationGallery({
         setSelected(null);
       }
     } catch {
-      addNotification("删除失败", "EntitleHub 删除接口返回失败，请稍后重试。");
+      addNotification("删除失败", "AiSaaS 删除接口返回失败，请稍后重试。");
     }
   };
 
@@ -127,9 +127,9 @@ export function GenerationGallery({
     jobs
       .filter((j) => j.type === type)
       .forEach((job) => {
-        if (job.status === "queued" || job.status === "running") {
+        if (job.status === "queued" || job.status === "running" || job.status === "review") {
           list.push({ kind: "pending", job, key: job.id });
-        } else if (job.status === "failed") {
+        } else if (job.status === "failed" || job.status === "cancelled") {
           list.push({ kind: "failed", job, key: job.id });
         } else {
           job.results

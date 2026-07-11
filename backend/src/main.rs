@@ -1,5 +1,5 @@
+mod aisaas;
 mod config;
-mod entitlehub;
 mod error;
 mod models;
 mod routes;
@@ -27,7 +27,7 @@ async fn main() {
 
     let config = AppConfig::from_env();
     let bind_addr = config.bind_addr;
-    let mock_entitlehub = config.mock_entitlehub;
+    let mock_aisaas = config.mock_aisaas;
     let state = AppState::new(config);
 
     let cors = CorsLayer::new()
@@ -43,7 +43,7 @@ async fn main() {
     let listener = tokio::net::TcpListener::bind(bind_addr)
         .await
         .expect("failed to bind backend address");
-    info!(%bind_addr, mock_entitlehub, "shadowweave backend listening");
+    info!(%bind_addr, mock_aisaas, "shadowweave backend listening");
 
     axum::serve(listener, app)
         .await

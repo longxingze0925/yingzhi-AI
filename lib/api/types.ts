@@ -32,7 +32,7 @@ export interface Author {
 export interface MediaItem {
   id: string;
   type: MediaType;
-  /** EntitleHub 资产 id，用于把作品作为下一次生成的参考素材 */
+  /** AiSaaS 资产 id，用于把作品作为下一次生成的参考素材 */
   assetId?: string | null;
   /** 占位渲染用的种子（替换为真实 url 后弃用） */
   seed: string;
@@ -123,7 +123,13 @@ export interface StylePreset {
   seed: string;
 }
 
-export type JobStatus = "queued" | "running" | "succeeded" | "failed";
+export type JobStatus =
+  | "queued"
+  | "running"
+  | "review"
+  | "succeeded"
+  | "failed"
+  | "cancelled";
 
 export interface GenerationJob {
   id: string;

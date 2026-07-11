@@ -11,7 +11,6 @@ import {
   Share2,
   Heart,
   Sparkles,
-  Scissors,
   Pencil,
   Copy,
   Trash2,
@@ -86,13 +85,15 @@ function CardHeader({
 }: {
   time: number;
   model: string;
-  status: "succeeded" | "running" | "queued" | "failed";
+  status: "succeeded" | "running" | "queued" | "review" | "failed" | "cancelled";
 }) {
   const statusMap = {
     succeeded: { label: "已完成", cls: "bg-emerald-500/15 text-emerald-500", icon: Check },
     running: { label: "生成中", cls: "bg-primary/15 text-primary", icon: Loader2 },
     queued: { label: "排队中", cls: "bg-amber-500/15 text-amber-500", icon: Clock },
+    review: { label: "待审核", cls: "bg-sky-500/15 text-sky-500", icon: Clock },
     failed: { label: "失败", cls: "bg-destructive/15 text-destructive", icon: AlertCircle },
+    cancelled: { label: "已取消", cls: "bg-muted text-muted-foreground", icon: X },
   }[status];
   const Icon = statusMap.icon;
   return (
@@ -231,7 +232,7 @@ export function WorkCard({
       markDownloaded(item.id);
       addNotification("作品已开始下载", item.prompt);
     } catch {
-      addNotification("下载失败", "EntitleHub 下载登记失败，请稍后重试。");
+      addNotification("下载失败", "AiSaaS 下载登记失败，请稍后重试。");
     }
   };
 
@@ -243,14 +244,14 @@ export function WorkCard({
     } catch {
       addNotification(
         isFavorite ? "取消收藏失败" : "收藏失败",
-        "EntitleHub 收藏接口返回失败，请稍后重试。"
+        "AiSaaS 收藏接口返回失败，请稍后重试。"
       );
     }
   };
 
   const handleEdit = () => {
     if (!item.assetId) {
-      addNotification("无法编辑", "这个作品没有关联 EntitleHub 素材，不能自动填入参考。");
+      addNotification("无法编辑", "这个作品没有关联 AiSaaS 素材，不能自动填入参考。");
       return;
     }
     const target =
@@ -338,19 +339,6 @@ export function WorkCard({
         >
           <Heart className={cn("h-3.5 w-3.5", isFavorite && "fill-current")} />
         </button>
-        {[
-          { icon: Maximize2, label: "高清放大" },
-          { icon: Scissors, label: "剪辑" },
-        ].map((a) => (
-          <button
-            key={a.label}
-            disabled
-            title={`${a.label}暂未开放`}
-            className="grid h-7 w-7 place-items-center rounded-md disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            <a.icon className="h-3.5 w-3.5" />
-          </button>
-        ))}
         <button
           onClick={handleEdit}
           disabled={!item.assetId}
@@ -389,7 +377,18 @@ export function PendingCard({
   job: GenerationJob;
   onCancel: (id: string) => void;
 }) {
-  const status = job.status === "queued" ? "queued" : "running";
+  const status =
+    job.status === "queued" || job.status === "review" || job.status === "cancelled"
+      ? job.status
+      : "running";
+  const statusText =
+    job.status === "queued"
+      ? "正在排队…"
+      : job.status === "review"
+        ? "等待审核…"
+        : job.status === "cancelled"
+          ? "任务已取消"
+          : "正在编织影像…";
   return (
     <CardShell>
       <CardHeader time={job.createdAt} model={job.model} status={status} />
@@ -401,9 +400,14 @@ export function PendingCard({
       >
         <Skeleton className="h-full w-full rounded-none" />
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 p-4">
-          <Loader2 className="h-6 w-6 animate-spin text-primary/70" />
+          <Loader2
+            className={cn(
+              "h-6 w-6 text-primary/70",
+              job.status !== "review" && job.status !== "cancelled" && "animate-spin"
+            )}
+          />
           <span className="text-xs text-muted-foreground">
-            {job.status === "queued" ? "正在排队…" : "正在编织影像…"}
+            {statusText}
           </span>
           <div className="w-full max-w-[80%]">
             <Progress value={job.progress} className="h-1" />
@@ -434,7 +438,11 @@ export function FailedCard({
 }) {
   return (
     <CardShell className="border-destructive/30">
-      <CardHeader time={job.createdAt} model={job.model} status="failed" />
+      <CardHeader
+        time={job.createdAt}
+        model={job.model}
+        status={job.status === "cancelled" ? "cancelled" : "failed"}
+      />
       <MetaRow item={job} muted />
       <PromptRow prompt={job.prompt} />
       <div
@@ -446,15 +454,19 @@ export function FailedCard({
       >
         <div className="flex flex-col items-center gap-2 p-4 text-center">
           <AlertCircle className="h-6 w-6 text-destructive" />
-          <span className="text-xs text-muted-foreground">{job.error}</span>
-          <Button
-            variant="outline"
-            size="sm"
-            className="mt-1"
-            onClick={() => onRetry?.(job.id)}
-          >
-            <RotateCw className="h-3.5 w-3.5" /> 重试
-          </Button>
+          <span className="text-xs text-muted-foreground">
+            {job.status === "cancelled" ? "任务已取消" : job.error}
+          </span>
+          {job.status !== "cancelled" && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="mt-1"
+              onClick={() => onRetry?.(job.id)}
+            >
+              <RotateCw className="h-3.5 w-3.5" /> 重试
+            </Button>
+          )}
         </div>
       </div>
     </CardShell>

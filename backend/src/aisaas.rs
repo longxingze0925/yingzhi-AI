@@ -4,12 +4,12 @@ use crate::{
     models::{
         AssetFolderDto, AssetItemDto, AssetUploadDto, AssetsResponse, AuthorDto, BillingDto,
         CreateAssetFolderRequest, CreateAssetUploadRequest, CreateGenerationJobRequest, JobStatus,
-        MediaItemDto, MediaType, ModelCapabilitiesDto, ModelProductDto, SourceMode,
+        MediaItemDto, MediaType, ModelCapabilitiesDto, ModelProductDto, PricingPlanDto, SourceMode,
         UploadedAssetDto, WorkDownloadResponse, WorkVisibility,
     },
 };
 use reqwest::{
-    Method,
+    Method, StatusCode,
     header::{AUTHORIZATION, CONTENT_TYPE, HeaderMap, HeaderName, HeaderValue},
 };
 use serde::{Deserialize, Serialize};
@@ -17,46 +17,74 @@ use serde_json::{Value, json};
 use uuid::Uuid;
 
 #[derive(Clone)]
-pub struct EntitleHubClient {
+pub struct AiSaaSClient {
     http: reqwest::Client,
     config: AppConfig,
 }
 
 #[derive(Clone, Debug)]
-pub struct EntitleHubCustomerSession {
+pub struct AiSaaSCustomerSession {
     pub customer_id: String,
     pub email: String,
     pub name: String,
 }
 
 #[derive(Clone, Debug, Default)]
-pub struct EntitleHubCustomerProfile {
+pub struct AiSaaSCustomerProfile {
     pub customer_id: String,
     pub email: Option<String>,
     pub name: Option<String>,
 }
 
 #[derive(Clone, Debug, Default)]
-pub struct EntitleHubBalanceSummary {
+pub struct AiSaaSBalanceSummary {
     pub balance_minor: i64,
     pub held_minor: i64,
     pub available_minor: i64,
 }
 
 #[derive(Clone, Debug, Default)]
-pub struct EntitleHubPlanSummary {
+pub struct AiSaaSPlanSummary {
     pub name: Option<String>,
     pub credits_total: Option<i64>,
 }
 
 #[derive(Clone, Debug, Default)]
-pub struct EntitleHubUsageSummary {
+pub struct AiSaaSUsageSummary {
     pub generated: i64,
     pub charged_minor: i64,
     pub image_count: i64,
     pub video_count: i64,
     pub audio_count: i64,
     pub daily_credits: Vec<i64>,
+}
+
+#[derive(Clone, Debug)]
+pub struct AiSaaSAssetDownload {
+    pub content_type: String,
+    pub bytes: Vec<u8>,
+}
+
+#[derive(Clone, Debug, Default, Deserialize)]
+struct AiSaaSPlan {
+    pub id: String,
+    #[serde(default)]
+    pub code: Option<String>,
+    pub name: String,
+    #[serde(default)]
+    pub description: Option<String>,
+    #[serde(default, alias = "priceMinor", alias = "price_minor")]
+    pub price_minor: Option<i64>,
+    #[serde(default, alias = "billingPeriod", alias = "billing_period")]
+    pub billing_period: Option<String>,
+    #[serde(default, alias = "aiCreditsMinor", alias = "ai_credits_minor")]
+    pub ai_credits_minor: Option<i64>,
+    #[serde(default)]
+    pub features: Vec<String>,
+    #[serde(default)]
+    pub purchasable: bool,
+    #[serde(default, alias = "isDefault", alias = "is_default")]
+    pub is_default: bool,
 }
 
 #[derive(Clone, Copy, Debug, Default)]
@@ -69,7 +97,7 @@ pub struct AssetListFilters<'a> {
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
-pub struct EntitleHubJob {
+pub struct AiSaaSJob {
     pub id: String,
     #[serde(default, alias = "jobType", alias = "job_type", alias = "type")]
     pub job_type: Option<MediaType>,
@@ -94,6 +122,8 @@ pub struct EntitleHubJob {
     pub prompt: Option<String>,
     #[serde(default)]
     pub model: Option<String>,
+    #[serde(default, alias = "modelCode", alias = "model_code")]
+    pub model_code: Option<String>,
     #[serde(default, alias = "aspectRatio", alias = "aspect_ratio")]
     pub aspect_ratio: Option<String>,
     #[serde(default)]
@@ -113,10 +143,16 @@ pub struct EntitleHubJob {
     #[serde(default)]
     pub progress: Option<u8>,
     #[serde(default)]
-    pub assets: Vec<EntitleHubAsset>,
+    pub assets: Vec<AiSaaSAsset>,
     #[serde(default, alias = "workId", alias = "work_id")]
     pub work_id: Option<String>,
-    #[serde(default, alias = "sourceMode", alias = "source_mode")]
+    #[serde(
+        default,
+        alias = "sourceMode",
+        alias = "source_mode",
+        alias = "inputMode",
+        alias = "input_mode"
+    )]
     pub source_mode: Option<SourceMode>,
     #[serde(default, alias = "referenceCount", alias = "reference_count")]
     pub reference_count: Option<u32>,
@@ -136,7 +172,7 @@ pub struct EntitleHubJob {
 }
 
 #[derive(Clone, Debug, Deserialize)]
-pub struct EntitleHubAssetFolder {
+pub struct AiSaaSAssetFolder {
     pub id: String,
     pub name: String,
     #[serde(default)]
@@ -147,7 +183,7 @@ pub struct EntitleHubAssetFolder {
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 #[allow(dead_code)]
-pub struct EntitleHubAsset {
+pub struct AiSaaSAsset {
     pub id: String,
     #[serde(default, alias = "file_name", alias = "fileName")]
     pub file_name: Option<String>,
@@ -203,7 +239,7 @@ pub struct EntitleHubAsset {
 
 #[derive(Clone, Debug, Deserialize)]
 #[allow(dead_code)]
-pub struct EntitleHubWork {
+pub struct AiSaaSWork {
     pub id: String,
     #[serde(default, alias = "owner_customer_id", alias = "ownerCustomerId")]
     pub owner_customer_id: Option<String>,
@@ -273,7 +309,7 @@ pub struct EntitleHubWork {
     pub created_at: Option<Value>,
 }
 
-impl EntitleHubClient {
+impl AiSaaSClient {
     pub fn new(config: AppConfig) -> Self {
         Self {
             http: reqwest::Client::new(),
@@ -282,16 +318,16 @@ impl EntitleHubClient {
     }
 
     pub fn is_mock(&self) -> bool {
-        self.config.mock_entitlehub
+        self.config.mock_aisaas
     }
 
     pub async fn login_customer(
         &self,
         email: &str,
         password: &str,
-    ) -> ApiResult<EntitleHubCustomerSession> {
+    ) -> ApiResult<AiSaaSCustomerSession> {
         if self.is_mock() {
-            return Ok(EntitleHubCustomerSession {
+            return Ok(AiSaaSCustomerSession {
                 customer_id: self.config.demo_customer_id.clone(),
                 email: email.to_string(),
                 name: email.split('@').next().unwrap_or("影织用户").to_string(),
@@ -309,23 +345,19 @@ impl EntitleHubClient {
             }))
             .send()
             .await?;
-        let body = response.json::<Value>().await?;
-        let data = unwrap_entitlehub_data(body)?;
+        let data = read_aisaas_data(response).await?;
         let customer = data
             .get("customer")
             .or_else(|| data.get("user"))
             .cloned()
             .unwrap_or_else(|| data.clone());
 
-        let customer_id = value_string(
-            &data,
-            &["customer_id", "customerId", "id"],
-        )
-        .or_else(|| value_string(&customer, &["customer_id", "customerId", "id"]))
-        .ok_or_else(|| ApiError::Upstream {
-            code: "ENTITLEHUB_LOGIN_RESPONSE_INVALID",
-            message: "EntitleHub 登录成功但未返回 customer_id".to_string(),
-        })?;
+        let customer_id = value_string(&data, &["customer_id", "customerId", "id"])
+            .or_else(|| value_string(&customer, &["customer_id", "customerId", "id"]))
+            .ok_or_else(|| ApiError::Upstream {
+                code: "AISAAS_LOGIN_RESPONSE_INVALID",
+                message: "AiSaaS 登录成功但未返回 customer_id".to_string(),
+            })?;
         let email = value_string(&data, &["email"])
             .or_else(|| value_string(&customer, &["email"]))
             .unwrap_or_else(|| email.to_string());
@@ -333,7 +365,7 @@ impl EntitleHubClient {
             .or_else(|| value_string(&customer, &["name", "customer_name", "customerName"]))
             .unwrap_or_else(|| email.split('@').next().unwrap_or("影织用户").to_string());
 
-        Ok(EntitleHubCustomerSession {
+        Ok(AiSaaSCustomerSession {
             customer_id,
             email,
             name,
@@ -343,9 +375,9 @@ impl EntitleHubClient {
     pub async fn get_customer_profile(
         &self,
         customer_id: &str,
-    ) -> ApiResult<EntitleHubCustomerProfile> {
+    ) -> ApiResult<AiSaaSCustomerProfile> {
         if self.is_mock() {
-            return Ok(EntitleHubCustomerProfile {
+            return Ok(AiSaaSCustomerProfile {
                 customer_id: self.config.demo_customer_id.clone(),
                 email: None,
                 name: None,
@@ -359,31 +391,26 @@ impl EntitleHubClient {
             .headers(self.server_headers(None)?)
             .send()
             .await?;
-        let body = response.json::<Value>().await?;
-        let data = unwrap_entitlehub_data(body)?;
+        let data = read_aisaas_data(response).await?;
         let customer = data
             .get("customer")
             .or_else(|| data.get("user"))
             .cloned()
             .unwrap_or_else(|| data.clone());
 
-        Ok(EntitleHubCustomerProfile {
+        Ok(AiSaaSCustomerProfile {
             customer_id: value_string(&data, &["customer_id", "customerId", "id"])
                 .or_else(|| value_string(&customer, &["customer_id", "customerId", "id"]))
                 .unwrap_or_else(|| customer_id.to_string()),
-            email: value_string(&data, &["email"])
-                .or_else(|| value_string(&customer, &["email"])),
+            email: value_string(&data, &["email"]).or_else(|| value_string(&customer, &["email"])),
             name: value_string(&data, &["name", "customer_name", "customerName"])
                 .or_else(|| value_string(&customer, &["name", "customer_name", "customerName"])),
         })
     }
 
-    pub async fn get_customer_balance(
-        &self,
-        customer_id: &str,
-    ) -> ApiResult<EntitleHubBalanceSummary> {
+    pub async fn get_customer_balance(&self, customer_id: &str) -> ApiResult<AiSaaSBalanceSummary> {
         if self.is_mock() {
-            return Ok(EntitleHubBalanceSummary::default());
+            return Ok(AiSaaSBalanceSummary::default());
         }
 
         let base = self.base_url()?;
@@ -395,8 +422,7 @@ impl EntitleHubClient {
             .headers(self.server_headers(None)?)
             .send()
             .await?;
-        let body = response.json::<Value>().await?;
-        let data = unwrap_entitlehub_data(body)?;
+        let data = read_aisaas_data(response).await?;
         let balance = data
             .get("balance")
             .or_else(|| data.get("wallet"))
@@ -438,45 +464,54 @@ impl EntitleHubClient {
         )
         .unwrap_or_else(|| balance_minor.saturating_sub(held_minor));
 
-        Ok(EntitleHubBalanceSummary {
+        Ok(AiSaaSBalanceSummary {
             balance_minor,
             held_minor,
             available_minor,
         })
     }
 
-    pub async fn get_customer_plan(
-        &self,
-        customer_id: &str,
-    ) -> ApiResult<EntitleHubPlanSummary> {
+    pub async fn get_customer_plan(&self, customer_id: &str) -> ApiResult<AiSaaSPlanSummary> {
         if self.is_mock() {
-            return Ok(EntitleHubPlanSummary::default());
+            return Ok(AiSaaSPlanSummary::default());
         }
 
         let base = self.base_url()?;
         let response = self
             .http
-            .get(format!("{base}/api/server/web/v1/customers/{customer_id}/plan"))
+            .get(format!(
+                "{base}/api/server/web/v1/customers/{customer_id}/plan"
+            ))
             .headers(self.server_headers(None)?)
             .send()
             .await?;
-        let body = response.json::<Value>().await?;
-        let data = unwrap_entitlehub_data(body)?;
+        let data = read_aisaas_data(response).await?;
         if data.is_null() {
-            return Ok(EntitleHubPlanSummary::default());
+            return Ok(AiSaaSPlanSummary::default());
         }
-        let plan = data
-            .get("plan")
-            .cloned()
-            .unwrap_or_else(|| data.clone());
+        let plan = data.get("plan").cloned().unwrap_or_else(|| data.clone());
 
-        Ok(EntitleHubPlanSummary {
-            name: value_string(&plan, &["name", "plan_name", "planName", "title"]),
+        Ok(AiSaaSPlanSummary {
+            name: value_string(
+                &plan,
+                &[
+                    "name",
+                    "plan_name",
+                    "planName",
+                    "title",
+                    "plan_code",
+                    "planCode",
+                    "code",
+                    "id",
+                ],
+            ),
             credits_total: value_i64(
                 &plan,
                 &[
                     "credits_total",
                     "creditsTotal",
+                    "ai_credits_minor",
+                    "aiCreditsMinor",
                     "credits",
                     "monthly_credits",
                     "monthlyCredits",
@@ -488,12 +523,9 @@ impl EntitleHubClient {
         })
     }
 
-    pub async fn get_customer_usage(
-        &self,
-        customer_id: &str,
-    ) -> ApiResult<EntitleHubUsageSummary> {
+    pub async fn get_customer_usage(&self, customer_id: &str) -> ApiResult<AiSaaSUsageSummary> {
         if self.is_mock() {
-            return Ok(EntitleHubUsageSummary::default());
+            return Ok(AiSaaSUsageSummary::default());
         }
 
         let base = self.base_url()?;
@@ -505,9 +537,26 @@ impl EntitleHubClient {
             .headers(self.server_headers(None)?)
             .send()
             .await?;
-        let body = response.json::<Value>().await?;
-        let data = unwrap_entitlehub_data(body)?;
+        let data = read_aisaas_data(response).await?;
         Ok(usage_summary_from_value(data))
+    }
+
+    pub async fn list_pricing_plans(&self) -> ApiResult<Vec<PricingPlanDto>> {
+        if self.is_mock() {
+            return Ok(vec![]);
+        }
+
+        let base = self.base_url()?;
+        let response = self
+            .http
+            .get(format!("{base}/api/server/web/v1/plans"))
+            .headers(self.server_headers(None)?)
+            .send()
+            .await?;
+        let data = read_aisaas_data(response).await?;
+        let plans: Vec<AiSaaSPlan> = serde_json::from_value(list_value(data, &["items", "plans"]))
+            .map_err(ApiError::from)?;
+        Ok(plans.into_iter().map(pricing_plan_from_aisaas).collect())
     }
 
     pub async fn list_models(&self, customer_id: Option<&str>) -> ApiResult<Vec<ModelProductDto>> {
@@ -523,20 +572,30 @@ impl EntitleHubClient {
             .send()
             .await
         {
-            Ok(response) if response.status().is_success() => response,
-            _ => {
+            Ok(response) if response.status() == StatusCode::NOT_FOUND => {
                 self.http
                     .get(format!("{base}/api/server/ai/v1/models"))
-                    .headers(self.server_headers_for_customer(customer_id.unwrap_or_default(), None)?)
+                    .headers(
+                        self.server_headers_for_customer(customer_id.unwrap_or_default(), None)?,
+                    )
+                    .send()
+                    .await?
+            }
+            Ok(response) => response,
+            Err(_) => {
+                self.http
+                    .get(format!("{base}/api/server/ai/v1/models"))
+                    .headers(
+                        self.server_headers_for_customer(customer_id.unwrap_or_default(), None)?,
+                    )
                     .send()
                     .await?
             }
         };
 
-        let body = response.json::<Value>().await?;
-        let data = unwrap_entitlehub_data(body)?;
+        let data = read_aisaas_data(response).await?;
         let models_data = data.get("data").cloned().unwrap_or(data);
-        serde_json::from_value(models_data).map_err(ApiError::from)
+        model_products_from_value(models_data)
     }
 
     pub async fn create_job(
@@ -544,9 +603,9 @@ impl EntitleHubClient {
         customer_id: &str,
         idempotency_key: &str,
         input: &CreateGenerationJobRequest,
-    ) -> ApiResult<EntitleHubJob> {
+    ) -> ApiResult<AiSaaSJob> {
         if self.is_mock() {
-            return Ok(EntitleHubJob {
+            return Ok(AiSaaSJob {
                 id: Uuid::new_v4().to_string(),
                 job_type: Some(input.media_type.clone()),
                 status: "submitted".to_string(),
@@ -575,6 +634,7 @@ impl EntitleHubClient {
                 updated_at: None,
                 prompt: Some(input.prompt.clone()),
                 model: Some(input.model.clone()),
+                model_code: Some(input.model.clone()),
                 aspect_ratio: Some(input.aspect_ratio.clone()),
                 ratio: Some(input.aspect_ratio.clone()),
                 resolution: input.resolution.clone(),
@@ -627,6 +687,15 @@ impl EntitleHubClient {
             if let Some(resolution) = &input.resolution {
                 obj.insert("resolution".to_string(), json!(resolution));
             }
+            if let Some(style_id) = input
+                .style_id
+                .as_deref()
+                .map(str::trim)
+                .filter(|value| !value.is_empty() && *value != "none")
+            {
+                obj.insert("styleId".to_string(), json!(style_id));
+                obj.insert("style_id".to_string(), json!(style_id));
+            }
             obj.insert("aspectRatio".to_string(), json!(input.aspect_ratio));
             match input.media_type {
                 MediaType::Image => {
@@ -657,22 +726,21 @@ impl EntitleHubClient {
         let response = self
             .http
             .post(format!("{base}/api/server/web/v1/ai/jobs"))
-            .headers(self.server_headers(Some(idempotency_key))?)
+            .headers(self.server_headers_for_customer(customer_id, Some(idempotency_key))?)
             .json(&payload)
             .send()
             .await?;
 
-        let body = response.json::<Value>().await?;
-        let data = unwrap_entitlehub_data(body)?;
+        let data = read_aisaas_data(response).await?;
         let job = data.get("job").cloned().unwrap_or(data);
-        serde_json::from_value(job).map_err(ApiError::from)
+        Ok(aisaas_job_from_value(job))
     }
 
-    pub async fn get_job(&self, customer_id: &str, job_id: &str) -> ApiResult<EntitleHubJob> {
+    pub async fn get_job(&self, customer_id: &str, job_id: &str) -> ApiResult<AiSaaSJob> {
         if self.is_mock() {
             return Err(ApiError::BadRequest {
                 code: "MOCK_JOB_QUERY_UNSUPPORTED",
-                message: "mock EntitleHub jobs are advanced by local state".to_string(),
+                message: "mock AiSaaS jobs are advanced by local state".to_string(),
             });
         }
 
@@ -686,17 +754,16 @@ impl EntitleHubClient {
             .send()
             .await?;
 
-        let body = response.json::<Value>().await?;
-        let data = unwrap_entitlehub_data(body)?;
+        let data = read_aisaas_data(response).await?;
         let job = data.get("job").cloned().unwrap_or(data);
-        serde_json::from_value(job).map_err(ApiError::from)
+        Ok(aisaas_job_from_value(job))
     }
 
     pub async fn list_jobs(
         &self,
         customer_id: &str,
         media_type: Option<MediaType>,
-    ) -> ApiResult<Vec<EntitleHubJob>> {
+    ) -> ApiResult<Vec<AiSaaSJob>> {
         if self.is_mock() {
             return Ok(vec![]);
         }
@@ -715,10 +782,9 @@ impl EntitleHubClient {
             .send()
             .await?;
 
-        let body = response.json::<Value>().await?;
-        let data = unwrap_entitlehub_data(body)?;
+        let data = read_aisaas_data(response).await?;
         let jobs = list_value(data, &["jobs", "data", "items"]);
-        serde_json::from_value(jobs).map_err(ApiError::from)
+        Ok(aisaas_job_list_from_value(jobs))
     }
 
     pub async fn list_works(
@@ -747,8 +813,7 @@ impl EntitleHubClient {
             .headers(self.server_headers(None)?)
             .send()
             .await?;
-        let body = response.json::<Value>().await?;
-        let data = unwrap_entitlehub_data(body)?;
+        let data = read_aisaas_data(response).await?;
         Ok(parse_work_list(data, customer_id))
     }
 
@@ -776,8 +841,7 @@ impl EntitleHubClient {
             .headers(self.server_headers(None)?)
             .send()
             .await?;
-        let body = response.json::<Value>().await?;
-        let data = unwrap_entitlehub_data(body)?;
+        let data = read_aisaas_data(response).await?;
         Ok(parse_work_list(data, customer_id.unwrap_or_default()))
     }
 
@@ -824,14 +888,12 @@ impl EntitleHubClient {
             .send()
             .await?;
 
-        let folders_data = unwrap_entitlehub_data(folders_response.json::<Value>().await?)?;
-        let assets_data = unwrap_entitlehub_data(assets_response.json::<Value>().await?)?;
-        let folders_raw: Vec<EntitleHubAssetFolder> =
-            serde_json::from_value(list_value(folders_data, &["folders", "items"]))
-                .map_err(ApiError::from)?;
-        let assets_raw: Vec<EntitleHubAsset> =
-            serde_json::from_value(list_value(assets_data, &["assets", "items"]))
-                .map_err(ApiError::from)?;
+        let folders_data = read_aisaas_data(folders_response).await?;
+        let assets_data = read_aisaas_data(assets_response).await?;
+        let folders_raw =
+            aisaas_folder_list_from_value(list_value(folders_data, &["folders", "items"]));
+        let assets_raw =
+            aisaas_asset_list_from_value(list_value(assets_data, &["assets", "items"]));
 
         let folders = folders_raw
             .into_iter()
@@ -886,10 +948,9 @@ impl EntitleHubClient {
             .json(&payload)
             .send()
             .await?;
-        let body = response.json::<Value>().await?;
-        let data = unwrap_entitlehub_data(body)?;
+        let data = read_aisaas_data(response).await?;
         let folder = data.get("folder").cloned().unwrap_or(data);
-        let raw: EntitleHubAssetFolder = serde_json::from_value(folder)?;
+        let raw = aisaas_folder_from_value(folder);
         Ok(AssetFolderDto {
             id: raw.id,
             name: raw.name,
@@ -923,9 +984,17 @@ impl EntitleHubClient {
         }
 
         let base = self.base_url()?;
+        let folder_id = input.folder_id.as_deref().and_then(|value| {
+            let value = value.trim();
+            if value.is_empty() || value == "all" || value == "local" {
+                None
+            } else {
+                Some(value)
+            }
+        });
         let payload = json!({
             "customer_id": customer_id,
-            "folder_id": input.folder_id,
+            "folder_id": folder_id,
             "file_name": input.file_name,
             "kind": input.asset_type,
             "asset_type": input.asset_type,
@@ -943,8 +1012,7 @@ impl EntitleHubClient {
             .json(&payload)
             .send()
             .await?;
-        let body = response.json::<Value>().await?;
-        let data = unwrap_entitlehub_data(body)?;
+        let data = read_aisaas_data(response).await?;
         let upload = data.get("upload").cloned().unwrap_or(data);
         serde_json::from_value(upload).map_err(ApiError::from)
     }
@@ -1011,8 +1079,7 @@ impl EntitleHubClient {
             .body(bytes.clone())
             .send()
             .await?;
-        let body = response.json::<Value>().await?;
-        match unwrap_entitlehub_data(body) {
+        match read_aisaas_data(response).await {
             Ok(data) => asset_upload_result(data, &input.asset_type, &input.mime_type),
             Err(direct_err) => {
                 let upload = self
@@ -1059,10 +1126,9 @@ impl EntitleHubClient {
             .headers(self.server_headers(None)?)
             .send()
             .await?;
-        let body = response.json::<Value>().await?;
-        let data = unwrap_entitlehub_data(body)?;
+        let data = read_aisaas_data(response).await?;
         let asset_value = data.get("asset").cloned().unwrap_or(data);
-        let asset: EntitleHubAsset = serde_json::from_value(asset_value)?;
+        let asset = aisaas_asset_from_value(asset_value);
         Ok(asset_to_item(asset))
     }
 
@@ -1074,6 +1140,7 @@ impl EntitleHubClient {
     ) -> ApiResult<UploadedAssetDto> {
         let method = upload.method.parse::<Method>().unwrap_or(Method::PUT);
         let mut request = self.http.request(method, upload.url);
+        let mut has_content_type = false;
 
         if let Some(headers) = upload.headers.as_object() {
             for (name, value) in headers {
@@ -1086,14 +1153,18 @@ impl EntitleHubClient {
                 let Ok(value) = HeaderValue::from_str(value) else {
                     continue;
                 };
+                if name == CONTENT_TYPE {
+                    has_content_type = true;
+                }
                 request = request.header(name, value);
             }
         }
-        request = request.header(CONTENT_TYPE, input.mime_type.as_str());
+        if !has_content_type {
+            request = request.header(CONTENT_TYPE, input.mime_type.as_str());
+        }
 
         let response = request.body(bytes).send().await?;
-        let body = response.json::<Value>().await?;
-        let data = unwrap_entitlehub_data(body)?;
+        let data = read_aisaas_data(response).await?;
         asset_upload_result(data, &input.asset_type, &input.mime_type)
     }
 
@@ -1111,8 +1182,7 @@ impl EntitleHubClient {
             .headers(self.server_headers(None)?)
             .send()
             .await?;
-        let body = response.json::<Value>().await.unwrap_or(Value::Null);
-        unwrap_entitlehub_data(body)?;
+        read_aisaas_data_lossy(response).await?;
         Ok(())
     }
 
@@ -1171,6 +1241,38 @@ impl EntitleHubClient {
         .await
     }
 
+    pub async fn download_asset(&self, asset_id: &str) -> ApiResult<AiSaaSAssetDownload> {
+        if self.is_mock() {
+            return Ok(AiSaaSAssetDownload {
+                content_type: "application/octet-stream".to_string(),
+                bytes: Vec::new(),
+            });
+        }
+
+        let base = self.base_url()?;
+        let response = self
+            .http
+            .get(format!("{base}/api/ai/assets/{asset_id}"))
+            .send()
+            .await?;
+        if !response.status().is_success() {
+            return Err(ApiError::Upstream {
+                code: "AISAAS_ASSET_DOWNLOAD_FAILED",
+                message: format!("AiSaaS asset download failed: {}", response.status()),
+            });
+        }
+        let content_type = response
+            .headers()
+            .get(CONTENT_TYPE)
+            .and_then(|value| value.to_str().ok())
+            .unwrap_or("application/octet-stream")
+            .to_string();
+        let bytes = response.bytes().await?.to_vec();
+        Ok(AiSaaSAssetDownload {
+            content_type,
+            bytes,
+        })
+    }
     pub async fn download_work(
         &self,
         customer_id: &str,
@@ -1192,15 +1294,14 @@ impl EntitleHubClient {
             .json(&json!({ "customer_id": customer_id }))
             .send()
             .await?;
-        let body = response.json::<Value>().await?;
-        let data = unwrap_entitlehub_data(body)?;
+        let data = read_aisaas_data(response).await?;
         let download_url =
             value_string(&data, &["downloadUrl", "download_url"]).unwrap_or_default();
         let downloaded_at = value_time_millis(&data, &["downloadedAt", "downloaded_at"]);
         let work = data
             .get("work")
             .cloned()
-            .and_then(|value| serde_json::from_value::<EntitleHubWork>(value).ok())
+            .map(aisaas_work_from_value)
             .map(|work| work_to_media_item(work, customer_id));
         Ok(WorkDownloadResponse {
             download_url,
@@ -1230,21 +1331,18 @@ impl EntitleHubClient {
             request = request.json(&body);
         }
         let response = request.send().await?;
-        let body = response.json::<Value>().await.unwrap_or(Value::Null);
-        let data = unwrap_entitlehub_data(body)?;
+        let data = read_aisaas_data_lossy(response).await?;
         Ok(data
             .get("work")
             .cloned()
             .or_else(|| data.get("data").cloned())
-            .and_then(|value| serde_json::from_value::<EntitleHubWork>(value).ok())
+            .map(aisaas_work_from_value)
             .map(|work| work_to_media_item(work, customer_id)))
     }
 
     fn base_url(&self) -> ApiResult<String> {
-        self.config.entitlehub_base_url.clone().ok_or_else(|| {
-            ApiError::Internal(
-                "ENTITLEHUB_BASE_URL is required when ENTITLEHUB_MOCK=false".to_string(),
-            )
+        self.config.aisaas_base_url.clone().ok_or_else(|| {
+            ApiError::Internal("AISAAS_BASE_URL is required when AISAAS_MOCK=false".to_string())
         })
     }
 
@@ -1257,27 +1355,22 @@ impl EntitleHubClient {
         customer_id: &str,
         idempotency_key: Option<&str>,
     ) -> ApiResult<HeaderMap> {
-        let key = self.config.entitlehub_server_key.clone().ok_or_else(|| {
-            ApiError::Internal(
-                "ENTITLEHUB_SERVER_KEY is required when ENTITLEHUB_MOCK=false".to_string(),
-            )
+        let key = self.config.aisaas_server_key.clone().ok_or_else(|| {
+            ApiError::Internal("AISAAS_SERVER_KEY is required when AISAAS_MOCK=false".to_string())
         })?;
 
         let mut headers = HeaderMap::new();
         headers.insert(
             AUTHORIZATION,
             HeaderValue::from_str(&format!("Bearer {key}")).map_err(|err| {
-                ApiError::Internal(format!("invalid EntitleHub server key header: {err}"))
+                ApiError::Internal(format!("invalid AiSaaS server key header: {err}"))
             })?,
         );
         headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
         if !customer_id.trim().is_empty() {
-            headers.insert(
-                "X-EntitleHub-Customer-Id",
-                HeaderValue::from_str(customer_id).map_err(|err| {
-                    ApiError::Internal(format!("invalid customer id header: {err}"))
-                })?,
-            );
+            let value = HeaderValue::from_str(customer_id)
+                .map_err(|err| ApiError::Internal(format!("invalid customer id header: {err}")))?;
+            headers.insert("X-AiSaaS-Customer-Id", value);
         }
         if let Some(key) = idempotency_key {
             headers.insert(
@@ -1291,41 +1384,189 @@ impl EntitleHubClient {
     }
 }
 
-pub fn map_entitlehub_status(status: &str) -> JobStatus {
+pub fn map_aisaas_status(status: &str) -> JobStatus {
     match status {
-        "submitted" => JobStatus::Queued,
+        "pending" | "submitted" => JobStatus::Queued,
         "running" => JobStatus::Running,
         "caching" => JobStatus::Caching,
         "succeeded" => JobStatus::Succeeded,
-        "provider_failed" | "failed" => JobStatus::Failed,
+        "provider_failed" | "failed" | "refunded" => JobStatus::Failed,
         "timeout_review" => JobStatus::Review,
         "cancelled" => JobStatus::Cancelled,
         _ => JobStatus::Running,
     }
 }
 
-fn unwrap_entitlehub_data(body: Value) -> ApiResult<Value> {
+async fn read_aisaas_data(response: reqwest::Response) -> ApiResult<Value> {
+    let status = response.status();
+    let body = if status.is_success() {
+        response.json::<Value>().await?
+    } else {
+        response.json::<Value>().await.unwrap_or(Value::Null)
+    };
+    unwrap_aisaas_response(status, body)
+}
+
+async fn read_aisaas_data_lossy(response: reqwest::Response) -> ApiResult<Value> {
+    let status = response.status();
+    let body = response.json::<Value>().await.unwrap_or(Value::Null);
+    unwrap_aisaas_response(status, body)
+}
+
+fn unwrap_aisaas_response(status: StatusCode, body: Value) -> ApiResult<Value> {
+    if !status.is_success() {
+        return Err(aisaas_response_error(status, body));
+    }
+
     if let Some(code) = body.get("code").and_then(|v| v.as_i64()) {
         if code != 0 {
-            let message = body
-                .get("message")
-                .and_then(|v| v.as_str())
-                .unwrap_or("EntitleHub request failed")
-                .to_string();
-            let error_code = body
-                .get("errorCode")
-                .or_else(|| body.get("error_code"))
-                .and_then(|v| v.as_str());
-            return Err(ApiError::Upstream {
-                code: "ENTITLEHUB_ERROR",
-                message: error_code
-                    .map(|code| format!("{code}: {message}"))
-                    .unwrap_or(message),
-            });
+            return Err(aisaas_business_error(code, body));
         }
         return Ok(body.get("data").cloned().unwrap_or(Value::Null));
     }
     Ok(body)
+}
+
+fn aisaas_response_error(status: StatusCode, body: Value) -> ApiError {
+    let code = aisaas_error_code(&body, &format!("AISAAS_HTTP_{}", status.as_u16()));
+    ApiError::UpstreamResponse {
+        status: map_aisaas_http_status(status),
+        code,
+        message: aisaas_error_message(&body),
+        request_id: aisaas_request_id(&body),
+        upstream_status: Some(status.as_u16()),
+    }
+}
+
+fn aisaas_business_error(code: i64, body: Value) -> ApiError {
+    let error_code = aisaas_error_code(&body, "AISAAS_ERROR");
+    let status = map_aisaas_business_status(code, &error_code);
+    ApiError::UpstreamResponse {
+        status,
+        code: error_code,
+        message: aisaas_error_message(&body),
+        request_id: aisaas_request_id(&body),
+        upstream_status: None,
+    }
+}
+
+fn map_aisaas_http_status(status: StatusCode) -> StatusCode {
+    if status == StatusCode::UNAUTHORIZED || status == StatusCode::FORBIDDEN {
+        return StatusCode::BAD_GATEWAY;
+    }
+    if status == StatusCode::TOO_MANY_REQUESTS || status.is_client_error() {
+        return status;
+    }
+    if status.is_server_error() {
+        return StatusCode::BAD_GATEWAY;
+    }
+    StatusCode::BAD_GATEWAY
+}
+
+fn map_aisaas_business_status(code: i64, error_code: &str) -> StatusCode {
+    let normalized = error_code.to_ascii_lowercase();
+    if code / 100 == 429 || normalized.contains("rate_limit") {
+        return StatusCode::TOO_MANY_REQUESTS;
+    }
+    StatusCode::BAD_GATEWAY
+}
+
+fn aisaas_error_code(body: &Value, fallback: &str) -> String {
+    body.get("errorCode")
+        .or_else(|| body.get("error_code"))
+        .and_then(|v| v.as_str())
+        .filter(|value| !value.trim().is_empty())
+        .map(str::to_string)
+        .or_else(|| {
+            body.get("code")
+                .and_then(|v| v.as_i64())
+                .map(|code| code.to_string())
+        })
+        .unwrap_or_else(|| fallback.to_string())
+}
+
+fn aisaas_error_message(body: &Value) -> String {
+    body.get("message")
+        .or_else(|| body.get("error"))
+        .and_then(|v| v.as_str())
+        .filter(|value| !value.trim().is_empty())
+        .unwrap_or("AiSaaS request failed")
+        .to_string()
+}
+
+fn aisaas_request_id(body: &Value) -> Option<String> {
+    body.get("request_id")
+        .or_else(|| body.get("requestId"))
+        .and_then(|v| v.as_str())
+        .filter(|value| !value.trim().is_empty())
+        .map(str::to_string)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn maps_http_429_to_rate_limited_response() {
+        let err = unwrap_aisaas_response(
+            StatusCode::TOO_MANY_REQUESTS,
+            json!({
+                "code": 42901,
+                "errorCode": "rate_limited",
+                "message": "rate_limited",
+                "request_id": "req_rate_limit"
+            }),
+        )
+        .expect_err("429 should be mapped as an upstream response error");
+
+        match err {
+            ApiError::UpstreamResponse {
+                status,
+                code,
+                message,
+                request_id,
+                upstream_status,
+            } => {
+                assert_eq!(status, StatusCode::TOO_MANY_REQUESTS);
+                assert_eq!(code, "rate_limited");
+                assert_eq!(message, "rate_limited");
+                assert_eq!(request_id.as_deref(), Some("req_rate_limit"));
+                assert_eq!(upstream_status, Some(429));
+            }
+            other => panic!("unexpected error: {other:?}"),
+        }
+    }
+
+    #[test]
+    fn maps_business_rate_limit_to_429() {
+        let err = unwrap_aisaas_response(
+            StatusCode::OK,
+            json!({
+                "code": 42901,
+                "errorCode": "rate_limited",
+                "message": "too many requests",
+                "requestId": "req_business_rate_limit"
+            }),
+        )
+        .expect_err("business rate limit should be mapped as an upstream response error");
+
+        match err {
+            ApiError::UpstreamResponse {
+                status,
+                code,
+                message,
+                request_id,
+                upstream_status,
+            } => {
+                assert_eq!(status, StatusCode::TOO_MANY_REQUESTS);
+                assert_eq!(code, "rate_limited");
+                assert_eq!(message, "too many requests");
+                assert_eq!(request_id.as_deref(), Some("req_business_rate_limit"));
+                assert_eq!(upstream_status, None);
+            }
+            other => panic!("unexpected error: {other:?}"),
+        }
+    }
 }
 
 fn asset_upload_result(
@@ -1354,12 +1595,14 @@ fn asset_upload_result(
                 .map(str::to_string)
         })
         .ok_or_else(|| ApiError::Upstream {
-            code: "ENTITLEHUB_UPLOAD_RESPONSE_INVALID",
-            message: "上传成功但 EntitleHub 未返回素材 ID".to_string(),
+            code: "AISAAS_UPLOAD_RESPONSE_INVALID",
+            message: "上传成功但 AiSaaS 未返回素材 ID".to_string(),
         })?;
 
     let url = data
-        .get("url")
+        .get("public_url")
+        .or_else(|| data.get("publicUrl"))
+        .or_else(|| data.get("url"))
         .and_then(|v| v.as_str())
         .map(str::to_string)
         .or_else(|| {
@@ -1369,9 +1612,11 @@ fn asset_upload_result(
                     asset
                         .get("public_url")
                         .or_else(|| asset.get("publicUrl"))
+                        .or_else(|| asset.get("url"))
+                        .or_else(|| asset.get("asset_url"))
+                        .or_else(|| asset.get("assetUrl"))
                         .or_else(|| asset.get("download_url"))
                         .or_else(|| asset.get("downloadUrl"))
-                        .or_else(|| asset.get("url"))
                 })
                 .and_then(|v| v.as_str())
                 .map(str::to_string)
@@ -1409,9 +1654,7 @@ fn asset_upload_result(
         })
         .or_else(|| Some(fallback_mime_type.to_string()));
 
-    let normalized_asset = asset
-        .and_then(|value| serde_json::from_value::<EntitleHubAsset>(value).ok())
-        .map(asset_to_item);
+    let normalized_asset = asset.map(aisaas_asset_from_value).map(asset_to_item);
 
     Ok(UploadedAssetDto {
         asset_id,
@@ -1427,16 +1670,16 @@ fn upload_unavailable_error(direct_err: &ApiError, fallback_err: &ApiError) -> A
     let fallback_message = api_error_message(fallback_err);
     if direct_message == "not_found" && fallback_message == "not_found" {
         return ApiError::Upstream {
-            code: "ENTITLEHUB_UPLOAD_UNAVAILABLE",
-            message: "EntitleHub 上传失败：当前 customer_id 不存在，或上传接口尚未开放；请配置真实 EntitleHub customer_id 后重试。"
+            code: "AISAAS_UPLOAD_UNAVAILABLE",
+            message: "AiSaaS 上传失败：当前 customer_id 不存在，或上传接口尚未开放；请配置真实 AiSaaS customer_id 后重试。"
                 .to_string(),
         };
     }
 
     ApiError::Upstream {
-        code: "ENTITLEHUB_UPLOAD_UNAVAILABLE",
+        code: "AISAAS_UPLOAD_UNAVAILABLE",
         message: format!(
-            "EntitleHub 上传接口不可用：直传失败（{}），上传会话失败（{}）",
+            "AiSaaS 上传接口不可用：直传失败（{}），上传会话失败（{}）",
             direct_message, fallback_message
         ),
     }
@@ -1448,7 +1691,44 @@ fn api_error_message(err: &ApiError) -> String {
         | ApiError::Unauthenticated { message, .. }
         | ApiError::NotFound { message, .. }
         | ApiError::Upstream { message, .. }
+        | ApiError::UpstreamResponse { message, .. }
         | ApiError::Internal(message) => message.clone(),
+    }
+}
+
+fn pricing_plan_from_aisaas(plan: AiSaaSPlan) -> PricingPlanDto {
+    let monthly = plan.price_minor.unwrap_or(0).max(0) / 100;
+    let yearly = match plan.billing_period.as_deref() {
+        Some("year") | Some("yearly") => monthly,
+        _ => monthly.saturating_mul(10),
+    };
+    let credits = plan
+        .ai_credits_minor
+        .filter(|credits| *credits > 0)
+        .map(|credits| format!("{credits} 算力点"))
+        .unwrap_or_else(|| "按后台权益配置".to_string());
+    let mut features = plan.features;
+    if features.is_empty() {
+        features.push("AI 生成权益".to_string());
+        features.push("素材库缓存".to_string());
+    }
+
+    PricingPlanDto {
+        id: plan.code.unwrap_or(plan.id),
+        name: plan.name,
+        tagline: plan
+            .description
+            .unwrap_or_else(|| "AiSaaS 后台配置套餐".to_string()),
+        price_monthly: monthly,
+        price_yearly: yearly,
+        credits,
+        features,
+        highlighted: plan.is_default,
+        cta: if plan.purchasable {
+            "选择套餐".to_string()
+        } else {
+            "联系开通".to_string()
+        },
     }
 }
 
@@ -1539,14 +1819,14 @@ fn reference_asset_count(input: &CreateGenerationJobRequest) -> Option<u32> {
         })
 }
 
-fn asset_to_item(asset: EntitleHubAsset) -> AssetItemDto {
+fn asset_to_item(asset: AiSaaSAsset) -> AssetItemDto {
     let id = asset.id.clone();
     let url = asset
-        .url
+        .public_url
         .clone()
+        .or(asset.url.clone())
         .or(asset.asset_url.clone())
-        .or(asset.download_url.clone())
-        .or(asset.public_url.clone());
+        .or(asset.download_url.clone());
     let thumbnail_url = asset
         .thumbnail_url
         .clone()
@@ -1632,6 +1912,363 @@ fn asset_to_item(asset: EntitleHubAsset) -> AssetItemDto {
     }
 }
 
+fn model_products_from_value(value: Value) -> ApiResult<Vec<ModelProductDto>> {
+    let items = list_value(value, &["data", "items", "models"]);
+    let Value::Array(models) = items else {
+        return Ok(vec![]);
+    };
+
+    Ok(models.into_iter().map(model_product_from_value).collect())
+}
+
+fn model_product_from_value(model: Value) -> ModelProductDto {
+    let billing = model.get("billing").cloned().unwrap_or(Value::Null);
+    let capabilities = model.get("capabilities").cloned().unwrap_or(Value::Null);
+    let id = value_string(&model, &["id", "code", "model"])
+        .unwrap_or_else(|| "unknown-model".to_string());
+    let modality = value_string(&model, &["modality", "type", "job_type", "jobType"])
+        .as_deref()
+        .and_then(media_type_from_string)
+        .unwrap_or(MediaType::Image);
+
+    ModelProductDto {
+        id: id.clone(),
+        name: value_string(&model, &["name", "title"]).unwrap_or_else(|| id.clone()),
+        modality,
+        provider_model: value_string(&model, &["providerModel", "provider_model"]),
+        billing: BillingDto {
+            currency: value_string(&billing, &["currency"]).unwrap_or_else(|| "CNY".to_string()),
+            mode: value_string(&billing, &["mode", "billingMode", "billing_mode"])
+                .unwrap_or_else(|| "image_per_item".to_string()),
+            second_price_minor: value_i64(&billing, &["secondPriceMinor", "second_price_minor"]),
+            request_price_minor: value_i64(&billing, &["requestPriceMinor", "request_price_minor"]),
+            image_price_minor: value_i64(&billing, &["imagePriceMinor", "image_price_minor"]),
+        },
+        capabilities: ModelCapabilitiesDto {
+            ratios: value_string_vec(&capabilities, &["ratios", "aspectRatios", "aspect_ratios"]),
+            resolutions: value_string_vec(&capabilities, &["resolutions", "sizes"]),
+            durations: value_u32_vec(
+                &capabilities,
+                &["durations", "durationSeconds", "duration_seconds"],
+            ),
+            default_duration_seconds: value_u32(
+                &capabilities,
+                &["defaultDurationSeconds", "default_duration_seconds"],
+            ),
+            image_counts: value_u32_vec(&capabilities, &["imageCounts", "image_counts"]),
+            max_images: value_u32(&capabilities, &["maxImages", "max_images"]),
+            input_modes: value_string_vec(&capabilities, &["inputModes", "input_modes"])
+                .into_iter()
+                .filter_map(|value| media_source_mode_from_string(&value))
+                .collect(),
+            max_reference_images: value_u32(
+                &capabilities,
+                &["maxReferenceImages", "max_reference_images"],
+            ),
+            max_reference_videos: value_u32(
+                &capabilities,
+                &["maxReferenceVideos", "max_reference_videos"],
+            ),
+            max_reference_audios: value_u32(
+                &capabilities,
+                &["maxReferenceAudios", "max_reference_audios"],
+            ),
+            supports_reference_video: value_bool(
+                &capabilities,
+                &["supportsReferenceVideo", "supports_reference_video"],
+            ),
+            supports_reference_audio: value_bool(
+                &capabilities,
+                &["supportsReferenceAudio", "supports_reference_audio"],
+            ),
+            supports_first_frame: value_bool(
+                &capabilities,
+                &["supportsFirstFrame", "supports_first_frame"],
+            ),
+            supports_last_frame: value_bool(
+                &capabilities,
+                &["supportsLastFrame", "supports_last_frame"],
+            ),
+            accepted_mime_types: value_string_vec(
+                &capabilities,
+                &["acceptedMimeTypes", "accepted_mime_types"],
+            ),
+            max_asset_size_mb: value_u32(&capabilities, &["maxAssetSizeMb", "max_asset_size_mb"]),
+            max_image_asset_size_mb: value_u32(
+                &capabilities,
+                &["maxImageAssetSizeMb", "max_image_asset_size_mb"],
+            ),
+            max_video_asset_size_mb: value_u32(
+                &capabilities,
+                &["maxVideoAssetSizeMb", "max_video_asset_size_mb"],
+            ),
+            max_audio_asset_size_mb: value_u32(
+                &capabilities,
+                &["maxAudioAssetSizeMb", "max_audio_asset_size_mb"],
+            ),
+            min_reference_video_seconds: value_u32(
+                &capabilities,
+                &["minReferenceVideoSeconds", "min_reference_video_seconds"],
+            ),
+            max_reference_video_seconds: value_u32(
+                &capabilities,
+                &["maxReferenceVideoSeconds", "max_reference_video_seconds"],
+            ),
+            total_reference_video_seconds: value_u32(
+                &capabilities,
+                &[
+                    "totalReferenceVideoSeconds",
+                    "total_reference_video_seconds",
+                ],
+            ),
+            min_reference_audio_seconds: value_u32(
+                &capabilities,
+                &["minReferenceAudioSeconds", "min_reference_audio_seconds"],
+            ),
+            max_reference_audio_seconds: value_u32(
+                &capabilities,
+                &["maxReferenceAudioSeconds", "max_reference_audio_seconds"],
+            ),
+            total_reference_audio_seconds: value_u32(
+                &capabilities,
+                &[
+                    "totalReferenceAudioSeconds",
+                    "total_reference_audio_seconds",
+                ],
+            ),
+        },
+    }
+}
+
+fn aisaas_job_list_from_value(value: Value) -> Vec<AiSaaSJob> {
+    let Value::Array(items) = value else {
+        return vec![];
+    };
+    items.into_iter().map(aisaas_job_from_value).collect()
+}
+
+fn aisaas_job_from_value(job: Value) -> AiSaaSJob {
+    let media_type = value_string(&job, &["type", "jobType", "job_type"])
+        .as_deref()
+        .and_then(media_type_from_string);
+    let source_mode = value_string(
+        &job,
+        &["sourceMode", "source_mode", "inputMode", "input_mode"],
+    )
+    .as_deref()
+    .and_then(media_source_mode_from_string);
+    let assets = aisaas_asset_list_from_value(list_value(job.clone(), &["assets"]));
+
+    AiSaaSJob {
+        id: value_string(&job, &["id"]).unwrap_or_default(),
+        job_type: media_type,
+        status: value_string(&job, &["status"]).unwrap_or_else(|| "running".to_string()),
+        provider_job_id: value_string(&job, &["providerJobId", "provider_job_id"]),
+        charge_mode: value_string(&job, &["chargeMode", "charge_mode"]),
+        quantity: value_i64(&job, &["quantity"]),
+        held_minor: value_i64(&job, &["heldMinor", "held_minor"]),
+        charged_minor: value_i64(&job, &["chargedMinor", "charged_minor"]),
+        asset_urls: value_string_vec(&job, &["assetUrls", "asset_urls"]),
+        created_at: value_string(&job, &["createdAt", "created_at"]),
+        updated_at: value_string(&job, &["updatedAt", "updated_at"]),
+        prompt: value_string(&job, &["prompt"]),
+        model: value_string(&job, &["model"]),
+        model_code: value_string(&job, &["modelCode", "model_code"]),
+        aspect_ratio: value_string(&job, &["aspectRatio", "aspect_ratio"]),
+        ratio: value_string(&job, &["ratio"]),
+        resolution: value_string(&job, &["resolution"]),
+        size: value_string(&job, &["size"]),
+        count: value_u32(&job, &["count"]),
+        n: value_u32(&job, &["n"]),
+        duration_sec: value_u32(&job, &["durationSec", "duration_sec"]),
+        duration: value_u32(&job, &["duration"]),
+        progress: value_u32(&job, &["progress"]).and_then(|value| u8::try_from(value).ok()),
+        assets,
+        work_id: value_string(&job, &["workId", "work_id"]),
+        source_mode,
+        reference_count: value_u32(&job, &["referenceCount", "reference_count"]),
+        has_first_frame: value_bool(&job, &["hasFirstFrame", "has_first_frame"]),
+        has_last_frame: value_bool(&job, &["hasLastFrame", "has_last_frame"]),
+        failure_reason: value_string(&job, &["failureReason", "failure_reason", "error"]),
+        request_payload: job
+            .get("requestPayload")
+            .or_else(|| job.get("request_payload"))
+            .cloned(),
+    }
+}
+
+fn aisaas_folder_list_from_value(value: Value) -> Vec<AiSaaSAssetFolder> {
+    let Value::Array(items) = value else {
+        return vec![];
+    };
+    items.into_iter().map(aisaas_folder_from_value).collect()
+}
+
+fn aisaas_folder_from_value(folder: Value) -> AiSaaSAssetFolder {
+    AiSaaSAssetFolder {
+        id: value_string(&folder, &["id"]).unwrap_or_else(|| "root".to_string()),
+        name: value_string(&folder, &["name"]).unwrap_or_else(|| "未命名文件夹".to_string()),
+        metadata: folder.get("metadata").cloned(),
+        asset_count: value_i64(&folder, &["assetCount", "asset_count"]),
+    }
+}
+
+fn aisaas_asset_list_from_value(value: Value) -> Vec<AiSaaSAsset> {
+    let Value::Array(items) = value else {
+        return vec![];
+    };
+    items.into_iter().map(aisaas_asset_from_value).collect()
+}
+
+fn aisaas_asset_from_value(asset: Value) -> AiSaaSAsset {
+    AiSaaSAsset {
+        id: value_string(&asset, &["id"]).unwrap_or_default(),
+        file_name: value_string(&asset, &["fileName", "file_name"]),
+        name: value_string(&asset, &["name"]),
+        folder_id: value_string(&asset, &["folderId", "folder_id"]),
+        asset_type: value_string(&asset, &["assetType", "asset_type", "type"]),
+        kind: value_string(&asset, &["kind"]),
+        asset_role: value_string(&asset, &["assetRole", "asset_role"]),
+        status: value_string(&asset, &["status"]),
+        source: value_string(&asset, &["source"]),
+        source_alias: value_string(&asset, &["sourceAlias", "source_alias"]),
+        url: value_string(&asset, &["url"]),
+        asset_url: value_string(&asset, &["assetUrl", "asset_url"]),
+        download_url: value_string(&asset, &["downloadUrl", "download_url"]),
+        public_url: value_string(&asset, &["publicUrl", "public_url"]),
+        thumbnail_url: value_string(&asset, &["thumbnailUrl", "thumbnail_url"]),
+        cover_url: value_string(&asset, &["coverUrl", "cover_url"]),
+        cover_asset_url: value_string(&asset, &["coverAssetUrl", "cover_asset_url"]),
+        poster_url: value_string(&asset, &["posterUrl", "poster_url"]),
+        mime_type: value_string(&asset, &["mimeType", "mime_type"]),
+        file_size: value_i64(&asset, &["fileSize", "file_size"]),
+        duration: value_i64(&asset, &["duration"]),
+        duration_sec: value_i64(&asset, &["durationSec", "duration_sec"]),
+        duration_seconds: value_i64(&asset, &["durationSeconds", "duration_seconds"]),
+        width: value_i64(&asset, &["width"]),
+        height: value_i64(&asset, &["height"]),
+        metadata: asset.get("metadata").cloned(),
+    }
+}
+
+fn aisaas_work_list_from_value(value: Value) -> Vec<AiSaaSWork> {
+    let Value::Array(items) = value else {
+        return vec![];
+    };
+    items.into_iter().map(aisaas_work_from_value).collect()
+}
+
+fn aisaas_work_from_value(work: Value) -> AiSaaSWork {
+    AiSaaSWork {
+        id: value_string(&work, &["id"]).unwrap_or_default(),
+        owner_customer_id: value_string(&work, &["ownerCustomerId", "owner_customer_id"]),
+        source_job_id: value_string(&work, &["sourceJobId", "source_job_id"]),
+        title: value_string(&work, &["title"]),
+        description: value_string(&work, &["description"]),
+        work_type: value_string(&work, &["workType", "work_type", "type"])
+            .as_deref()
+            .and_then(media_type_from_string),
+        visibility: value_string(&work, &["visibility"]),
+        primary_asset_id: value_string(&work, &["primaryAssetId", "primary_asset_id"]),
+        primary_asset_url: value_string(&work, &["primaryAssetUrl", "primary_asset_url"]),
+        cover_asset_url: value_string(&work, &["coverAssetUrl", "cover_asset_url"]),
+        favorite_count: value_i64(&work, &["favoriteCount", "favorite_count"]),
+        favorited: value_bool(&work, &["favorited"]),
+        source_mode: value_string(&work, &["sourceMode", "source_mode"])
+            .as_deref()
+            .and_then(media_source_mode_from_string),
+        reference_count: value_u32(&work, &["referenceCount", "reference_count"]),
+        has_first_frame: value_bool(&work, &["hasFirstFrame", "has_first_frame"]),
+        has_last_frame: value_bool(&work, &["hasLastFrame", "has_last_frame"]),
+        published_at_camel: value_string(&work, &["publishedAt"]),
+        favorited_at: value_string(&work, &["favoritedAt", "favorited_at"]),
+        downloaded_at: value_string(&work, &["downloadedAt", "downloaded_at"]),
+        publication_status: value_string(&work, &["publicationStatus", "publication_status"]),
+        published_at: value_string(&work, &["published_at"]),
+        publication_tags: value_string_vec(&work, &["publicationTags", "publication_tags"]),
+        metadata: work.get("metadata").cloned(),
+        prompt: value_string(&work, &["prompt"]),
+        full_prompt: value_string(&work, &["fullPrompt", "full_prompt"]),
+        model: value_string(&work, &["model"]),
+        model_id: value_string(&work, &["modelId", "model_id"]),
+        model_name: value_string(&work, &["modelName", "model_name"]),
+        aspect_ratio: value_string(&work, &["aspectRatio", "aspect_ratio"]),
+        ratio: value_string(&work, &["ratio"]),
+        resolution: value_string(&work, &["resolution"]),
+        duration_sec: value_i64(&work, &["durationSec", "duration_sec"]),
+        category: value_string(&work, &["category"]),
+        created_at: work
+            .get("createdAt")
+            .or_else(|| work.get("created_at"))
+            .cloned(),
+    }
+}
+fn media_type_from_string(value: &str) -> Option<MediaType> {
+    match value.trim().to_ascii_lowercase().as_str() {
+        "image" => Some(MediaType::Image),
+        "video" => Some(MediaType::Video),
+        "audio" => Some(MediaType::Audio),
+        _ => None,
+    }
+}
+
+fn media_source_mode_from_string(value: &str) -> Option<SourceMode> {
+    match value.trim().to_ascii_lowercase().as_str() {
+        "text" => Some(SourceMode::Text),
+        "image" => Some(SourceMode::Image),
+        "video" => Some(SourceMode::Video),
+        "audio" => Some(SourceMode::Audio),
+        "frames" | "first_last_frame" => Some(SourceMode::Frames),
+        _ => None,
+    }
+}
+
+fn value_string_vec(value: &Value, keys: &[&str]) -> Vec<String> {
+    for key in keys {
+        if let Some(Value::Array(items)) = value.get(key) {
+            return items
+                .iter()
+                .filter_map(|item| item.as_str().map(str::to_string))
+                .collect();
+        }
+    }
+    vec![]
+}
+
+fn value_u32_vec(value: &Value, keys: &[&str]) -> Vec<u32> {
+    for key in keys {
+        if let Some(Value::Array(items)) = value.get(key) {
+            return items.iter().filter_map(numeric_value_u32).collect();
+        }
+    }
+    vec![]
+}
+
+fn value_u32(value: &Value, keys: &[&str]) -> Option<u32> {
+    value_i64(value, keys).and_then(|value| u32::try_from(value).ok())
+}
+
+fn value_bool(value: &Value, keys: &[&str]) -> Option<bool> {
+    for key in keys {
+        if let Some(value) = value.get(key) {
+            if let Some(flag) = value.as_bool() {
+                return Some(flag);
+            }
+            if let Some(text) = value.as_str() {
+                return match text.trim().to_ascii_lowercase().as_str() {
+                    "1" | "true" | "yes" | "on" => Some(true),
+                    "0" | "false" | "no" | "off" => Some(false),
+                    _ => None,
+                };
+            }
+        }
+    }
+    None
+}
+
+fn numeric_value_u32(value: &Value) -> Option<u32> {
+    numeric_value_i64(value).and_then(|value| u32::try_from(value).ok())
+}
 fn value_string(value: &Value, keys: &[&str]) -> Option<String> {
     for key in keys {
         if let Some(value) = value.get(key).and_then(|v| v.as_str()) {
@@ -1671,7 +2308,7 @@ fn value_time_millis(value: &Value, keys: &[&str]) -> Option<i64> {
     None
 }
 
-fn usage_summary_from_value(data: Value) -> EntitleHubUsageSummary {
+fn usage_summary_from_value(data: Value) -> AiSaaSUsageSummary {
     let summary = data
         .get("summary")
         .or_else(|| data.get("stats"))
@@ -1679,7 +2316,7 @@ fn usage_summary_from_value(data: Value) -> EntitleHubUsageSummary {
         .unwrap_or_else(|| data.clone());
     let records = list_value(data.clone(), &["records", "usage", "items", "data"]);
 
-    let mut usage = EntitleHubUsageSummary {
+    let mut usage = AiSaaSUsageSummary {
         generated: value_i64(
             &summary,
             &[
@@ -1775,20 +2412,20 @@ fn daily_usage_values(data: &Value) -> Vec<i64> {
 
 fn parse_work_list(data: Value, customer_id: &str) -> Vec<MediaItemDto> {
     let works_value = list_value(data, &["works", "gallery", "data", "items"]);
-    let works: Vec<EntitleHubWork> = serde_json::from_value(works_value).unwrap_or_default();
+    let works = aisaas_work_list_from_value(works_value);
     works
         .into_iter()
         .map(|work| work_to_media_item(work, customer_id))
         .collect()
 }
 
-fn work_to_media_item(work: EntitleHubWork, customer_id: &str) -> MediaItemDto {
+fn work_to_media_item(work: AiSaaSWork, customer_id: &str) -> MediaItemDto {
     let media_type = work.work_type.clone().unwrap_or(MediaType::Image);
     let prompt = work_prompt(&work);
     let asset_url = work
-        .cover_asset_url
+        .primary_asset_url
         .clone()
-        .or(work.primary_asset_url.clone());
+        .or(work.cover_asset_url.clone());
     let model = work
         .model_name
         .clone()
@@ -1889,7 +2526,7 @@ fn work_to_media_item(work: EntitleHubWork, customer_id: &str) -> MediaItemDto {
     }
 }
 
-fn work_prompt(work: &EntitleHubWork) -> String {
+fn work_prompt(work: &AiSaaSWork) -> String {
     work.prompt
         .clone()
         .or_else(|| metadata_string(&work.metadata, &["prompt", "full_prompt"]))

@@ -2,7 +2,7 @@
 
 > 用一句话，编织影像。专业级 AI 文生图 / 图生图 / 文生视频创作平台。
 
-明暗双主题、电影感高级视觉，完整可运行的前端骨架。后端已在 `backend/` 下启动 Rust 第一版，用于承接前端并调用 EntitleHub Server API。
+明暗双主题、电影感高级视觉，完整可运行的前端骨架。后端已在 `backend/` 下启动 Rust 第一版，用于承接前端并调用 AiSaaS Server API。
 
 ## 技术栈
 
@@ -33,7 +33,7 @@ NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:18777 npm run dev
 
 ```bash
 cd backend
-cargo run        # 默认 mock EntitleHub：http://127.0.0.1:18777
+cargo run        # 默认 mock AiSaaS：http://127.0.0.1:18777
 ```
 
 ## 镜像一键安装
@@ -44,9 +44,9 @@ cargo run        # 默认 mock EntitleHub：http://127.0.0.1:18777
 bash <(curl -Ls https://raw.githubusercontent.com/longxingze0925/yingzhi-AI/main/ops/install.sh)
 ```
 
-运行后会进入影织安装 / 运维菜单；首次安装会提示填写 EntitleHub Server Key，不填写则按 mock 模式启动。默认拉取 GHCR 上已经构建好的 `yingzhi-AI-web` / `yingzhi-AI-backend` 镜像。
+运行后会进入影织安装 / 运维菜单；首次安装会提示填写 AiSaaS Server Key，不填写则按 mock 模式启动。默认拉取 GHCR 上已经构建好的 `yingzhi-AI-web` / `yingzhi-AI-backend` 镜像。
 
-安装访问方式和 EntitleHub 安装器保持一致：
+安装访问方式和 AiSaaS 安装器保持一致：
 
 1. 不使用域名，仅本机访问
 2. 不使用域名，使用服务器 IP 访问
@@ -72,14 +72,14 @@ sudo shadowweave
 sudo bash /opt/shadowweave/yingzhictl.sh status
 ```
 
-菜单包含更新、状态、日志、证书管理、修改 EntitleHub Server Key、诊断、重启和卸载。安装器会等待后端和前端健康检查通过后再判定成功；如果检查失败，会自动输出 backend / web / caddy 最近日志，方便定位镜像、Key、DNS、证书、端口或反代问题。
+菜单包含更新、状态、日志、证书管理、修改 AiSaaS Server Key、诊断、重启和卸载。安装器会等待后端和前端健康检查通过后再判定成功；如果检查失败，会自动输出 backend / web / caddy 最近日志，方便定位镜像、Key、DNS、证书、端口或反代问题。
 
 ## 源码一键安装
 
 备用方案：服务器直接拉源码并本机编译。服务器建议使用 Debian/Ubuntu，脚本会安装 Node.js 20、Rust、构建前后端、写入 systemd 服务，并默认用 Nginx 做同域反代。当前生产推荐优先使用上面的镜像一键安装。
 
 ```bash
-ENTITLEHUB_SERVER_KEY='ehsk_xxx' \
+AISAAS_SERVER_KEY='aissk_xxx' \
 SHADOWWEAVE_DOMAIN='your-domain.com' \
 bash <(curl -Ls https://raw.githubusercontent.com/longxingze0925/yingzhi-AI/main/ops/install.sh) source
 ```
@@ -89,7 +89,7 @@ bash <(curl -Ls https://raw.githubusercontent.com/longxingze0925/yingzhi-AI/main
 ```bash
 SHADOWWEAVE_REPO='your-github-user/your-repo' \
 SHADOWWEAVE_REF='main' \
-ENTITLEHUB_SERVER_KEY='ehsk_xxx' \
+AISAAS_SERVER_KEY='aissk_xxx' \
 SHADOWWEAVE_DOMAIN='your-domain.com' \
 bash <(curl -Ls https://raw.githubusercontent.com/your-github-user/your-repo/main/ops/install.sh) source
 ```
@@ -120,7 +120,7 @@ sudo bash /opt/shadowweave/ops/shadowweavectl.sh restart
 
 ```
 app/                  # 路由与页面（App Router）
-backend/              # Rust 后端：影织业务 API -> EntitleHub Server API
+backend/              # Rust 后端：影织业务 API -> AiSaaS Server API
 components/
   ui/                 # 基础组件（button/card/dialog/select…）
   brand/              # Logo、渐变占位、光晕背景
@@ -136,7 +136,7 @@ data/mock/            # 占位数据（作品、模型、定价、用户）
 
 ## 对接 Rust 后端
 
-前端所有真实数据请求集中在 **`lib/api/client.ts`**，浏览器只请求影织 Rust 后端；EntitleHub Server Key 只放在后端环境变量里。真实模式下登录、余额、模型、生成任务、资产、作品、收藏、发布、下载登记都经由后端代理到 EntitleHub。
+前端所有真实数据请求集中在 **`lib/api/client.ts`**，浏览器只请求影织 Rust 后端；AiSaaS Server Key 只放在后端环境变量里。真实模式下登录、余额、模型、生成任务、资产、作品、收藏、发布、下载登记都经由后端代理到 AiSaaS。后端只读取 `AISAAS_BASE_URL` / `AISAAS_SERVER_KEY` / `AISAAS_MOCK`。
 
 Rust 后端当前提供：
 
@@ -159,4 +159,4 @@ Rust 后端当前提供：
 
 - 品牌色：紫电 → 品红 渐变，青蓝高光（CSS 变量 `--brand-*`，明暗各一套）
 - 占位图：`components/brand/gradient-thumb.tsx` 用确定性渐变 + 噪点生成，无外链依赖
-- 真实支付、个人资料保存、API Key 轮换仍需 EntitleHub 对应业务接口开放后接入
+- 真实支付、个人资料保存、API Key 轮换仍需 AiSaaS 对应业务接口开放后接入

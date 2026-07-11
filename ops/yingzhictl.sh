@@ -16,9 +16,9 @@ PIN_DIGESTS="${SHADOWWEAVE_PIN_DIGESTS:-1}"
 WEB_IMAGE="${SHADOWWEAVE_WEB_IMAGE:-ghcr.io/${SHADOWWEAVE_REPO,,}-web:latest}"
 BACKEND_IMAGE="${SHADOWWEAVE_BACKEND_IMAGE:-ghcr.io/${SHADOWWEAVE_REPO,,}-backend:latest}"
 CADDY_IMAGE="${CADDY_IMAGE:-caddy:2}"
-ENTITLEHUB_BASE_URL="${ENTITLEHUB_BASE_URL:-https://ht.0000.icu}"
-ENTITLEHUB_SERVER_KEY="${ENTITLEHUB_SERVER_KEY:-}"
-ENTITLEHUB_MOCK="${ENTITLEHUB_MOCK:-}"
+AISAAS_BASE_URL="${AISAAS_BASE_URL:-https://ht.0000.icu}"
+AISAAS_SERVER_KEY="${AISAAS_SERVER_KEY:-}"
+AISAAS_MOCK="${AISAAS_MOCK:-}"
 GHCR_USERNAME="${GHCR_USERNAME:-}"
 GHCR_TOKEN="${GHCR_TOKEN:-}"
 
@@ -300,16 +300,16 @@ safe_refresh_source() {
   rm -rf "$tmp"
 }
 
-resolve_entitlehub_mode() {
-  if [[ -z "$ENTITLEHUB_SERVER_KEY" && -t 0 && "${ENTITLEHUB_MOCK,,}" != "true" && "$ENTITLEHUB_MOCK" != "1" ]]; then
-    ENTITLEHUB_SERVER_KEY="$(ask_secret_optional 'EntitleHub Server Key，留空则使用 mock 模式')"
+resolve_aisaas_mode() {
+  if [[ -z "$AISAAS_SERVER_KEY" && -t 0 && "${AISAAS_MOCK,,}" != "true" && "$AISAAS_MOCK" != "1" ]]; then
+    AISAAS_SERVER_KEY="$(ask_secret_optional 'AiSaaS Server Key，留空则使用 mock 模式')"
   fi
 
-  if [[ -z "$ENTITLEHUB_MOCK" ]]; then
-    if [[ -n "$ENTITLEHUB_SERVER_KEY" ]]; then
-      ENTITLEHUB_MOCK="false"
+  if [[ -z "$AISAAS_MOCK" ]]; then
+    if [[ -n "$AISAAS_SERVER_KEY" ]]; then
+      AISAAS_MOCK="false"
     else
-      ENTITLEHUB_MOCK="true"
+      AISAAS_MOCK="true"
     fi
   fi
 }
@@ -324,7 +324,7 @@ write_env_file() {
   local env_path="$INSTALL_DIR/$ENV_FILE"
 
   if [[ ! -f "$env_path" ]]; then
-    resolve_entitlehub_mode
+    resolve_aisaas_mode
     umask 077
     cat > "$env_path" <<EOF
 COMPOSE_HOST_BIND=${host_bind}
@@ -335,14 +335,14 @@ SHADOWWEAVE_PUBLIC_URL=${public_url}
 SHADOWWEAVE_WEB_IMAGE=${WEB_IMAGE}
 SHADOWWEAVE_BACKEND_IMAGE=${BACKEND_IMAGE}
 CADDY_IMAGE=${CADDY_IMAGE}
-ENTITLEHUB_BASE_URL=${ENTITLEHUB_BASE_URL}
-ENTITLEHUB_SERVER_KEY=${ENTITLEHUB_SERVER_KEY}
-ENTITLEHUB_MOCK=${ENTITLEHUB_MOCK}
+AISAAS_BASE_URL=${AISAAS_BASE_URL}
+AISAAS_SERVER_KEY=${AISAAS_SERVER_KEY}
+AISAAS_MOCK=${AISAAS_MOCK}
 SHADOWWEAVE_SESSION_COOKIE=${SHADOWWEAVE_SESSION_COOKIE:-shadowweave_session}
 SHADOWWEAVE_SESSION_TTL_SECONDS=${SHADOWWEAVE_SESSION_TTL_SECONDS:-604800}
 EOF
   else
-    warn "已保留现有 $ENV_FILE，EntitleHub Server Key 不会被覆盖。"
+    warn "已保留现有 $ENV_FILE，AiSaaS Server Key 不会被覆盖。"
   fi
 
   set_env_value "$env_path" COMPOSE_HOST_BIND "$host_bind"
@@ -353,7 +353,7 @@ EOF
   set_env_value "$env_path" SHADOWWEAVE_WEB_IMAGE "$WEB_IMAGE"
   set_env_value "$env_path" SHADOWWEAVE_BACKEND_IMAGE "$BACKEND_IMAGE"
   set_env_value "$env_path" CADDY_IMAGE "$CADDY_IMAGE"
-  set_env_value "$env_path" ENTITLEHUB_BASE_URL "$(get_env_value ENTITLEHUB_BASE_URL "$env_path" || printf '%s' "$ENTITLEHUB_BASE_URL")"
+  set_env_value "$env_path" AISAAS_BASE_URL "$(get_env_value AISAAS_BASE_URL "$env_path" || printf '%s' "$AISAAS_BASE_URL")"
   chmod 600 "$env_path"
 }
 
@@ -938,14 +938,14 @@ change_key_flow() {
   migrate_legacy_install
   is_installed || die "$APP_NAME 尚未安装。"
   local key mock
-  key="$(ask_secret_optional '新的 EntitleHub Server Key，留空则切换 mock 模式')"
+  key="$(ask_secret_optional '新的 AiSaaS Server Key，留空则切换 mock 模式')"
   if [[ -n "$key" ]]; then
     mock="false"
   else
     mock="true"
   fi
-  set_env_value "$INSTALL_DIR/$ENV_FILE" ENTITLEHUB_SERVER_KEY "$key"
-  set_env_value "$INSTALL_DIR/$ENV_FILE" ENTITLEHUB_MOCK "$mock"
+  set_env_value "$INSTALL_DIR/$ENV_FILE" AISAAS_SERVER_KEY "$key"
+  set_env_value "$INSTALL_DIR/$ENV_FILE" AISAAS_MOCK "$mock"
   compose_base up -d --force-recreate backend
   run_smoke
 }
@@ -1069,7 +1069,7 @@ main_menu() {
 2) 查看状态
 3) 查看日志
 4) 证书管理
-5) 修改 EntitleHub Server Key
+5) 修改 AiSaaS Server Key
 6) 运行诊断
 7) 重启服务
 8) 卸载

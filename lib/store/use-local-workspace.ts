@@ -55,7 +55,7 @@ function initialNotifications(): WorkspaceNotification[] {
     {
       id: "welcome",
       title: "本地工作区已就绪",
-      body: "页面通知和偏好设置会保存在当前浏览器；作品与素材以 EntitleHub 为准。",
+      body: "页面通知和偏好设置会保存在当前浏览器；作品与素材以 AiSaaS 为准。",
       createdAt: now - 1000 * 60 * 8,
       read: false,
     },

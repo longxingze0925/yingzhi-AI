@@ -106,7 +106,7 @@ export function MediaCard({
           </div>
 
           {hasActions && (
-            <div className="absolute right-3 top-3 flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+            <div className="absolute right-3 top-3 z-20 flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
               {onFavorite && (
                 <button
                   type="button"
@@ -151,14 +151,14 @@ export function MediaCard({
 
           {/* 视频中央播放钮 */}
           {item.type === "video" && (
-            <div className="absolute inset-0 grid place-items-center">
+            <div className="pointer-events-none absolute inset-0 grid place-items-center">
               <span className="grid h-12 w-12 place-items-center rounded-full bg-white/15 backdrop-blur-md transition-transform duration-300 group-hover:scale-110">
                 <Play className="h-5 w-5 translate-x-0.5 fill-white text-white" />
               </span>
             </div>
           )}
           {item.type === "audio" && (
-            <div className="absolute inset-0 grid place-items-center">
+            <div className="pointer-events-none absolute inset-0 grid place-items-center">
               <span className="grid h-12 w-12 place-items-center rounded-full bg-white/15 backdrop-blur-md transition-transform duration-300 group-hover:scale-110">
                 <Music2 className="h-5 w-5 text-white" />
               </span>

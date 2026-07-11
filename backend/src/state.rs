@@ -5,8 +5,8 @@ use tokio::sync::RwLock;
 use uuid::Uuid;
 
 use crate::{
+    aisaas::AiSaaSClient,
     config::AppConfig,
-    entitlehub::EntitleHubClient,
     models::{AuthorDto, MediaItemDto, UserDto},
 };
 
@@ -22,7 +22,7 @@ pub struct UserSession {
 #[derive(Clone)]
 pub struct AppState {
     pub config: AppConfig,
-    pub entitlehub: EntitleHubClient,
+    pub aisaas: AiSaaSClient,
     pub jobs: Arc<RwLock<HashMap<String, crate::models::GenerationJobDto>>>,
     pub works: Arc<RwLock<Vec<MediaItemDto>>>,
     pub sessions: Arc<RwLock<HashMap<String, UserSession>>>,
@@ -31,7 +31,7 @@ pub struct AppState {
 impl AppState {
     pub fn new(config: AppConfig) -> Self {
         Self {
-            entitlehub: EntitleHubClient::new(config.clone()),
+            aisaas: AiSaaSClient::new(config.clone()),
             config,
             jobs: Arc::new(RwLock::new(HashMap::new())),
             works: Arc::new(RwLock::new(Vec::new())),
@@ -39,7 +39,12 @@ impl AppState {
         }
     }
 
-    pub async fn create_session(&self, customer_id: String, email: String, name: String) -> UserSession {
+    pub async fn create_session(
+        &self,
+        customer_id: String,
+        email: String,
+        name: String,
+    ) -> UserSession {
         let session = UserSession {
             session_id: Uuid::new_v4().to_string(),
             customer_id,
@@ -79,7 +84,7 @@ impl AppState {
             plan: "专业版".to_string(),
             credits: 2480,
             credits_total: 3000,
-            entitlehub_customer_id: self.config.demo_customer_id.clone(),
+            aisaas_customer_id: self.config.demo_customer_id.clone(),
         }
     }
 
@@ -93,10 +98,10 @@ impl AppState {
             },
             email: session.email.clone(),
             avatar_seed: session.customer_id.clone(),
-            plan: "EntitleHub".to_string(),
+            plan: "AiSaaS".to_string(),
             credits: 0,
             credits_total: 0,
-            entitlehub_customer_id: session.customer_id.clone(),
+            aisaas_customer_id: session.customer_id.clone(),
         }
     }
 

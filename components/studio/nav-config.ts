@@ -37,8 +37,8 @@ export const STUDIO_NAV: NavGroup[] = [
   {
     title: "资源",
     items: [
-      { label: "我的作品", href: "/studio/assets", icon: FolderOpen },
-      { label: "素材资产库", href: "/studio/library", icon: Library },
+      { label: "我的作品", href: "/studio/library", icon: Library },
+      { label: "素材资产库", href: "/studio/assets", icon: FolderOpen },
     ],
   },
 ];

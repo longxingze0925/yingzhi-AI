@@ -1,341 +1,388 @@
 "use client";
 
 import * as React from "react";
-import { Copy, Download, Grid3x3, LayoutGrid } from "lucide-react";
-import { PageHeader } from "@/components/studio/page-header";
-import { MediaCard } from "@/components/shared/media-card";
-import { MasonryGrid } from "@/components/shared/masonry-grid";
-import { MediaGridSkeleton } from "@/components/shared/media-grid-skeleton";
-import { MediaDetailDialog } from "@/components/studio/media-detail-dialog";
-import { Button } from "@/components/ui/button";
 import {
-  deleteWorkRemote,
-  downloadWorkRemote,
-  favoriteWorkRemote,
-  listMyFavorites,
-  listMyWorks,
+  Upload,
+  FolderPlus,
+  Folder,
+  ImageIcon,
+  Film,
+  Music2,
+  Palette,
+  Trash2,
+} from "lucide-react";
+import { PageHeader } from "@/components/studio/page-header";
+import { PageContainer, TILE_GRID } from "@/components/studio/page-container";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { GradientThumb } from "@/components/brand/gradient-thumb";
+import {
+  createAssetFolder,
+  uploadAssetFile,
+  deleteAssetRemote,
+  listAssets,
 } from "@/lib/api/client";
-import { downloadMediaItem } from "@/lib/local-actions";
+import type { AssetItem, AssetsLibrary } from "@/lib/api/types";
 import { useLocalWorkspaceStore } from "@/lib/store/use-local-workspace";
-import { PageContainer } from "@/components/studio/page-container";
-import type { MediaItem } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
 
-type AssetTab = "all" | "image" | "video" | "audio" | "fav";
+const EMPTY_LIBRARY: AssetsLibrary = {
+  folders: [],
+  materials: [],
+};
+const MAX_LOCAL_ASSET_MB = 50;
+const MAX_LOCAL_ASSET_BYTES = MAX_LOCAL_ASSET_MB * 1024 * 1024;
 
-function Grid({
-  items,
-  loading,
-  onOpen,
-  onDelete,
-  onFavorite,
-  favoriteIds,
-  onDownload,
-}: {
-  items: MediaItem[];
-  loading: boolean;
-  onOpen: (m: MediaItem) => void;
-  onDelete: (m: MediaItem) => void;
-  onFavorite: (m: MediaItem) => void;
-  favoriteIds: Set<string>;
-  onDownload: (m: MediaItem) => void;
-}) {
-  if (loading) {
-    return <MediaGridSkeleton count={8} />;
-  }
-  if (items.length === 0) {
-    return (
-      <div className="py-20 text-center text-sm text-muted-foreground">
-        这里还没有作品，去
-        <a href="/studio/image" className="mx-1 text-primary hover:underline">
-          创作
-        </a>
-        一个吧
-      </div>
-    );
-  }
-  return (
-    <MasonryGrid>
-      {items.map((m) => (
-        <MediaCard
-          key={m.id}
-          item={m}
-          onClick={onOpen}
-          onDelete={onDelete}
-          onFavorite={onFavorite}
-          onDownload={onDownload}
-          favorited={favoriteIds.has(m.id)}
-          showAuthor={false}
-        />
-      ))}
-    </MasonryGrid>
-  );
-}
+const FOLDER_ICONS = {
+  image: ImageIcon,
+  video: Film,
+  audio: Music2,
+  style: Palette,
+  folder: Folder,
+};
 
 export default function AssetsPage() {
-  const [works, setWorks] = React.useState<MediaItem[]>([]);
-  const [favs, setFavs] = React.useState<MediaItem[]>([]);
+  const [library, setLibrary] = React.useState<AssetsLibrary>(EMPTY_LIBRARY);
   const [loading, setLoading] = React.useState(true);
-  const [loadError, setLoadError] = React.useState<string | null>(null);
-  const [tab, setTab] = React.useState<AssetTab>("all");
-  const [selected, setSelected] = React.useState<MediaItem | null>(null);
-  const [open, setOpen] = React.useState(false);
-  const favoriteItems = useLocalWorkspaceStore((s) => s.favoriteItems);
-  const isFavorite = useLocalWorkspaceStore((s) => s.isFavorite);
-  const deletedWorkIds = useLocalWorkspaceStore((s) => s.deletedWorkIds);
-  const setFavorite = useLocalWorkspaceStore((s) => s.setFavorite);
-  const deleteWork = useLocalWorkspaceStore((s) => s.deleteWork);
-  const markDownloaded = useLocalWorkspaceStore((s) => s.markDownloaded);
+  const [error, setError] = React.useState<string | null>(null);
+  const [selectedFolder, setSelectedFolder] = React.useState("all");
+  const [folderDialogOpen, setFolderDialogOpen] = React.useState(false);
+  const [folderName, setFolderName] = React.useState("");
+  const [dragging, setDragging] = React.useState(false);
+  const uploadInputRef = React.useRef<HTMLInputElement | null>(null);
   const addNotification = useLocalWorkspaceStore((s) => s.addNotification);
 
   React.useEffect(() => {
     let alive = true;
-    const fallbackTimer = window.setTimeout(() => {
-      if (alive) setLoading(false);
-    }, 10000);
-
-    async function load() {
-      setLoadError(null);
-      try {
-        const [worksData, favsData] = await Promise.all([
-          listMyWorks(),
-          listMyFavorites(),
-        ]);
+    setLoading(true);
+    setError(null);
+    listAssets()
+      .then((nextLibrary) => {
+        if (alive) setLibrary(nextLibrary);
+      })
+      .catch((err) => {
         if (!alive) return;
-        setWorks(worksData);
-        setFavs(favsData);
-      } catch (err) {
-        if (!alive) return;
-        setWorks([]);
-        setFavs([]);
-        setLoadError(err instanceof Error ? err.message : "作品加载失败");
-      } finally {
+        setLibrary(EMPTY_LIBRARY);
+        setError(err instanceof Error ? err.message : "素材资产加载失败");
+      })
+      .finally(() => {
         if (alive) setLoading(false);
-      }
-    }
-
-    load();
+      });
     return () => {
       alive = false;
-      window.clearTimeout(fallbackTimer);
     };
   }, []);
 
-  const onOpen = (m: MediaItem) => {
-    setSelected(m);
-    setOpen(true);
-  };
-
-  const visibleWorks = React.useMemo(
-    () => works.filter((work) => !deletedWorkIds.includes(work.id)),
-    [deletedWorkIds, works]
-  );
-  const visibleFavs = React.useMemo(() => {
-    const merged = new Map<string, MediaItem>();
-    favs
-      .filter((item) => isFavorite(item))
-      .forEach((item) => merged.set(item.id, item));
-    Object.values(favoriteItems).forEach((item) => merged.set(item.id, item));
-    deletedWorkIds.forEach((id) => merged.delete(id));
-    return Array.from(merged.values());
-  }, [deletedWorkIds, favoriteItems, favs, isFavorite]);
-  const images = visibleWorks.filter((w) => w.type === "image");
-  const videos = visibleWorks.filter((w) => w.type === "video");
-  const audios = visibleWorks.filter((w) => w.type === "audio");
-  const favoriteIds = React.useMemo(
+  const folders = React.useMemo(
     () =>
-      new Set([
-        ...favs.filter((item) => isFavorite(item)).map((item) => item.id),
-        ...Object.keys(favoriteItems),
-      ]),
-    [favoriteItems, favs, isFavorite]
+      library.folders.map((folder) => ({
+        ...folder,
+        count: library.materials.filter((item) => item.folderId === folder.id).length,
+      })),
+    [library.folders, library.materials]
   );
+  const materials = library.materials;
+  const activeFolderId =
+    selectedFolder === "all"
+      ? folders[0]?.id
+      : selectedFolder;
+  const visibleMaterials =
+    selectedFolder === "all"
+      ? materials
+      : materials.filter((item) => item.folderId === selectedFolder);
 
-  const deleteItem = async (item: MediaItem) => {
+  const reloadLibrary = React.useCallback(async () => {
+    const nextLibrary = await listAssets();
+    setLibrary(nextLibrary);
+  }, []);
+
+  const createFolder = async () => {
+    const name = folderName.trim();
+    if (!name) return;
     try {
-      await deleteWorkRemote(item.id);
-      setWorks((items) => items.filter((work) => work.id !== item.id));
-      setFavs((items) => items.filter((work) => work.id !== item.id));
-      addNotification("作品已删除", item.prompt);
-      deleteWork(item.id);
-      if (selected?.id === item.id) {
-        setOpen(false);
-        setSelected(null);
-      }
+      const folder = await createAssetFolder({ name, kind: "folder" });
+      setLibrary((current) => ({
+        ...current,
+        folders: [folder, ...current.folders.filter((item) => item.id !== folder.id)],
+      }));
+      setSelectedFolder(folder.id);
+      addNotification("已新建文件夹", name);
+      setFolderName("");
+      setFolderDialogOpen(false);
     } catch {
-      addNotification("删除失败", "EntitleHub 删除接口返回失败，请稍后重试。");
+      addNotification("新建文件夹失败", "AiSaaS 文件夹接口返回失败，请稍后重试。");
     }
   };
 
-  const favoriteItem = async (item: MediaItem) => {
-    const currentlyFavorite = favoriteIds.has(item.id);
-    try {
-      const remoteWork = await favoriteWorkRemote(item.id, !currentlyFavorite);
-      const updated = remoteWork ?? {
-        ...item,
-        favoritedAt: currentlyFavorite ? null : Date.now(),
-      };
-      setWorks((items) =>
-        items.map((work) => (work.id === item.id ? { ...work, ...updated } : work))
-      );
-      setFavs((items) => {
-        if (currentlyFavorite) {
-          return items.filter((work) => work.id !== item.id);
-        }
-        const next = items.filter((work) => work.id !== item.id);
-        return [updated, ...next];
-      });
-      setFavorite(updated, !currentlyFavorite);
-      addNotification(
-        currentlyFavorite ? "已取消收藏" : "已加入收藏",
-        item.prompt
-      );
-    } catch {
-      addNotification(
-        currentlyFavorite ? "取消收藏失败" : "收藏失败",
-        "EntitleHub 收藏接口返回失败，请稍后重试。"
-      );
-    }
+  const assetTypeForFile = (file: File): AssetItem["kind"] => {
+    if (file.type.startsWith("audio/")) return "audio";
+    if (file.type.startsWith("video/")) return "video";
+    if (file.name.toLowerCase().endsWith(".safetensors")) return "style";
+    return "image";
   };
 
-  const downloadItem = async (item: MediaItem) => {
-    try {
-      const result = await downloadWorkRemote(item.id);
-      const nextItem = result.work ?? {
-        ...item,
-        downloadedAt: result.downloadedAt ?? Date.now(),
-      };
-      setWorks((items) =>
-        items.map((work) => (work.id === item.id ? { ...work, ...nextItem } : work))
-      );
-      await downloadMediaItem(nextItem, result.downloadUrl);
-      addNotification("作品已开始下载", item.prompt);
-      markDownloaded(item.id);
-    } catch {
-      addNotification("下载失败", "EntitleHub 下载登记失败，请稍后重试。");
-    }
-  };
-
-  const exportList = async () => {
-    const payload = visibleWorks.map((item) => ({
-      id: item.id,
-      type: item.type,
-      prompt: item.prompt,
-      fullPrompt: item.fullPrompt,
-      model: item.model,
-      aspectRatio: item.aspectRatio,
-      resolution: item.resolution,
-      durationSec: item.durationSec,
-      createdAt: new Date(item.createdAt).toISOString(),
-    }));
-    const blob = new Blob([JSON.stringify(payload, null, 2)], {
-      type: "application/json;charset=utf-8",
+  const uploadRemoteFile = async (file: File, folderId?: string) => {
+    await uploadAssetFile({
+      file,
+      folderId,
+      assetType: assetTypeForFile(file),
+      assetRole: "reference",
     });
-    const url = URL.createObjectURL(blob);
-    const anchor = document.createElement("a");
-    anchor.href = url;
-    anchor.download = `shadowweave-works-${Date.now()}.json`;
-    document.body.appendChild(anchor);
-    anchor.click();
-    anchor.remove();
-    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
-    addNotification("作品清单已导出", `共导出 ${payload.length} 条作品元数据。`);
   };
 
-  const copyAllPrompts = async () => {
-    await navigator.clipboard.writeText(visibleWorks.map((item) => item.fullPrompt ?? item.prompt).join("\n\n---\n\n"));
-    addNotification("提示词已复制", `共复制 ${visibleWorks.length} 条作品提示词。`);
+  const uploadFiles = async (fileList: FileList | File[]) => {
+    const candidates = Array.from(fileList);
+    const oversized = candidates.filter((file) => file.size > MAX_LOCAL_ASSET_BYTES);
+    const files = candidates.filter((file) => {
+      const name = file.name.toLowerCase();
+      const supported =
+        file.type.startsWith("image/") ||
+        file.type.startsWith("video/") ||
+        file.type.startsWith("audio/") ||
+        name.endsWith(".webp") ||
+        name.endsWith(".safetensors");
+      return file.size <= MAX_LOCAL_ASSET_BYTES && supported;
+    });
+    if (oversized.length > 0) {
+      addNotification(
+        "部分素材超过大小限制",
+        `已跳过 ${oversized.length} 个超过 ${MAX_LOCAL_ASSET_MB}MB 的文件。`
+      );
+    }
+    if (files.length === 0) {
+      addNotification("没有可上传的素材", "支持图片、视频、音频、WebP 与 safetensors 文件。");
+      return;
+    }
+
+    const folderId =
+      selectedFolder !== "all" && activeFolderId ? activeFolderId : undefined;
+
+    try {
+      await Promise.all(files.map((file) => uploadRemoteFile(file, folderId)));
+      await reloadLibrary();
+      addNotification("素材已上传", `新增 ${files.length} 个素材`);
+    } catch {
+      addNotification("素材上传失败", "AiSaaS 上传接口返回失败，请稍后重试。");
+    }
   };
 
-  const tabItems: Array<{
-    value: AssetTab;
-    label: string;
-    icon?: React.ElementType;
-    count: number;
-  }> = [
-    { value: "all", label: "全部", icon: LayoutGrid, count: visibleWorks.length },
-    { value: "image", label: "图片", count: images.length },
-    { value: "video", label: "视频", count: videos.length },
-    { value: "audio", label: "音频", count: audios.length },
-    { value: "fav", label: "收藏", icon: Grid3x3, count: visibleFavs.length },
-  ];
-
-  const currentItems =
-    tab === "image"
-      ? images
-      : tab === "video"
-        ? videos
-        : tab === "audio"
-          ? audios
-        : tab === "fav"
-          ? visibleFavs
-          : visibleWorks;
+  const deleteMaterial = async (item: AssetItem) => {
+    try {
+      await deleteAssetRemote(item.id);
+      setLibrary((current) => ({
+        ...current,
+        materials: current.materials.filter((material) => material.id !== item.id),
+      }));
+      addNotification("素材已删除", item.name);
+    } catch {
+      addNotification("素材删除失败", "请稍后重试，或确认 AiSaaS 素材删除接口配置。");
+    }
+  };
 
   return (
     <PageContainer>
-      <PageHeader title="我的作品" description="管理你生成的全部图片、视频与音频">
+      <PageHeader title="素材资产库" description="集中管理参考图、参考视频、参考音频、首尾帧与品牌资产">
         <Button
           variant="outline"
           size="sm"
-          onClick={() => void exportList()}
-          disabled={visibleWorks.length === 0}
+          onClick={() => setFolderDialogOpen(true)}
         >
-          <Download className="h-4 w-4" /> 批量导出
+          <FolderPlus className="h-4 w-4" /> 新建文件夹
         </Button>
         <Button
-          variant="outline"
+          variant="brand"
           size="sm"
-          onClick={() => void copyAllPrompts()}
-          disabled={visibleWorks.length === 0}
+          onClick={() => uploadInputRef.current?.click()}
         >
-          <Copy className="h-4 w-4" /> 复制提示词
+          <Upload className="h-4 w-4" /> 上传素材
         </Button>
+        <input
+          ref={uploadInputRef}
+          type="file"
+          multiple
+          className="hidden"
+          accept="image/*,video/*,audio/*,.webp,.safetensors"
+          onChange={(event) => {
+            if (event.currentTarget.files) {
+              void uploadFiles(event.currentTarget.files);
+              event.currentTarget.value = "";
+            }
+          }}
+        />
       </PageHeader>
 
-      <div className="mt-6">
-        <div className="inline-flex h-10 items-center justify-center rounded-lg bg-muted/60 p-1 text-muted-foreground">
-          {tabItems.map((item) => {
-            const Icon = item.icon;
-            const active = tab === item.value;
-            return (
-              <button
-                key={item.value}
-                type="button"
-                onClick={() => setTab(item.value)}
-                className={cn(
-                  "inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                  active
-                    ? "bg-background text-foreground shadow-sm"
-                    : "hover:text-foreground"
-                )}
-              >
-                {Icon && <Icon className="h-4 w-4" />}
-                {item.label} {!loading && `(${item.count})`}
-              </button>
-            );
-          })}
+      {/* 文件夹 */}
+      <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {folders.map((f) => {
+          const Icon =
+            FOLDER_ICONS[f.kind as keyof typeof FOLDER_ICONS] ?? Folder;
+          return (
+            <button
+              key={f.id}
+              onClick={() => setSelectedFolder(f.id)}
+              className={cn(
+                "flex items-center gap-3 rounded-xl border p-4 text-left transition-colors",
+                selectedFolder === f.id
+                  ? "border-primary/50 bg-primary/10"
+                  : "border-border/60 bg-card/40 hover:border-primary/30"
+              )}
+            >
+              <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
+                <Icon className="h-5 w-5" />
+              </span>
+              <div className="min-w-0">
+                <p className="truncate text-sm font-medium">{f.name}</p>
+                <p className="text-xs text-muted-foreground">
+                  {f.count} 个文件
+                </p>
+              </div>
+            </button>
+          );
+        })}
+      </div>
+      {!loading && folders.length === 0 && (
+        <div className="mt-4 rounded-xl border border-border/60 bg-card/30 px-4 py-8 text-center text-sm text-muted-foreground">
+          还没有素材文件夹。上传素材时会自动创建文件夹，也可以先新建文件夹。
         </div>
+      )}
+      {!loading && error && (
+        <div className="mt-4 rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+          素材资产加载失败，当前显示空素材库。
+        </div>
+      )}
+      {loading && (
+        <div className="mt-4 rounded-xl border border-border/60 bg-card/40 px-4 py-3 text-sm text-muted-foreground">
+          正在加载素材资产…
+        </div>
+      )}
 
-        <div className="mt-4">
-          {loadError && !loading ? (
-            <div className="py-20 text-center text-sm text-destructive">
-              我的作品加载失败：{loadError}
-            </div>
-          ) : (
-            <Grid
-              items={currentItems}
-              loading={loading}
-              onOpen={onOpen}
-              onDelete={deleteItem}
-              onFavorite={favoriteItem}
-              onDownload={downloadItem}
-              favoriteIds={favoriteIds}
-            />
+      {/* 上传区 */}
+      <button
+        onClick={() => uploadInputRef.current?.click()}
+        onDragOver={(event) => {
+          event.preventDefault();
+          setDragging(true);
+        }}
+        onDragLeave={() => setDragging(false)}
+        onDrop={(event) => {
+          event.preventDefault();
+          setDragging(false);
+          void uploadFiles(event.dataTransfer.files);
+        }}
+        className={cn(
+          "mt-6 flex w-full flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-border bg-background/40 py-10 transition-colors",
+          dragging
+            ? "border-primary bg-primary/10"
+            : "hover:border-primary/50 hover:bg-primary/5"
+        )}
+      >
+        <span className="grid h-12 w-12 place-items-center rounded-full bg-primary/10 text-primary">
+          <Upload className="h-5 w-5" />
+        </span>
+        <p className="text-sm font-medium">拖拽文件到此处，或点击上传</p>
+        <p className="text-xs text-muted-foreground">
+          支持 JPG / PNG / WebP / MP4 / MP3 / WAV，单文件最大 {MAX_LOCAL_ASSET_MB}MB
+        </p>
+      </button>
+
+      {/* 素材网格 */}
+      <div className="mt-8">
+        <div className="mb-4 flex items-center gap-2">
+          <h2 className="text-sm font-semibold">全部素材</h2>
+          <Badge variant="muted">{visibleMaterials.length}</Badge>
+          {selectedFolder !== "all" && (
+            <button
+              onClick={() => setSelectedFolder("all")}
+              className="ml-auto text-xs text-primary hover:underline"
+            >
+              查看全部
+            </button>
           )}
         </div>
+        {visibleMaterials.length === 0 ? (
+          <div className="rounded-xl border border-border/60 bg-card/30 py-14 text-center text-sm text-muted-foreground">
+            暂无素材
+          </div>
+        ) : (
+          <div className={TILE_GRID}>
+            {visibleMaterials.map((m) => (
+              <div
+                key={m.id}
+                className="group overflow-hidden rounded-xl border border-border/60 bg-card/40"
+              >
+                <div className="relative">
+                  <GradientThumb
+                    seed={m.seed}
+                    src={m.url}
+                    alt={m.name}
+                    mediaType={
+                      m.kind === "audio" ? "audio" : m.kind === "video" ? "video" : "image"
+                    }
+                    className="aspect-square w-full"
+                  >
+                    {m.kind === "audio" && (
+                      <span className="absolute inset-0 grid place-items-center text-white">
+                        <span className="grid h-11 w-11 place-items-center rounded-full bg-black/35 backdrop-blur">
+                          <Music2 className="h-5 w-5" />
+                        </span>
+                      </span>
+                    )}
+                  </GradientThumb>
+                  <button
+                    type="button"
+                    onClick={() => void deleteMaterial(m)}
+                    className="absolute right-2 top-2 grid h-7 w-7 place-items-center rounded-lg bg-black/35 text-white opacity-0 backdrop-blur transition-opacity hover:bg-destructive group-hover:opacity-100"
+                    title="删除素材"
+                    aria-label="删除素材"
+                  >
+                    <Trash2 className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+                <div className="flex items-center justify-between gap-2 px-2 py-1.5">
+                  <p className="truncate text-xs text-muted-foreground">{m.name}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
-      <MediaDetailDialog item={selected} open={open} onOpenChange={setOpen} />
+      <Dialog open={folderDialogOpen} onOpenChange={setFolderDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>新建文件夹</DialogTitle>
+            <DialogDescription>
+              文件夹会创建到 AiSaaS 素材库。
+            </DialogDescription>
+          </DialogHeader>
+          <Input
+            autoFocus
+            value={folderName}
+            onChange={(event) => setFolderName(event.currentTarget.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") void createFolder();
+            }}
+            placeholder="例如：品牌参考图"
+          />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setFolderDialogOpen(false)}>
+              取消
+            </Button>
+            <Button variant="brand" onClick={() => void createFolder()} disabled={!folderName.trim()}>
+              创建
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </PageContainer>
   );
 }

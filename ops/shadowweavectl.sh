@@ -17,9 +17,9 @@ FRONTEND_HOST="${SHADOWWEAVE_FRONTEND_HOST:-127.0.0.1}"
 FRONTEND_PORT="${SHADOWWEAVE_FRONTEND_PORT:-3000}"
 PUBLIC_API_BASE="${NEXT_PUBLIC_API_BASE_URL-}"
 DEMO_FALLBACK="${NEXT_PUBLIC_DEMO_FALLBACK:-0}"
-ENTITLEHUB_BASE_URL="${ENTITLEHUB_BASE_URL:-https://ht.0000.icu}"
-ENTITLEHUB_SERVER_KEY="${ENTITLEHUB_SERVER_KEY:-}"
-ENTITLEHUB_MOCK="${ENTITLEHUB_MOCK:-}"
+AISAAS_BASE_URL="${AISAAS_BASE_URL:-https://ht.0000.icu}"
+AISAAS_SERVER_KEY="${AISAAS_SERVER_KEY:-}"
+AISAAS_MOCK="${AISAAS_MOCK:-}"
 SESSION_COOKIE="${SHADOWWEAVE_SESSION_COOKIE:-shadowweave_session}"
 SESSION_TTL_SECONDS="${SHADOWWEAVE_SESSION_TTL_SECONDS:-604800}"
 DOMAIN="${SHADOWWEAVE_DOMAIN:-_}"
@@ -123,33 +123,33 @@ clone_or_update_repo() {
   fi
 }
 
-resolve_entitlehub_mode() {
-  if [[ -z "$ENTITLEHUB_SERVER_KEY" && -t 0 && "${ENTITLEHUB_MOCK,,}" != "true" && "${ENTITLEHUB_MOCK}" != "1" ]]; then
-    printf 'EntitleHub Server Key (leave empty to install mock mode): '
-    read -r -s ENTITLEHUB_SERVER_KEY
+resolve_aisaas_mode() {
+  if [[ -z "$AISAAS_SERVER_KEY" && -t 0 && "${AISAAS_MOCK,,}" != "true" && "${AISAAS_MOCK}" != "1" ]]; then
+    printf 'AiSaaS Server Key (leave empty to install mock mode): '
+    read -r -s AISAAS_SERVER_KEY
     printf '\n'
   fi
 
-  if [[ -z "$ENTITLEHUB_MOCK" ]]; then
-    if [[ -n "$ENTITLEHUB_SERVER_KEY" ]]; then
-      ENTITLEHUB_MOCK="false"
+  if [[ -z "$AISAAS_MOCK" ]]; then
+    if [[ -n "$AISAAS_SERVER_KEY" ]]; then
+      AISAAS_MOCK="false"
     else
-      ENTITLEHUB_MOCK="true"
+      AISAAS_MOCK="true"
     fi
   fi
 }
 
 write_env_files() {
-  resolve_entitlehub_mode
+  resolve_aisaas_mode
   mkdir -p "$CONFIG_DIR"
   chmod 750 "$CONFIG_DIR"
 
   cat >"$CONFIG_DIR/backend.env" <<EOF
 HOST=${BACKEND_HOST}
 PORT=${BACKEND_PORT}
-ENTITLEHUB_BASE_URL=${ENTITLEHUB_BASE_URL}
-ENTITLEHUB_SERVER_KEY=${ENTITLEHUB_SERVER_KEY}
-ENTITLEHUB_MOCK=${ENTITLEHUB_MOCK}
+AISAAS_BASE_URL=${AISAAS_BASE_URL}
+AISAAS_SERVER_KEY=${AISAAS_SERVER_KEY}
+AISAAS_MOCK=${AISAAS_MOCK}
 SHADOWWEAVE_SESSION_COOKIE=${SESSION_COOKIE}
 SHADOWWEAVE_SESSION_TTL_SECONDS=${SESSION_TTL_SECONDS}
 RUST_LOG=shadowweave_backend=info,backend=info,tower_http=info
@@ -354,8 +354,8 @@ Common env:
   SHADOWWEAVE_INSTALL_DIR=/opt/shadowweave
   SHADOWWEAVE_STATE_DIR=/var/lib/shadowweave
   SHADOWWEAVE_DOMAIN=example.com
-  ENTITLEHUB_BASE_URL=https://ht.0000.icu
-  ENTITLEHUB_SERVER_KEY=ehsk_xxx
+  AISAAS_BASE_URL=https://ht.0000.icu
+  AISAAS_SERVER_KEY=aissk_xxx
   NEXT_PUBLIC_API_BASE_URL=        # empty means same-origin /api through nginx
   SHADOWWEAVE_SKIP_NGINX=1
 EOF

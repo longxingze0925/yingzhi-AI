@@ -108,7 +108,7 @@ export function MediaDetailDialog({
 
   const editWithReference = () => {
     if (!item.assetId) {
-      addNotification("无法编辑", "这个作品没有关联 EntitleHub 素材，不能自动填入参考。");
+      addNotification("无法编辑", "这个作品没有关联 AiSaaS 素材，不能自动填入参考。");
       return;
     }
     const target =
@@ -161,7 +161,7 @@ export function MediaDetailDialog({
       setDownloaded(true);
       setTimeout(() => setDownloaded(false), 1600);
     } catch {
-      addNotification("下载失败", "EntitleHub 下载登记失败，请稍后重试。");
+      addNotification("下载失败", "AiSaaS 下载登记失败，请稍后重试。");
     } finally {
       setBusyAction(null);
     }
@@ -176,7 +176,7 @@ export function MediaDetailDialog({
     } catch {
       addNotification(
         isFavorite ? "取消收藏失败" : "收藏失败",
-        "EntitleHub 收藏接口返回失败，请稍后重试。"
+        "AiSaaS 收藏接口返回失败，请稍后重试。"
       );
     } finally {
       setBusyAction(null);
@@ -196,7 +196,7 @@ export function MediaDetailDialog({
         addNotification("作品已发布到灵感广场", item.prompt);
       }
     } catch {
-      addNotification("发布状态更新失败", "请稍后重试，或确认 EntitleHub 发布接口配置。");
+      addNotification("发布状态更新失败", "请稍后重试，或确认 AiSaaS 发布接口配置。");
     } finally {
       setBusyAction(null);
     }

@@ -55,7 +55,7 @@ pub struct UserDto {
     pub plan: String,
     pub credits: i64,
     pub credits_total: i64,
-    pub entitlehub_customer_id: String,
+    pub aisaas_customer_id: String,
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -121,7 +121,7 @@ pub struct GenerationJobDto {
     pub id: String,
     #[serde(skip)]
     pub customer_id: Option<String>,
-    pub entitlehub_job_id: Option<String>,
+    pub aisaas_job_id: Option<String>,
     #[serde(rename = "type")]
     pub media_type: MediaType,
     pub status: JobStatus,

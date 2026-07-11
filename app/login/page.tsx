@@ -2,13 +2,12 @@
 
 import * as React from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, Check, Mail, Lock, Smartphone } from "lucide-react";
+import { ArrowRight, Check, Mail } from "lucide-react";
 import { Logo } from "@/components/brand/logo";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { GradientThumb } from "@/components/brand/gradient-thumb";
 import { GALLERY } from "@/data/mock/gallery";
 import { loginWithPassword } from "@/lib/api/client";
@@ -24,7 +23,6 @@ const HIGHLIGHTS = [
 
 export default function LoginPage() {
   const router = useRouter();
-  const [mode, setMode] = React.useState<"login" | "register">("login");
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [submitting, setSubmitting] = React.useState(false);
@@ -32,10 +30,6 @@ export default function LoginPage() {
   const refreshCurrentUser = useCurrentUserStore((s) => s.refresh);
 
   const submitLogin = React.useCallback(async () => {
-    if (mode !== "login") {
-      setError("注册入口稍后接入 EntitleHub 注册接口，请先使用已有账号登录。");
-      return;
-    }
     const nextEmail = email.trim();
     if (!nextEmail || !password) {
       setError("请输入邮箱和密码");
@@ -54,7 +48,7 @@ export default function LoginPage() {
     } finally {
       setSubmitting(false);
     }
-  }, [email, mode, password, refreshCurrentUser, router]);
+  }, [email, password, refreshCurrentUser, router]);
 
   return (
     <div className="flex min-h-screen">
@@ -112,85 +106,43 @@ export default function LoginPage() {
         <div className="flex flex-1 items-center justify-center px-6 pb-16">
           <div className="w-full max-w-sm">
             <h1 className="text-2xl font-bold tracking-tight">
-              {mode === "login" ? "欢迎回来" : "创建账号"}
+              欢迎回来
             </h1>
             <p className="mt-2 text-sm text-muted-foreground">
-              {mode === "login"
-                ? "登录以继续你的创作之旅"
-                : "免费注册，立即获得 100 算力点"}
+              登录以继续你的创作之旅
             </p>
 
-            <Tabs defaultValue="email" className="mt-8">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="email">
-                  <Mail className="h-4 w-4" /> 邮箱
-                </TabsTrigger>
-                <TabsTrigger value="phone">
-                  <Smartphone className="h-4 w-4" /> 手机号
-                </TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="email" className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">邮箱地址</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="you@example.com"
-                    value={email}
-                    onChange={(event) => setEmail(event.currentTarget.value)}
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter") void submitLogin();
-                    }}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <Label htmlFor="pwd">密码</Label>
-                    {mode === "login" && (
-                      <button
-                        disabled
-                        title="找回密码暂未开放"
-                        className="text-xs text-primary disabled:cursor-not-allowed disabled:opacity-50"
-                      >
-                        忘记密码？
-                      </button>
-                    )}
-                  </div>
-                  <Input
-                    id="pwd"
-                    type="password"
-                    placeholder="请输入密码"
-                    value={password}
-                    onChange={(event) => setPassword(event.currentTarget.value)}
-                    onKeyDown={(event) => {
-                      if (event.key === "Enter") void submitLogin();
-                    }}
-                  />
-                </div>
-              </TabsContent>
-
-              <TabsContent value="phone" className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="phone">手机号</Label>
-                  <Input id="phone" type="tel" placeholder="请输入手机号" />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="code">验证码</Label>
-                  <div className="flex gap-2">
-                    <Input id="code" placeholder="6 位验证码" />
-                    <Button
-                      variant="outline"
-                      className="shrink-0"
-                      disabled
-                      title="短信验证码暂未开放"
-                    >
-                      获取验证码
-                    </Button>
-                  </div>
-                </div>
-              </TabsContent>
-            </Tabs>
+            <div className="mt-8 space-y-4">
+              <div className="inline-flex h-9 items-center gap-2 rounded-lg border border-border bg-card/40 px-3 text-sm font-medium text-muted-foreground">
+                <Mail className="h-4 w-4" /> 邮箱登录
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="email">邮箱地址</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="you@example.com"
+                  value={email}
+                  onChange={(event) => setEmail(event.currentTarget.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") void submitLogin();
+                  }}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="pwd">密码</Label>
+                <Input
+                  id="pwd"
+                  type="password"
+                  placeholder="请输入密码"
+                  value={password}
+                  onChange={(event) => setPassword(event.currentTarget.value)}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") void submitLogin();
+                  }}
+                />
+              </div>
+            </div>
 
             {error && (
               <p className="mt-4 rounded-lg border border-destructive/20 bg-destructive/10 px-3 py-2 text-sm text-destructive">
@@ -205,41 +157,9 @@ export default function LoginPage() {
               disabled={submitting}
               onClick={() => void submitLogin()}
             >
-              {submitting ? "正在登录" : mode === "login" ? "登录" : "注册并开始"}
+              {submitting ? "正在登录" : "登录"}
               <ArrowRight className="h-4 w-4" />
             </Button>
-
-            {/* 第三方登录 */}
-            <div className="my-6 flex items-center gap-3 text-xs text-muted-foreground">
-              <span className="h-px flex-1 bg-border" />
-              或使用以下方式
-              <span className="h-px flex-1 bg-border" />
-            </div>
-            <div className="grid grid-cols-3 gap-3">
-              {["微信", "Google", "GitHub"].map((p) => (
-                <Button
-                  key={p}
-                  variant="outline"
-                  className="w-full"
-                  disabled
-                  title={`${p} 登录暂未开放`}
-                >
-                  {p}
-                </Button>
-              ))}
-            </div>
-
-            <p className="mt-8 text-center text-sm text-muted-foreground">
-              {mode === "login" ? "还没有账号？" : "已有账号？"}
-              <button
-                onClick={() =>
-                  setMode((m) => (m === "login" ? "register" : "login"))
-                }
-                className="ml-1 font-medium text-primary hover:underline"
-              >
-                {mode === "login" ? "立即注册" : "去登录"}
-              </button>
-            </p>
 
             <p className="mt-6 text-center text-xs text-muted-foreground/70">
               继续即表示同意

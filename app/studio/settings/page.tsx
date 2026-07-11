@@ -10,8 +10,6 @@ import {
   Check,
   Copy,
   Sparkles,
-  Upload,
-  Lock,
 } from "lucide-react";
 import { PageHeader } from "@/components/studio/page-header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -94,7 +92,7 @@ function UpgradeDialog() {
         </DialogHeader>
         {!hasPlans ? (
           <div className="rounded-lg border border-border/60 bg-muted/40 px-4 py-8 text-center text-sm text-muted-foreground">
-            {loading ? "正在读取套餐..." : "EntitleHub 暂未开放 Web 套餐购买接口。"}
+            {loading ? "正在读取套餐..." : "AiSaaS 暂未开放 Web 套餐购买接口。"}
           </div>
         ) : (
           <div className="grid gap-4 sm:grid-cols-3">
@@ -244,14 +242,6 @@ export default function SettingsPage() {
                   <AvatarFallback>{profileName.slice(0, 1)}</AvatarFallback>
                 </Avatar>
                 <div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => avatarInputRef.current?.click()}
-                    disabled
-                  >
-                    <Upload className="h-4 w-4" /> 更换头像
-                  </Button>
                   <input
                     ref={avatarInputRef}
                     type="file"
@@ -262,8 +252,8 @@ export default function SettingsPage() {
                       event.currentTarget.value = "";
                     }}
                   />
-                  <p className="mt-1.5 text-xs text-muted-foreground">
-                    资料保存接口暂未开放，当前仅展示 EntitleHub 登录资料
+                  <p className="text-xs text-muted-foreground">
+                    当前仅展示 AiSaaS 登录资料
                   </p>
                 </div>
               </div>
@@ -287,11 +277,6 @@ export default function SettingsPage() {
                     onChange={(event) => setProfileEmail(event.currentTarget.value)}
                   />
                 </div>
-              </div>
-              <div className="flex justify-end">
-                <Button variant="brand" disabled>
-                  <Lock className="h-4 w-4" /> 等待后台接口
-                </Button>
               </div>
             </CardContent>
           </Card>
@@ -336,7 +321,7 @@ export default function SettingsPage() {
                     </span>
                   </div>
                   <p className="mt-3 text-sm text-muted-foreground">
-                    套餐状态以 EntitleHub 返回为准
+                    套餐状态以 AiSaaS 返回为准
                   </p>
                 </div>
                 <UpgradeDialog />
@@ -357,9 +342,6 @@ export default function SettingsPage() {
                   <p className="text-xs text-muted-foreground">
                     每月 1 日重置 · 剩余 {creditPct}%
                   </p>
-                  <Button variant="outline" size="sm" disabled>
-                    等待购买接口
-                  </Button>
                 </div>
               </div>
             </CardContent>

@@ -3,17 +3,18 @@ use axum::{
     body::Bytes,
     extract::{DefaultBodyLimit, Path, Query, State},
     http::{
-        header::{COOKIE, SET_COOKIE},
         HeaderMap, HeaderValue,
+        header::{CONTENT_TYPE, COOKIE, SET_COOKIE},
     },
     response::IntoResponse,
     routing::{get, post},
 };
 use serde::Deserialize;
+use tracing::info;
 use uuid::Uuid;
 
 use crate::{
-    entitlehub::{AssetListFilters, EntitleHubJob, map_entitlehub_status},
+    aisaas::{AiSaaSJob, AssetListFilters, map_aisaas_status},
     error::{ApiError, ApiResult},
     models::{
         ActionResponse, ApiKeyResponse, AssetFolderDto, AssetFolderResponse, AssetItemDto,
@@ -49,6 +50,7 @@ pub fn router(state: AppState) -> Router {
             "/api/assets/upload-file",
             post(upload_asset_file).layer(DefaultBodyLimit::max(64 * 1024 * 1024)),
         )
+        .route("/api/assets/:id/download-file", get(download_asset_file))
         .route("/api/assets/:id", get(get_asset).delete(delete_asset))
         .route(
             "/api/generation/jobs",
@@ -86,10 +88,7 @@ async fn login(
         });
     }
 
-    let customer = state
-        .entitlehub
-        .login_customer(email, &input.password)
-        .await?;
+    let customer = state.aisaas.login_customer(email, &input.password).await?;
     let session = state
         .create_session(customer.customer_id, customer.email, customer.name)
         .await;
@@ -117,10 +116,7 @@ async fn auth_me(
     }))
 }
 
-async fn logout(
-    State(state): State<AppState>,
-    headers: HeaderMap,
-) -> ApiResult<impl IntoResponse> {
+async fn logout(State(state): State<AppState>, headers: HeaderMap) -> ApiResult<impl IntoResponse> {
     if let Some(session_id) = session_id_from_headers(&state, &headers) {
         state.remove_session(&session_id).await;
     }
@@ -138,16 +134,28 @@ async fn logout(
 }
 
 async fn me(State(state): State<AppState>, headers: HeaderMap) -> ApiResult<Json<UserResponse>> {
-    let user = if state.entitlehub.is_mock() {
+    let user = if state.aisaas.is_mock() {
         current_session(&state, &headers)
             .await
             .map(|session| state.user_from_session(&session))
             .unwrap_or_else(|| state.demo_user())
     } else {
         let session = require_session(&state, &headers).await?;
-        let profile = state.entitlehub.get_customer_profile(&session.customer_id).await.ok();
-        let balance = state.entitlehub.get_customer_balance(&session.customer_id).await.ok();
-        let plan = state.entitlehub.get_customer_plan(&session.customer_id).await.ok();
+        let profile = state
+            .aisaas
+            .get_customer_profile(&session.customer_id)
+            .await
+            .ok();
+        let balance = state
+            .aisaas
+            .get_customer_balance(&session.customer_id)
+            .await
+            .ok();
+        let plan = state
+            .aisaas
+            .get_customer_plan(&session.customer_id)
+            .await
+            .ok();
         let mut user = state.user_from_session(&session);
         if let Some(profile) = profile {
             user.id = profile.customer_id;
@@ -160,7 +168,9 @@ async fn me(State(state): State<AppState>, headers: HeaderMap) -> ApiResult<Json
         }
         if let Some(balance) = balance {
             user.credits = balance.available_minor;
-            user.credits_total = balance.balance_minor.max(balance.available_minor + balance.held_minor);
+            user.credits_total = balance
+                .balance_minor
+                .max(balance.available_minor + balance.held_minor);
         }
         if let Some(plan) = plan {
             user.plan = plan.name.unwrap_or_else(|| "未订阅".to_string());
@@ -173,11 +183,14 @@ async fn me(State(state): State<AppState>, headers: HeaderMap) -> ApiResult<Json
     Ok(Json(UserResponse { user }))
 }
 
-async fn usage(State(state): State<AppState>, headers: HeaderMap) -> ApiResult<Json<UsageResponse>> {
-    if !state.entitlehub.is_mock() {
+async fn usage(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+) -> ApiResult<Json<UsageResponse>> {
+    if !state.aisaas.is_mock() {
         let session = require_session(&state, &headers).await?;
         let upstream = state
-            .entitlehub
+            .aisaas
             .get_customer_usage(&session.customer_id)
             .await
             .unwrap_or_default();
@@ -274,8 +287,11 @@ async fn usage(State(state): State<AppState>, headers: HeaderMap) -> ApiResult<J
     }))
 }
 
-async fn api_key(State(state): State<AppState>, headers: HeaderMap) -> ApiResult<Json<ApiKeyResponse>> {
-    if !state.entitlehub.is_mock() {
+async fn api_key(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+) -> ApiResult<Json<ApiKeyResponse>> {
+    if !state.aisaas.is_mock() {
         require_session(&state, &headers).await?;
         return Ok(Json(ApiKeyResponse {
             masked_key: "暂未开放".to_string(),
@@ -290,14 +306,15 @@ async fn api_key(State(state): State<AppState>, headers: HeaderMap) -> ApiResult
     }))
 }
 
-async fn billing_plans(State(state): State<AppState>) -> Json<PricingPlansResponse> {
-    if !state.entitlehub.is_mock() {
-        return Json(PricingPlansResponse { plans: vec![] });
+async fn billing_plans(State(state): State<AppState>) -> ApiResult<Json<PricingPlansResponse>> {
+    if !state.aisaas.is_mock() {
+        let plans = state.aisaas.list_pricing_plans().await?;
+        return Ok(Json(PricingPlansResponse { plans }));
     }
 
-    Json(PricingPlansResponse {
+    Ok(Json(PricingPlansResponse {
         plans: demo_pricing_plans(),
-    })
+    }))
 }
 
 async fn current_session(state: &AppState, headers: &HeaderMap) -> Option<UserSession> {
@@ -315,9 +332,7 @@ async fn require_session(state: &AppState, headers: &HeaderMap) -> ApiResult<Use
 }
 
 fn session_id_from_headers(state: &AppState, headers: &HeaderMap) -> Option<String> {
-    let cookie = headers
-        .get(COOKIE)
-        .and_then(|value| value.to_str().ok())?;
+    let cookie = headers.get(COOKIE).and_then(|value| value.to_str().ok())?;
     cookie.split(';').find_map(|part| {
         let mut parts = part.trim().splitn(2, '=');
         let name = parts.next()?.trim();
@@ -335,7 +350,7 @@ async fn request_customer_id(state: &AppState, headers: &HeaderMap) -> String {
         return session.customer_id;
     }
     headers
-        .get("x-entitlehub-customer-id")
+        .get("x-aisaas-customer-id")
         .and_then(|value| value.to_str().ok())
         .map(str::trim)
         .filter(|value| !value.is_empty())
@@ -344,10 +359,29 @@ async fn request_customer_id(state: &AppState, headers: &HeaderMap) -> String {
 }
 
 async fn require_customer_id(state: &AppState, headers: &HeaderMap) -> ApiResult<String> {
-    if state.entitlehub.is_mock() {
+    if state.aisaas.is_mock() {
         return Ok(request_customer_id(state, headers).await);
     }
     Ok(require_session(state, headers).await?.customer_id)
+}
+
+fn local_backend_url(state: &AppState, path: &str) -> String {
+    format!("http://{}{}", state.config.bind_addr, path)
+}
+
+fn asset_id_from_download_url(url: &str) -> Option<String> {
+    let marker = "/api/ai/assets/";
+    let start = url.find(marker)? + marker.len();
+    let asset_id = url[start..]
+        .split(['?', '#', '/'])
+        .next()
+        .unwrap_or_default()
+        .trim();
+    if asset_id.is_empty() {
+        None
+    } else {
+        Some(asset_id.to_string())
+    }
 }
 
 async fn gallery(
@@ -355,10 +389,12 @@ async fn gallery(
     headers: HeaderMap,
     Query(query): Query<ModelsQuery>,
 ) -> ApiResult<Json<WorksResponse>> {
-    if !state.entitlehub.is_mock() {
-        let customer_id = current_session(&state, &headers).await.map(|session| session.customer_id);
+    if !state.aisaas.is_mock() {
+        let customer_id = current_session(&state, &headers)
+            .await
+            .map(|session| session.customer_id);
         let works = state
-            .entitlehub
+            .aisaas
             .list_gallery(customer_id.as_deref(), query.media_type.clone())
             .await?;
         return Ok(Json(WorksResponse { works }));
@@ -375,9 +411,9 @@ async fn favorites(
     State(state): State<AppState>,
     headers: HeaderMap,
 ) -> ApiResult<Json<WorksResponse>> {
-    if !state.entitlehub.is_mock() {
+    if !state.aisaas.is_mock() {
         let customer_id = require_customer_id(&state, &headers).await?;
-        let works = state.entitlehub.list_works(&customer_id, None, true).await?;
+        let works = state.aisaas.list_works(&customer_id, None, true).await?;
         return Ok(Json(WorksResponse { works }));
     }
 
@@ -404,10 +440,10 @@ async fn assets(
     headers: HeaderMap,
     Query(query): Query<AssetsQuery>,
 ) -> ApiResult<Json<AssetsResponse>> {
-    if !state.entitlehub.is_mock() {
+    if !state.aisaas.is_mock() {
         let customer_id = require_customer_id(&state, &headers).await?;
         let assets = state
-            .entitlehub
+            .aisaas
             .list_assets(
                 &customer_id,
                 AssetListFilters {
@@ -446,8 +482,22 @@ async fn get_asset(
     Path(id): Path<String>,
 ) -> ApiResult<Json<AssetItemDto>> {
     let customer_id = require_customer_id(&state, &headers).await?;
-    let asset = state.entitlehub.get_asset(&customer_id, &id).await?;
+    let asset = state.aisaas.get_asset(&customer_id, &id).await?;
     Ok(Json(asset))
+}
+
+async fn download_asset_file(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+    Path(id): Path<String>,
+) -> ApiResult<impl IntoResponse> {
+    let _customer_id = require_customer_id(&state, &headers).await?;
+    let download = state.aisaas.download_asset(&id).await?;
+    let mut response_headers = HeaderMap::new();
+    if let Ok(content_type) = HeaderValue::from_str(&download.content_type) {
+        response_headers.insert(CONTENT_TYPE, content_type);
+    }
+    Ok((response_headers, download.bytes))
 }
 
 async fn create_asset_folder(
@@ -465,7 +515,7 @@ async fn create_asset_folder(
 
     let customer_id = require_customer_id(&state, &headers).await?;
     let folder = state
-        .entitlehub
+        .aisaas
         .create_asset_folder(
             &customer_id,
             &CreateAssetFolderRequest {
@@ -503,7 +553,7 @@ async fn create_asset_upload(
 
     let customer_id = require_customer_id(&state, &headers).await?;
     let upload = state
-        .entitlehub
+        .aisaas
         .create_asset_upload(&customer_id, &input)
         .await?;
     Ok(Json(AssetUploadResponse { upload }))
@@ -568,7 +618,7 @@ async fn upload_asset_file(
     };
     let customer_id = require_customer_id(&state, &headers).await?;
     let upload = state
-        .entitlehub
+        .aisaas
         .upload_asset_file(&customer_id, &input, bytes.to_vec())
         .await?;
     Ok(Json(upload))
@@ -580,12 +630,12 @@ async fn delete_asset(
     Path(id): Path<String>,
 ) -> ApiResult<Json<ActionResponse>> {
     let customer_id = require_customer_id(&state, &headers).await?;
-    state.entitlehub.delete_asset(&customer_id, &id).await?;
+    state.aisaas.delete_asset(&customer_id, &id).await?;
     Ok(Json(ActionResponse { ok: true }))
 }
 
 async fn styles(State(state): State<AppState>) -> Json<StylePresetsResponse> {
-    if !state.entitlehub.is_mock() {
+    if !state.aisaas.is_mock() {
         return Json(StylePresetsResponse { styles: vec![] });
     }
 
@@ -602,9 +652,13 @@ struct ModelsQuery {
 
 async fn models(
     State(state): State<AppState>,
+    headers: HeaderMap,
     Query(query): Query<ModelsQuery>,
 ) -> ApiResult<Json<ModelsResponse>> {
-    let mut data = state.entitlehub.list_models(None).await?;
+    let customer_id = current_session(&state, &headers)
+        .await
+        .map(|session| session.customer_id);
+    let mut data = state.aisaas.list_models(customer_id.as_deref()).await?;
     if let Some(media_type) = query.media_type {
         data.retain(|m| m.modality == media_type);
     }
@@ -651,24 +705,25 @@ async fn create_generation_job(
             .iter()
             .any(|asset| asset.role == "last_frame");
 
-    let job_id = Uuid::new_v4().to_string();
-    let idempotency_key = format!("shadowweave-{customer_id}-{job_id}-generate");
+    let request_id = Uuid::new_v4().to_string();
+    let idempotency_key = format!("shadowweave-{customer_id}-{request_id}-generate");
     let upstream_input = CreateGenerationJobRequest {
         resolution: resolution.clone(),
         duration_sec,
         ..input.clone()
     };
-    let entitlehub_job = state
-        .entitlehub
+    let aisaas_job = state
+        .aisaas
         .create_job(&customer_id, &idempotency_key, &upstream_input)
         .await?;
+    let job_id = aisaas_job.id.clone();
 
     let now = now_millis();
-    let status = map_entitlehub_status(&entitlehub_job.status);
-    let job = GenerationJobDto {
+    let status = map_aisaas_status(&aisaas_job.status);
+    let mut job = GenerationJobDto {
         id: job_id.clone(),
         customer_id: Some(customer_id.clone()),
-        entitlehub_job_id: Some(entitlehub_job.id),
+        aisaas_job_id: Some(job_id.clone()),
         media_type: input.media_type.clone(),
         status: status.clone(),
         progress: progress_for_status(&status),
@@ -682,8 +737,8 @@ async fn create_generation_job(
         results: vec![],
         error: None,
         duration_sec,
-        held_minor: entitlehub_job.held_minor.unwrap_or(0),
-        charged_minor: entitlehub_job.charged_minor.unwrap_or(0),
+        held_minor: aisaas_job.held_minor.unwrap_or(0),
+        charged_minor: aisaas_job.charged_minor.unwrap_or(0),
         idempotency_key,
         source_mode: Some(source_mode),
         reference_count: Some(reference_count),
@@ -691,21 +746,43 @@ async fn create_generation_job(
         has_last_frame: Some(has_last_frame),
     };
 
+    if job.status == JobStatus::Succeeded {
+        job.results = build_results_from_assets(&job, aisaas_job.assets, &customer_id)
+            .unwrap_or_else(|| build_results_from_urls(&job, aisaas_job.asset_urls));
+        if !job.results.is_empty() {
+            state.works.write().await.extend(job.results.clone());
+        }
+    }
+
     state.jobs.write().await.insert(job_id, job.clone());
+    info!(
+        shadowweave_user_id = %customer_id,
+        aisaas_customer_id = %customer_id,
+        aisaas_job_id = %job.id,
+        request_id = %request_id,
+        idempotency_key = %job.idempotency_key,
+        r#type = %media_type_label(&job.media_type),
+        model = %job.model,
+        status = ?job.status,
+        "shadowweave generation job created"
+    );
     Ok(Json(JobResponse { job }))
 }
 
-async fn list_jobs(State(state): State<AppState>, headers: HeaderMap) -> ApiResult<Json<JobsResponse>> {
-    let mut jobs: Vec<_> = if state.entitlehub.is_mock() {
+async fn list_jobs(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+) -> ApiResult<Json<JobsResponse>> {
+    let mut jobs: Vec<_> = if state.aisaas.is_mock() {
         state.jobs.read().await.values().cloned().collect()
     } else {
         let customer_id = require_customer_id(&state, &headers).await?;
         let mut upstream_jobs: Vec<_> = state
-            .entitlehub
+            .aisaas
             .list_jobs(&customer_id, None)
             .await?
             .into_iter()
-            .map(|job| generation_job_from_entitlehub(job, &customer_id))
+            .map(|job| generation_job_from_aisaas(job, &customer_id))
             .collect();
         let local_jobs: Vec<_> = state
             .jobs
@@ -719,7 +796,7 @@ async fn list_jobs(State(state): State<AppState>, headers: HeaderMap) -> ApiResu
         upstream_jobs
     };
 
-    if jobs.is_empty() && state.entitlehub.is_mock() {
+    if jobs.is_empty() && state.aisaas.is_mock() {
         jobs = demo_generation_jobs();
     }
     jobs.sort_by(|a, b| b.created_at.cmp(&a.created_at));
@@ -731,47 +808,71 @@ async fn get_job(
     headers: HeaderMap,
     Path(id): Path<String>,
 ) -> ApiResult<Json<JobResponse>> {
-    let mut job = {
-        let jobs = state.jobs.read().await;
-        jobs.get(&id).cloned().ok_or_else(|| ApiError::NotFound {
-            code: "JOB_NOT_FOUND",
-            message: "生成任务不存在".to_string(),
-        })?
+    let customer_id = if state.aisaas.is_mock() {
+        None
+    } else {
+        Some(require_customer_id(&state, &headers).await?)
     };
 
-    if state.entitlehub.is_mock() {
+    let job = {
+        let jobs = state.jobs.read().await;
+        jobs.get(&id).cloned()
+    };
+
+    if job.is_none() && !state.aisaas.is_mock() {
+        let customer_id = customer_id.as_deref().unwrap_or_default();
+        let upstream_job = state.aisaas.get_job(customer_id, &id).await?;
+        return Ok(Json(JobResponse {
+            job: generation_job_from_aisaas(upstream_job, customer_id),
+        }));
+    }
+
+    let mut job = job.ok_or_else(|| ApiError::NotFound {
+        code: "JOB_NOT_FOUND",
+        message: "生成任务不存在".to_string(),
+    })?;
+
+    if state.aisaas.is_mock() {
         advance_mock_job(&state, &mut job).await;
-    } else if let Some(entitlehub_job_id) = job.entitlehub_job_id.clone() {
-        let customer_id = require_customer_id(&state, &headers).await?;
-        if job.customer_id.as_deref() != Some(customer_id.as_str()) {
+    } else if let Some(aisaas_job_id) = job.aisaas_job_id.clone() {
+        let customer_id = customer_id.as_deref().unwrap_or_default();
+        if job.customer_id.as_deref() != Some(customer_id) {
             return Err(ApiError::NotFound {
                 code: "JOB_NOT_FOUND",
                 message: "生成任务不存在".to_string(),
             });
         }
-        let upstream_job = state
-            .entitlehub
-            .get_job(&customer_id, &entitlehub_job_id)
-            .await?;
-        apply_entitlehub_job(&state, &mut job, upstream_job).await;
+        let upstream_job = state.aisaas.get_job(&customer_id, &aisaas_job_id).await?;
+        apply_aisaas_job(&state, &mut job, upstream_job).await;
+        info!(
+            shadowweave_user_id = %customer_id,
+            aisaas_customer_id = %customer_id,
+            aisaas_job_id = %aisaas_job_id,
+            request_id = "",
+            idempotency_key = %job.idempotency_key,
+            r#type = %media_type_label(&job.media_type),
+            model = %job.model,
+            status = ?job.status,
+            "shadowweave generation job polled"
+        );
     }
 
-    state.jobs.write().await.insert(id, job.clone());
+    state.jobs.write().await.insert(job.id.clone(), job.clone());
     Ok(Json(JobResponse { job }))
 }
 
-async fn list_works(State(state): State<AppState>, headers: HeaderMap) -> ApiResult<Json<WorksResponse>> {
-    if !state.entitlehub.is_mock() {
+async fn list_works(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+) -> ApiResult<Json<WorksResponse>> {
+    if !state.aisaas.is_mock() {
         let customer_id = require_customer_id(&state, &headers).await?;
-        let works = state
-            .entitlehub
-            .list_works(&customer_id, None, false)
-            .await?;
+        let works = state.aisaas.list_works(&customer_id, None, false).await?;
         return Ok(Json(WorksResponse { works }));
     }
 
     let mut works = state.works.read().await.clone();
-    if works.is_empty() && state.entitlehub.is_mock() {
+    if works.is_empty() && state.aisaas.is_mock() {
         works = demo_my_works(&state);
     }
     works.sort_by(|a, b| b.created_at.cmp(&a.created_at));
@@ -783,16 +884,13 @@ async fn delete_work(
     headers: HeaderMap,
     Path(id): Path<String>,
 ) -> ApiResult<Json<ActionResponse>> {
-    if state.entitlehub.is_mock() {
+    if state.aisaas.is_mock() {
         state.works.write().await.retain(|work| work.id != id);
         return Ok(Json(ActionResponse { ok: true }));
     }
 
     let customer_id = require_customer_id(&state, &headers).await?;
-    state
-        .entitlehub
-        .delete_work(&customer_id, &id)
-        .await?;
+    state.aisaas.delete_work(&customer_id, &id).await?;
     Ok(Json(ActionResponse { ok: true }))
 }
 
@@ -801,7 +899,7 @@ async fn favorite_work(
     headers: HeaderMap,
     Path(id): Path<String>,
 ) -> ApiResult<Json<WorkResponse>> {
-    if state.entitlehub.is_mock() {
+    if state.aisaas.is_mock() {
         let mut works = state.works.write().await;
         let work = works.iter_mut().find(|work| work.id == id).map(|work| {
             work.favorited_at = Some(now_millis());
@@ -811,10 +909,7 @@ async fn favorite_work(
     }
 
     let customer_id = require_customer_id(&state, &headers).await?;
-    let work = state
-        .entitlehub
-        .favorite_work(&customer_id, &id, true)
-        .await?;
+    let work = state.aisaas.favorite_work(&customer_id, &id, true).await?;
     Ok(Json(WorkResponse { work }))
 }
 
@@ -823,7 +918,7 @@ async fn unfavorite_work(
     headers: HeaderMap,
     Path(id): Path<String>,
 ) -> ApiResult<Json<WorkResponse>> {
-    if state.entitlehub.is_mock() {
+    if state.aisaas.is_mock() {
         let mut works = state.works.write().await;
         let work = works.iter_mut().find(|work| work.id == id).map(|work| {
             work.favorited_at = None;
@@ -833,10 +928,7 @@ async fn unfavorite_work(
     }
 
     let customer_id = require_customer_id(&state, &headers).await?;
-    let work = state
-        .entitlehub
-        .favorite_work(&customer_id, &id, false)
-        .await?;
+    let work = state.aisaas.favorite_work(&customer_id, &id, false).await?;
     Ok(Json(WorkResponse { work }))
 }
 
@@ -845,7 +937,7 @@ async fn download_work(
     headers: HeaderMap,
     Path(id): Path<String>,
 ) -> ApiResult<Json<WorkDownloadResponse>> {
-    if state.entitlehub.is_mock() {
+    if state.aisaas.is_mock() {
         let now = now_millis();
         let mut works = state.works.write().await;
         let work = works.iter_mut().find(|work| work.id == id).map(|work| {
@@ -864,10 +956,25 @@ async fn download_work(
     }
 
     let customer_id = require_customer_id(&state, &headers).await?;
-    let download = state
-        .entitlehub
-        .download_work(&customer_id, &id)
-        .await?;
+    let mut download = state.aisaas.download_work(&customer_id, &id).await?;
+    let proxy_asset_id = asset_id_from_download_url(&download.download_url)
+        .or_else(|| {
+            download
+                .work
+                .as_ref()
+                .and_then(|work| work.url.as_deref())
+                .and_then(asset_id_from_download_url)
+        })
+        .or_else(|| {
+            download
+                .work
+                .as_ref()
+                .and_then(|work| work.asset_id.clone())
+        });
+    if let Some(asset_id) = proxy_asset_id {
+        download.download_url =
+            local_backend_url(&state, &format!("/api/assets/{asset_id}/download-file"));
+    }
     Ok(Json(download))
 }
 
@@ -877,7 +984,7 @@ async fn publish_work(
     Path(id): Path<String>,
     Json(input): Json<PublishWorkRequest>,
 ) -> ApiResult<Json<WorkResponse>> {
-    if state.entitlehub.is_mock() {
+    if state.aisaas.is_mock() {
         let mut works = state.works.write().await;
         let work = works.iter_mut().find(|work| work.id == id).map(|work| {
             work.visibility = Some(WorkVisibility::Gallery);
@@ -889,7 +996,7 @@ async fn publish_work(
 
     let customer_id = require_customer_id(&state, &headers).await?;
     let work = state
-        .entitlehub
+        .aisaas
         .publish_work(&customer_id, &id, input.tags)
         .await?;
     Ok(Json(WorkResponse { work }))
@@ -900,7 +1007,7 @@ async fn unpublish_work(
     headers: HeaderMap,
     Path(id): Path<String>,
 ) -> ApiResult<Json<WorkResponse>> {
-    if state.entitlehub.is_mock() {
+    if state.aisaas.is_mock() {
         let mut works = state.works.write().await;
         let work = works.iter_mut().find(|work| work.id == id).map(|work| {
             work.visibility = Some(WorkVisibility::Private);
@@ -911,10 +1018,7 @@ async fn unpublish_work(
     }
 
     let customer_id = require_customer_id(&state, &headers).await?;
-    let work = state
-        .entitlehub
-        .unpublish_work(&customer_id, &id)
-        .await?;
+    let work = state.aisaas.unpublish_work(&customer_id, &id).await?;
     Ok(Json(WorkResponse { work }))
 }
 
@@ -935,9 +1039,9 @@ fn validate_prompt(prompt: &str) -> ApiResult<()> {
     Ok(())
 }
 
-fn generation_job_from_entitlehub(job: EntitleHubJob, customer_id: &str) -> GenerationJobDto {
+fn generation_job_from_aisaas(job: AiSaaSJob, customer_id: &str) -> GenerationJobDto {
     let media_type = job.job_type.clone().unwrap_or(MediaType::Image);
-    let status = map_entitlehub_status(&job.status);
+    let status = map_aisaas_status(&job.status);
     let request = job.request_payload.as_ref();
     let count = job
         .count
@@ -956,6 +1060,7 @@ fn generation_job_from_entitlehub(job: EntitleHubJob, customer_id: &str) -> Gene
     let model = job
         .model
         .clone()
+        .or(job.model_code.clone())
         .or_else(|| request_string(request, &["model"]))
         .unwrap_or_else(|| "unknown".to_string());
     let aspect_ratio = job
@@ -969,8 +1074,8 @@ fn generation_job_from_entitlehub(job: EntitleHubJob, customer_id: &str) -> Gene
         .clone()
         .or(job.size.clone())
         .or_else(|| request_string(request, &["resolution", "size"]));
-    let created_at = parse_entitlehub_time(job.created_at.as_deref());
-    let updated_at = parse_entitlehub_time(job.updated_at.as_deref()).max(created_at);
+    let created_at = parse_aisaas_time(job.created_at.as_deref());
+    let updated_at = parse_aisaas_time(job.updated_at.as_deref()).max(created_at);
     let source_mode = job
         .source_mode
         .clone()
@@ -1006,7 +1111,7 @@ fn generation_job_from_entitlehub(job: EntitleHubJob, customer_id: &str) -> Gene
     let local_job = GenerationJobDto {
         id: job.id.clone(),
         customer_id: Some(customer_id.to_string()),
-        entitlehub_job_id: Some(job.id),
+        aisaas_job_id: Some(job.id),
         media_type,
         status: status.clone(),
         progress,
@@ -1022,7 +1127,7 @@ fn generation_job_from_entitlehub(job: EntitleHubJob, customer_id: &str) -> Gene
         duration_sec,
         held_minor: job.held_minor.unwrap_or(0),
         charged_minor: job.charged_minor.unwrap_or(0),
-        idempotency_key: format!("entitlehub-{customer_id}"),
+        idempotency_key: format!("aisaas-{customer_id}"),
         source_mode,
         reference_count,
         has_first_frame,
@@ -1044,7 +1149,7 @@ fn generation_job_from_entitlehub(job: EntitleHubJob, customer_id: &str) -> Gene
 
 fn build_results_from_assets(
     job: &GenerationJobDto,
-    assets: Vec<crate::entitlehub::EntitleHubAsset>,
+    assets: Vec<crate::aisaas::AiSaaSAsset>,
     customer_id: &str,
 ) -> Option<Vec<MediaItemDto>> {
     if assets.is_empty() {
@@ -1059,11 +1164,11 @@ fn build_results_from_assets(
         .into_iter()
         .map(|asset| {
             let url = asset
-                .url
+                .public_url
                 .clone()
+                .or(asset.url.clone())
                 .or(asset.asset_url.clone())
-                .or(asset.download_url.clone())
-                .or(asset.public_url.clone());
+                .or(asset.download_url.clone());
             MediaItemDto {
                 id: asset.id.clone(),
                 media_type: job.media_type.clone(),
@@ -1210,7 +1315,7 @@ fn request_source_mode(request: Option<&serde_json::Value>) -> Option<SourceMode
     }
 }
 
-fn parse_entitlehub_time(value: Option<&str>) -> i64 {
+fn parse_aisaas_time(value: Option<&str>) -> i64 {
     value
         .and_then(|s| chrono::DateTime::parse_from_rfc3339(s).ok())
         .map(|dt| dt.timestamp_millis())
@@ -1230,7 +1335,7 @@ async fn validate_against_models(
     customer_id: &str,
     input: &CreateGenerationJobRequest,
 ) -> ApiResult<ModelProductDto> {
-    let models = state.entitlehub.list_models(Some(customer_id)).await?;
+    let models = state.aisaas.list_models(Some(customer_id)).await?;
     let model = models
         .into_iter()
         .find(|m| m.id == input.model && m.modality == input.media_type)
@@ -1442,7 +1547,7 @@ async fn validate_reference_assets(
     model: &ModelProductDto,
     input: &CreateGenerationJobRequest,
 ) -> ApiResult<()> {
-    if state.entitlehub.is_mock() {
+    if state.aisaas.is_mock() {
         return Ok(());
     }
 
@@ -1455,7 +1560,7 @@ async fn validate_reference_assets(
     let mut total_audio_seconds = 0_u32;
     for reference in references {
         let asset = state
-            .entitlehub
+            .aisaas
             .get_asset(customer_id, &reference.asset_id)
             .await?;
         validate_reference_asset_metadata(&model.capabilities, &reference, &asset)?;
@@ -1684,12 +1789,8 @@ async fn advance_mock_job(state: &AppState, job: &mut GenerationJobDto) {
     }
 }
 
-async fn apply_entitlehub_job(
-    state: &AppState,
-    job: &mut GenerationJobDto,
-    upstream: EntitleHubJob,
-) {
-    let status = map_entitlehub_status(&upstream.status);
+async fn apply_aisaas_job(state: &AppState, job: &mut GenerationJobDto, upstream: AiSaaSJob) {
+    let status = map_aisaas_status(&upstream.status);
     job.status = status;
     job.progress = progress_for_status(&job.status);
     job.updated_at = now_millis();
@@ -1714,8 +1815,16 @@ async fn apply_entitlehub_job(
         job.count = count;
     }
 
+    let upstream_assets = upstream.assets.clone();
+    let upstream_asset_urls = upstream.asset_urls.clone();
+
     if job.status == JobStatus::Succeeded && job.results.is_empty() {
-        job.results = build_results(state, job, upstream.asset_urls).await;
+        job.results = build_results_from_assets(
+            job,
+            upstream_assets,
+            job.customer_id.as_deref().unwrap_or("current"),
+        )
+        .unwrap_or_else(|| build_results_from_urls(job, upstream_asset_urls));
         let mut works = state.works.write().await;
         works.extend(job.results.clone());
     }
@@ -2287,7 +2396,7 @@ fn demo_jobs_for_type(media_type: MediaType, items: &[MediaItemDto]) -> Vec<Gene
             Some(GenerationJobDto {
                 id: format!("demo_{}_{index}", media_type_label(&media_type)),
                 customer_id: None,
-                entitlehub_job_id: None,
+                aisaas_job_id: None,
                 media_type: media_type.clone(),
                 status: JobStatus::Succeeded,
                 progress: 100,

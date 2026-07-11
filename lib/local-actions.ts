@@ -116,7 +116,7 @@ export async function downloadMediaItem(item: MediaItem, overrideUrl?: string) {
 
   if (sourceUrl) {
     try {
-      const res = await fetch(sourceUrl);
+      const res = await fetch(sourceUrl, { credentials: "include" });
       if (!res.ok) throw new Error("download failed");
       const blob = await res.blob();
       const ext =

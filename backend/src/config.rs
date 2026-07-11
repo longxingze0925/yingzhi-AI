@@ -3,10 +3,10 @@ use std::{env, net::SocketAddr};
 #[derive(Clone, Debug)]
 pub struct AppConfig {
     pub bind_addr: SocketAddr,
-    pub entitlehub_base_url: Option<String>,
-    pub entitlehub_server_key: Option<String>,
+    pub aisaas_base_url: Option<String>,
+    pub aisaas_server_key: Option<String>,
     pub demo_customer_id: String,
-    pub mock_entitlehub: bool,
+    pub mock_aisaas: bool,
     pub session_cookie_name: String,
     pub session_ttl_seconds: i64,
 }
@@ -22,24 +22,19 @@ impl AppConfig {
             .parse()
             .expect("HOST/PORT must form a valid socket address");
 
-        let entitlehub_base_url = env::var("ENTITLEHUB_BASE_URL")
-            .ok()
-            .filter(|v| !v.trim().is_empty());
-        let entitlehub_server_key = env::var("ENTITLEHUB_SERVER_KEY")
-            .ok()
-            .filter(|v| !v.trim().is_empty());
+        let aisaas_base_url = env_non_empty("AISAAS_BASE_URL");
+        let aisaas_server_key = env_non_empty("AISAAS_SERVER_KEY");
 
-        let mock_entitlehub = env::var("ENTITLEHUB_MOCK")
-            .map(|v| matches!(v.as_str(), "1" | "true" | "TRUE" | "yes" | "YES"))
-            .unwrap_or_else(|_| entitlehub_base_url.is_none() || entitlehub_server_key.is_none());
+        let mock_aisaas = env_bool("AISAAS_MOCK")
+            .unwrap_or_else(|| aisaas_base_url.is_none() || aisaas_server_key.is_none());
 
         Self {
             bind_addr,
-            entitlehub_base_url,
-            entitlehub_server_key,
-            demo_customer_id: env::var("DEMO_ENTITLEHUB_CUSTOMER_ID")
-                .unwrap_or_else(|_| "00000000-0000-0000-0000-000000000001".to_string()),
-            mock_entitlehub,
+            aisaas_base_url,
+            aisaas_server_key,
+            demo_customer_id: env_non_empty("DEMO_AISAAS_CUSTOMER_ID")
+                .unwrap_or_else(|| "00000000-0000-0000-0000-000000000001".to_string()),
+            mock_aisaas,
             session_cookie_name: env::var("SHADOWWEAVE_SESSION_COOKIE")
                 .unwrap_or_else(|_| "shadowweave_session".to_string()),
             session_ttl_seconds: env::var("SHADOWWEAVE_SESSION_TTL_SECONDS")
@@ -48,4 +43,15 @@ impl AppConfig {
                 .unwrap_or(60 * 60 * 24 * 7),
         }
     }
+}
+
+fn env_non_empty(name: &str) -> Option<String> {
+    env::var(name).ok().filter(|value| !value.trim().is_empty())
+}
+
+fn env_bool(name: &str) -> Option<bool> {
+    env::var(name)
+        .ok()
+        .filter(|value| !value.trim().is_empty())
+        .map(|value| matches!(value.as_str(), "1" | "true" | "TRUE" | "yes" | "YES"))
 }

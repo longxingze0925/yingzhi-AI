@@ -1,7 +1,7 @@
 /**
  * 影织 · 前端数据访问层（单一替换点）
  *
- * 浏览器只请求影织 Rust 后端；EntitleHub Server Key 只放在 Rust 后端。
+ * 浏览器只请求影织 Rust 后端；AiSaaS Server Key 只放在 Rust 后端。
  */
 import { MOCK_USER } from "@/data/mock/config";
 import { GALLERY, getGalleryByType, DEMO_FAVORITES } from "@/data/mock/gallery";
@@ -159,7 +159,13 @@ function billingBaseCost(model?: AiModel): number {
 }
 
 function toGenerationStatus(status: BackendJobStatus): JobStatus {
-  if (status === "succeeded" || status === "failed" || status === "queued") {
+  if (
+    status === "succeeded" ||
+    status === "failed" ||
+    status === "queued" ||
+    status === "review" ||
+    status === "cancelled"
+  ) {
     return status;
   }
   return "running";
@@ -195,6 +201,30 @@ type ApiInit = RequestInit & {
   signal?: AbortSignal;
   timeoutMs?: number;
 };
+
+export class ApiClientError extends Error {
+  status: number;
+  code?: string;
+  requestId?: string;
+  upstreamStatus?: number;
+
+  constructor(
+    message: string,
+    options: {
+      status: number;
+      code?: string;
+      requestId?: string;
+      upstreamStatus?: number;
+    }
+  ) {
+    super(message);
+    this.name = "ApiClientError";
+    this.status = options.status;
+    this.code = options.code;
+    this.requestId = options.requestId;
+    this.upstreamStatus = options.upstreamStatus;
+  }
+}
 
 async function api<T>(path: string, init: ApiInit = {}): Promise<T> {
   const { signal, timeoutMs = DEFAULT_API_TIMEOUT_MS, ...requestInit } = init;
@@ -239,9 +269,16 @@ async function api<T>(path: string, init: ApiInit = {}): Promise<T> {
 
   const body = await res.json().catch(() => null);
   if (!res.ok) {
-    const message =
+    const rawMessage =
       body?.message ?? body?.error ?? `请求失败：HTTP ${res.status}`;
-    throw new Error(message);
+    const message =
+      res.status === 429 ? "当前请求过多，请稍后再试" : rawMessage;
+    throw new ApiClientError(message, {
+      status: res.status,
+      code: body?.code ?? body?.errorCode ?? body?.error_code,
+      requestId: body?.requestId ?? body?.request_id,
+      upstreamStatus: body?.upstreamStatus ?? body?.upstream_status,
+    });
   }
   return body as T;
 }
@@ -264,7 +301,7 @@ export async function getUser(): Promise<User> {
   return user;
 }
 
-/** EntitleHub Web 登录：浏览器只拿影织后端 session cookie。 */
+/** AiSaaS Web 登录：浏览器只拿影织后端 session cookie。 */
 export async function loginWithPassword(input: {
   email: string;
   password: string;
@@ -525,7 +562,7 @@ export async function listGenerationJobs(): Promise<GenerationJob[]> {
   }));
 }
 
-/** 可用 AI 模型：以后端 EntitleHub 配置为唯一数据源。 */
+/** 可用 AI 模型：以后端 AiSaaS 配置为唯一数据源。 */
 export async function listAiModels(type: MediaType): Promise<AiModel[]> {
   const { data } = await api<BackendModelsResponse>(
     `/api/ai/models?type=${encodeURIComponent(type)}`
@@ -555,7 +592,7 @@ export async function generate(
       params.type === "video" || params.type === "audio"
         ? params.durationSec
         : undefined,
-    styleId: params.styleId,
+    styleId: params.styleId && params.styleId !== "none" ? params.styleId : undefined,
     sourceMode: params.sourceMode,
     referenceAssets: params.referenceAssets,
     referenceAssetIds: params.referenceAssetIds,
