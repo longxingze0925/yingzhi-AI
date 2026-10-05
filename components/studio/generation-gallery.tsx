@@ -13,7 +13,12 @@ import { MediaGridSkeleton } from "@/components/shared/media-grid-skeleton";
 import { useGenerationStore } from "@/lib/store/use-generation-store";
 import { useLocalWorkspaceStore } from "@/lib/store/use-local-workspace";
 import { deleteWorkRemote, listGallery } from "@/lib/api/client";
-import type { GenerationJob, MediaItem, MediaType, SourceMode } from "@/lib/api/types";
+import type {
+  GenerationJob,
+  MediaItem,
+  MediaType,
+  SourceMode,
+} from "@/lib/api/types";
 import type {
   WorkFilterOptions,
   WorkFilters,
@@ -53,6 +58,8 @@ export function GenerationGallery({
   const historyLoaded = useGenerationStore((s) => s.historyLoaded);
   const historyError = useGenerationStore((s) => s.historyError);
   const loadHistory = useGenerationStore((s) => s.loadHistory);
+  const syncActiveJobs = useGenerationStore((s) => s.syncActiveJobs);
+  const resync = useGenerationStore((s) => s.resync);
   const cancel = useGenerationStore((s) => s.cancel);
   const retry = useGenerationStore((s) => s.retry);
   const removeResult = useGenerationStore((s) => s.removeResult);
@@ -82,13 +89,45 @@ export function GenerationGallery({
         setSelected(null);
       }
     } catch {
-      addNotification("删除失败", "AiSaaS 删除接口返回失败，请稍后重试。");
+      addNotification("删除失败", "平台删除接口返回失败，请稍后重试。");
     }
   };
 
   React.useEffect(() => {
     void loadHistory();
   }, [loadHistory]);
+
+  const hasActiveJobs = React.useMemo(
+    () =>
+      jobs.some(
+        (job) =>
+          job.syncState !== "lost" &&
+          (job.status === "queued" || job.status === "running"),
+      ),
+    [jobs],
+  );
+
+  React.useEffect(() => {
+    if (!hasActiveJobs) return;
+
+    const sync = () => void syncActiveJobs();
+    sync();
+    const timer = window.setInterval(sync, 2000);
+    const onFocus = () => {
+      if (document.visibilityState === "visible") sync();
+    };
+    const onOnline = () => sync();
+    window.addEventListener("focus", onFocus);
+    window.addEventListener("online", onOnline);
+    document.addEventListener("visibilitychange", onFocus);
+
+    return () => {
+      window.clearInterval(timer);
+      window.removeEventListener("focus", onFocus);
+      window.removeEventListener("online", onOnline);
+      document.removeEventListener("visibilitychange", onFocus);
+    };
+  }, [hasActiveJobs, syncActiveJobs]);
 
   React.useEffect(() => {
     let alive = true;
@@ -101,7 +140,9 @@ export function GenerationGallery({
       .catch((err) => {
         if (alive) setExamples([]);
         if (alive) {
-          setExamplesError(err instanceof Error ? err.message : "示例作品加载失败");
+          setExamplesError(
+            err instanceof Error ? err.message : "示例作品加载失败",
+          );
         }
       })
       .finally(() => {
@@ -127,16 +168,18 @@ export function GenerationGallery({
     jobs
       .filter((j) => j.type === type)
       .forEach((job) => {
-        if (job.status === "queued" || job.status === "running" || job.status === "review") {
+        if (
+          job.status === "queued" ||
+          job.status === "running" ||
+          job.status === "review"
+        ) {
           list.push({ kind: "pending", job, key: job.id });
         } else if (job.status === "failed" || job.status === "cancelled") {
           list.push({ kind: "failed", job, key: job.id });
         } else {
           job.results
             .filter((item) => !deletedWorkIds.includes(item.id))
-            .forEach((item) =>
-              list.push({ kind: "done", item, key: item.id })
-            );
+            .forEach((item) => list.push({ kind: "done", item, key: item.id }));
         }
       });
     return list;
@@ -166,7 +209,9 @@ export function GenerationGallery({
     });
 
     return {
-      models: Array.from(models).sort((a, b) => a.localeCompare(b, "zh-Hans-CN")),
+      models: Array.from(models).sort((a, b) =>
+        a.localeCompare(b, "zh-Hans-CN"),
+      ),
       resolutions: Array.from(resolutions).sort(),
       sourceModes: Array.from(sourceModes),
       frameStates: Array.from(frameStates),
@@ -198,8 +243,7 @@ export function GenerationGallery({
         filters.resolution === "全部清晰度" ||
         resolution === filters.resolution;
       const sourceLabel = sourceModeLabel(source.sourceMode);
-      const matchesRef =
-        filters.ref === "全部" || sourceLabel === filters.ref;
+      const matchesRef = filters.ref === "全部" || sourceLabel === filters.ref;
       const matchesFrame =
         filters.frame === "全部" ||
         (filters.frame === "有首帧" && Boolean(source.hasFirstFrame)) ||
@@ -288,7 +332,12 @@ export function GenerationGallery({
       <MasonryGrid>
         {filtered.map((e) =>
           e.kind === "pending" ? (
-            <PendingCard key={e.key} job={e.job} onCancel={cancel} />
+            <PendingCard
+              key={e.key}
+              job={e.job}
+              onCancel={cancel}
+              onResync={resync}
+            />
           ) : e.kind === "failed" ? (
             <FailedCard key={e.key} job={e.job} onRetry={retry} />
           ) : (
@@ -298,7 +347,7 @@ export function GenerationGallery({
               onOpen={openItem}
               onDelete={(item) => void deleteItem(item)}
             />
-          )
+          ),
         )}
       </MasonryGrid>
       <MediaDetailDialog item={selected} open={open} onOpenChange={setOpen} />

@@ -6,6 +6,8 @@ import { Menu, X, ArrowRight } from "lucide-react";
 import { Logo } from "@/components/brand/logo";
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { useCurrentUser } from "@/lib/store/use-current-user";
 import { cn } from "@/lib/utils";
 
 const NAV = [
@@ -18,6 +20,8 @@ const NAV = [
 export function Navbar() {
   const [scrolled, setScrolled] = React.useState(false);
   const [open, setOpen] = React.useState(false);
+  const { user, authenticated, loaded } = useCurrentUser();
+  const avatarText = user?.name.slice(0, 1).toUpperCase() || "影";
 
   React.useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
@@ -51,14 +55,28 @@ export function Navbar() {
 
         <div className="flex items-center gap-2">
           <ThemeToggle className="hidden sm:inline-flex" />
-          <Button
-            asChild
-            variant="ghost"
-            size="sm"
-            className="hidden sm:inline-flex"
-          >
-            <Link href="/login">登录</Link>
-          </Button>
+          {loaded && authenticated ? (
+            <Link
+              href="/studio"
+              aria-label={`进入 ${user?.name ?? "用户"} 的工作台`}
+              className="hidden rounded-full outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring sm:inline-flex"
+            >
+              <Avatar className="h-9 w-9 ring-2 ring-border">
+                <AvatarFallback>{avatarText}</AvatarFallback>
+              </Avatar>
+            </Link>
+          ) : loaded ? (
+            <Button
+              asChild
+              variant="ghost"
+              size="sm"
+              className="hidden sm:inline-flex"
+            >
+              <Link href="/login">登录</Link>
+            </Button>
+          ) : (
+            <span className="hidden h-9 w-12 sm:block" aria-hidden="true" />
+          )}
           <Button asChild variant="brand" size="sm" className="hidden sm:inline-flex">
             <Link href="/studio">
               进入工作台 <ArrowRight className="h-4 w-4" />
@@ -93,9 +111,22 @@ export function Navbar() {
             <div className="flex items-center justify-between px-1">
               <ThemeToggle />
               <div className="flex gap-2">
-                <Button asChild variant="outline" size="sm">
-                  <Link href="/login">登录</Link>
-                </Button>
+                {loaded && authenticated ? (
+                  <Link
+                    href="/studio"
+                    onClick={() => setOpen(false)}
+                    aria-label={`进入 ${user?.name ?? "用户"} 的工作台`}
+                    className="inline-flex rounded-full outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring"
+                  >
+                    <Avatar className="h-9 w-9 ring-2 ring-border">
+                      <AvatarFallback>{avatarText}</AvatarFallback>
+                    </Avatar>
+                  </Link>
+                ) : loaded ? (
+                  <Button asChild variant="outline" size="sm">
+                    <Link href="/login">登录</Link>
+                  </Button>
+                ) : null}
                 <Button asChild variant="brand" size="sm">
                   <Link href="/studio">进入工作台</Link>
                 </Button>

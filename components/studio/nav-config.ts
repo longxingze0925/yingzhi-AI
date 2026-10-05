@@ -5,6 +5,7 @@ import {
   Video,
   FolderOpen,
   Library,
+  LayoutGrid,
   Settings,
   type LucideIcon,
 } from "lucide-react";
@@ -14,6 +15,8 @@ export interface NavItem {
   href: string;
   icon: LucideIcon;
   badge?: string;
+  onAction?: () => void;
+  disabled?: boolean;
 }
 
 export interface NavGroup {
@@ -32,6 +35,7 @@ export const STUDIO_NAV: NavGroup[] = [
       { label: "图片生成", href: "/studio/image", icon: ImageIcon },
       { label: "视频生成", href: "/studio/video", icon: Video, badge: "New" },
       { label: "音频生成", href: "/studio/audio", icon: Music2 },
+      { label: "无限画布", href: "/studio/canvas", icon: LayoutGrid, badge: "开发中" },
     ],
   },
   {

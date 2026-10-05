@@ -1,0 +1,254 @@
+{
+  "date": "2026-10-03T11:59:25.403Z",
+  "url": "http://localhost:3002/studio/canvas",
+  "viewport": "1920x1080",
+  "browser": "Chrome 154.0.8037.97",
+  "screenshots": [
+    "01_login_blocker.png",
+    "02_frontend_api_status_404.png",
+    "03_backend_bootstrap_401.png"
+  ],
+  "errors": [
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "Failed to load resource: the server responded with a status of 404 (Not Found)"
+  ],
+  "warnings": [],
+  "apiResponses": [
+    {
+      "method": "GET",
+      "status": 404,
+      "url": "http://localhost:3002/api/studio/bootstrap"
+    },
+    {
+      "method": "GET",
+      "status": 404,
+      "url": "http://localhost:3002/api/status"
+    },
+    {
+      "method": "GET",
+      "status": 404,
+      "url": "http://localhost:3002/api/status"
+    },
+    {
+      "method": "GET",
+      "status": 404,
+      "url": "http://localhost:3002/api/status"
+    }
+  ],
+  "failedRequests": [
+    {
+      "method": "GET",
+      "url": "http://localhost:3002/login?next=%2Fstudio%2Fcanvas&_rsc=vmu6j",
+      "failure": "net::ERR_ABORTED"
+    },
+    {
+      "method": "GET",
+      "url": "http://localhost:3002/login?next=%2Fstudio%2Fcanvas&_rsc=tlsy5",
+      "failure": "net::ERR_ABORTED"
+    }
+  ],
+  "tests": [
+    {
+      "id": "1.1 create nodes",
+      "status": "BLOCKED",
+      "observed": "真实浏览器没有进入画布编辑器",
+      "reason": "未登录/认证初始化接口失败；按照“不得使用模拟数据”的要求不注入 token、不拦截或伪造 API。"
+    },
+    {
+      "id": "1.2 connection points",
+      "status": "BLOCKED",
+      "observed": "真实浏览器没有进入画布编辑器",
+      "reason": "未登录/认证初始化接口失败；按照“不得使用模拟数据”的要求不注入 token、不拦截或伪造 API。"
+    },
+    {
+      "id": "1.3 create connection",
+      "status": "BLOCKED",
+      "observed": "真实浏览器没有进入画布编辑器",
+      "reason": "未登录/认证初始化接口失败；按照“不得使用模拟数据”的要求不注入 token、不拦截或伪造 API。"
+    },
+    {
+      "id": "1.4 select connection",
+      "status": "BLOCKED",
+      "observed": "真实浏览器没有进入画布编辑器",
+      "reason": "未登录/认证初始化接口失败；按照“不得使用模拟数据”的要求不注入 token、不拦截或伪造 API。"
+    },
+    {
+      "id": "1.5 delete connection",
+      "status": "BLOCKED",
+      "observed": "真实浏览器没有进入画布编辑器",
+      "reason": "未登录/认证初始化接口失败；按照“不得使用模拟数据”的要求不注入 token、不拦截或伪造 API。"
+    },
+    {
+      "id": "1.6 Escape cancel",
+      "status": "BLOCKED",
+      "observed": "真实浏览器没有进入画布编辑器",
+      "reason": "未登录/认证初始化接口失败；按照“不得使用模拟数据”的要求不注入 token、不拦截或伪造 API。"
+    },
+    {
+      "id": "2.1 directional connections",
+      "status": "BLOCKED",
+      "observed": "真实浏览器没有进入画布编辑器",
+      "reason": "未登录/认证初始化接口失败；按照“不得使用模拟数据”的要求不注入 token、不拦截或伪造 API。"
+    },
+    {
+      "id": "2.2 move node follow",
+      "status": "BLOCKED",
+      "observed": "真实浏览器没有进入画布编辑器",
+      "reason": "未登录/认证初始化接口失败；按照“不得使用模拟数据”的要求不注入 token、不拦截或伪造 API。"
+    },
+    {
+      "id": "2.3 resize follow",
+      "status": "BLOCKED",
+      "observed": "真实浏览器没有进入画布编辑器",
+      "reason": "未登录/认证初始化接口失败；按照“不得使用模拟数据”的要求不注入 token、不拦截或伪造 API。"
+    },
+    {
+      "id": "2.4 reject self connection",
+      "status": "BLOCKED",
+      "observed": "真实浏览器没有进入画布编辑器",
+      "reason": "未登录/认证初始化接口失败；按照“不得使用模拟数据”的要求不注入 token、不拦截或伪造 API。"
+    },
+    {
+      "id": "2.5 multiple connections",
+      "status": "BLOCKED",
+      "observed": "真实浏览器没有进入画布编辑器",
+      "reason": "未登录/认证初始化接口失败；按照“不得使用模拟数据”的要求不注入 token、不拦截或伪造 API。"
+    },
+    {
+      "id": "2.6 delete node cleanup",
+      "status": "BLOCKED",
+      "observed": "真实浏览器没有进入画布编辑器",
+      "reason": "未登录/认证初始化接口失败；按照“不得使用模拟数据”的要求不注入 token、不拦截或伪造 API。"
+    },
+    {
+      "id": "3.1 refresh persistence",
+      "status": "BLOCKED",
+      "observed": "真实浏览器没有进入画布编辑器",
+      "reason": "未登录/认证初始化接口失败；按照“不得使用模拟数据”的要求不注入 token、不拦截或伪造 API。"
+    },
+    {
+      "id": "3.2 export/import",
+      "status": "BLOCKED",
+      "observed": "真实浏览器没有进入画布编辑器",
+      "reason": "未登录/认证初始化接口失败；按照“不得使用模拟数据”的要求不注入 token、不拦截或伪造 API。"
+    },
+    {
+      "id": "4.1 connection point visual",
+      "status": "BLOCKED",
+      "observed": "真实浏览器没有进入画布编辑器",
+      "reason": "未登录/认证初始化接口失败；按照“不得使用模拟数据”的要求不注入 token、不拦截或伪造 API。"
+    },
+    {
+      "id": "4.2 connection visual",
+      "status": "BLOCKED",
+      "observed": "真实浏览器没有进入画布编辑器",
+      "reason": "未登录/认证初始化接口失败；按照“不得使用模拟数据”的要求不注入 token、不拦截或伪造 API。"
+    },
+    {
+      "id": "4.3 cursor feedback",
+      "status": "BLOCKED",
+      "observed": "真实浏览器没有进入画布编辑器",
+      "reason": "未登录/认证初始化接口失败；按照“不得使用模拟数据”的要求不注入 token、不拦截或伪造 API。"
+    },
+    {
+      "id": "5.1 empty canvas",
+      "status": "BLOCKED",
+      "observed": "真实浏览器没有进入画布编辑器",
+      "reason": "未登录/认证初始化接口失败；按照“不得使用模拟数据”的要求不注入 token、不拦截或伪造 API。"
+    },
+    {
+      "id": "5.2 single node",
+      "status": "BLOCKED",
+      "observed": "真实浏览器没有进入画布编辑器",
+      "reason": "未登录/认证初始化接口失败；按照“不得使用模拟数据”的要求不注入 token、不拦截或伪造 API。"
+    },
+    {
+      "id": "5.3 20 connections/performance",
+      "status": "BLOCKED",
+      "observed": "真实浏览器没有进入画布编辑器",
+      "reason": "未登录/认证初始化接口失败；按照“不得使用模拟数据”的要求不注入 token、不拦截或伪造 API。"
+    },
+    {
+      "id": "5.4 zoom",
+      "status": "BLOCKED",
+      "observed": "真实浏览器没有进入画布编辑器",
+      "reason": "未登录/认证初始化接口失败；按照“不得使用模拟数据”的要求不注入 token、不拦截或伪造 API。"
+    },
+    {
+      "id": "5.5 pan",
+      "status": "BLOCKED",
+      "observed": "真实浏览器没有进入画布编辑器",
+      "reason": "未登录/认证初始化接口失败；按照“不得使用模拟数据”的要求不注入 token、不拦截或伪造 API。"
+    }
+  ],
+  "finalUrl": "http://localhost:3002/login?next=%2Fstudio%2Fcanvas",
+  "title": "影织 Shadowweave · AI 图片与视频创作平台",
+  "bodyText": "用一句话，编织影像\n全部图片与视频模型，影视级画质\n统一账号与余额，多端实时同步\n失败任务自动退款，消费记录可追踪\n作品云端同步，多端创作\n影织\nSHADOWWEAVE\n欢迎回来\n\n登录以继续你的创作之旅\n\n登录\n注册\n邮箱登录\n邮箱地址\n密码\n登录\n\n继续即表示同意平台的服务条款与隐私政策",
+  "navigationError": null,
+  "blocker": "真实 UI 画布未能访问，后续连接交互用例不能执行。",
+  "apiErrorSummary": [
+    {
+      "method": "GET",
+      "status": 404,
+      "url": "http://localhost:3002/api/studio/bootstrap"
+    },
+    {
+      "method": "GET",
+      "status": 404,
+      "url": "http://localhost:3002/api/status"
+    },
+    {
+      "method": "GET",
+      "status": 404,
+      "url": "http://localhost:3002/api/status"
+    },
+    {
+      "method": "GET",
+      "status": 404,
+      "url": "http://localhost:3002/api/status"
+    }
+  ],
+  "apiChecks": [
+    {
+      "name": "frontend_api_status",
+      "url": "http://localhost:3002/api/status",
+      "status": "404",
+      "contentType": "text/html; charset=utf-8",
+      "bytes": 21136,
+      "bodyPrefix": "<!DOCTYPE html><html lang=\"zh-CN\"><head><meta charSet=\"utf-8\"/><meta name=\"viewport\" content=\"width="
+    },
+    {
+      "name": "frontend_bootstrap",
+      "url": "http://localhost:3002/api/studio/bootstrap",
+      "status": "404",
+      "contentType": "text/html; charset=utf-8",
+      "bytes": 21150,
+      "bodyPrefix": "<!DOCTYPE html><html lang=\"zh-CN\"><head><meta charSet=\"utf-8\"/><meta name=\"viewport\" content=\"width="
+    },
+    {
+      "name": "api_status",
+      "url": "http://localhost:3000/api/status",
+      "status": "200",
+      "contentType": "application/json; charset=utf-8",
+      "bytes": 2752,
+      "jsonSummary": {
+        "success": true,
+        "message": ""
+      }
+    },
+    {
+      "name": "api_bootstrap",
+      "url": "http://localhost:3000/api/studio/bootstrap",
+      "status": "401",
+      "contentType": "application/json; charset=utf-8",
+      "bytes": 91,
+      "jsonSummary": {
+        "success": false,
+        "code": "AUTH_UNAUTHORIZED",
+        "message": "Unauthorized, invalid access token"
+      }
+    }
+  ]
+}

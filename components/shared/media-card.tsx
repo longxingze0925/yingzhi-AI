@@ -83,6 +83,7 @@ export function MediaCard({
         <GradientThumb
           seed={item.seed}
           src={item.url}
+          thumbnailSrc={item.thumbnailUrl}
           alt={item.prompt}
           mediaType={item.type}
           className={cn("w-full", ratioClass(item.aspectRatio))}

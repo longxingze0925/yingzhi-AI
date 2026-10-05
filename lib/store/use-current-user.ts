@@ -3,6 +3,7 @@
 import * as React from "react";
 import { create } from "zustand";
 import { getUser, logoutRemote } from "@/lib/api/client";
+import { useGenerationStore } from "@/lib/store/use-generation-store";
 import type { User } from "@/lib/api/types";
 
 interface CurrentUserState {
@@ -33,8 +34,16 @@ export const useCurrentUserStore = create<CurrentUserState>((set, get) => ({
     set({ loading: true, error: null });
     try {
       const user = await getUser();
+      const current = get().user;
+      if (
+        current &&
+        (current.id !== user.id || current.email !== user.email)
+      ) {
+        useGenerationStore.getState().resetSession();
+      }
       set({ user, loading: false, loaded: true });
     } catch (err) {
+      if (get().user) useGenerationStore.getState().resetSession();
       set({
         user: null,
         loading: false,
@@ -50,6 +59,7 @@ export const useCurrentUserStore = create<CurrentUserState>((set, get) => ({
     })),
 
   logout: async () => {
+    useGenerationStore.getState().resetSession();
     try {
       await logoutRemote();
     } catch {

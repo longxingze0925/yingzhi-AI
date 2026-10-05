@@ -1,0 +1,1411 @@
+{
+  "meta": {
+    "date": "2026-10-02",
+    "viewport": "1920x1080",
+    "browser": "Chrome 154.0.8037.97 (headless, Playwright)"
+  },
+  "original": {
+    "url": "http://localhost:3001/canvas",
+    "errors": [
+      "console: Failed to load resource: the server responded with a status of 502 (Bad Gateway)",
+      "pageerror: 接口连接失败，请确认后端服务已启动",
+      "console: Failed to load resource: the server responded with a status of 502 (Bad Gateway)",
+      "pageerror: 接口连接失败，请确认后端服务已启动",
+      "console: Failed to load resource: the server responded with a status of 502 (Bad Gateway)",
+      "pageerror: 接口连接失败，请确认后端服务已启动",
+      "console: Failed to load resource: the server responded with a status of 502 (Bad Gateway)",
+      "console: Error gathering Skill keys in cleanupImages Error: 接口连接失败，请确认后端服务已启动\n    at apiRequest (webpack-internal:///(app-pages-browser)/./src/services/api/request.ts:78:15)\n    at async Promise.all (index 0)\n    at async eval (webpack-internal:///(app-pages-browser)/./src/stores/use-asset-store.ts:271:21)"
+    ],
+    "requests": [
+      {
+        "method": "GET",
+        "status": 502,
+        "url": "http://localhost:3001/api/settings"
+      },
+      {
+        "method": "GET",
+        "status": 502,
+        "url": "http://localhost:3001/api/settings"
+      },
+      {
+        "method": "GET",
+        "status": 502,
+        "url": "http://localhost:3001/api/settings"
+      },
+      {
+        "method": "GET",
+        "status": 502,
+        "url": "http://localhost:3001/api/agent-skills"
+      }
+    ],
+    "screenshots": [
+      "原项目-画布列表页.png",
+      "原项目-画布编辑器-空状态.png",
+      "原项目-文本节点.png",
+      "原项目-图片节点.png",
+      "原项目-视频节点.png",
+      "原项目-音频节点.png",
+      "原项目-节点-选中状态.png",
+      "原项目-工具栏.png",
+      "原项目-缩放控件.png",
+      "原项目-快捷键面板.png",
+      "原项目-8个文本节点分布.png"
+    ],
+    "metrics": {
+      "editor": {
+        "canvas": {
+          "rect": {
+            "x": 265.4375,
+            "y": 0,
+            "width": 1654.5625,
+            "height": 1080,
+            "top": 0,
+            "right": 1920,
+            "bottom": 1080,
+            "left": 265.4375
+          },
+          "background": "rgb(24, 23, 21)",
+          "cursor": "auto"
+        },
+        "grid": {
+          "backgroundImage": "linear-gradient(rgba(245, 245, 244, 0.1) 1px, rgba(0, 0, 0, 0) 1px), linear-gradient(90deg, rgba(245, 245, 244, 0.1) 1px, rgba(0, 0, 0, 0) 1px)",
+          "backgroundSize": "48px 48px, 48px 48px",
+          "backgroundPosition": "0px 0px, 0px 0px"
+        },
+        "contentTransform": null,
+        "toolbar": null,
+        "zoom": null
+      },
+      "text": {
+        "id": "text-1790976914432-cdiyq",
+        "text": "文本双击编辑文字",
+        "rect": {
+          "x": 1036,
+          "y": 347,
+          "width": 340,
+          "height": 240
+        },
+        "borderColor": "oklch(1 0 0 / 0.1)",
+        "borderWidth": "0px",
+        "borderRadius": "0px",
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "boxShadow": "none",
+        "cursor": "auto",
+        "header": null,
+        "textarea": null,
+        "resizeHandle": {
+          "count": 0
+        }
+      },
+      "image": {
+        "id": "image-1790976914980-2rrck",
+        "text": "图片空图片节点参考内容描述要生成的图片内容gpt-image-2自动 · 1:1 · 1 张摄像机0",
+        "rect": {
+          "x": 996,
+          "y": 477,
+          "width": 340,
+          "height": 240
+        },
+        "borderColor": "oklch(1 0 0 / 0.1)",
+        "borderWidth": "0px",
+        "borderRadius": "0px",
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "boxShadow": "none",
+        "cursor": "auto",
+        "header": null,
+        "textarea": null,
+        "resizeHandle": {
+          "count": 0
+        }
+      },
+      "video": {
+        "id": "video-1790976915492-haxls",
+        "text": "视频空视频节点参考内容描述要生成的视频内容grok-imagine-video720p · 横屏 · 6s摄像机0",
+        "rect": {
+          "x": 713,
+          "y": 348,
+          "width": 420,
+          "height": 236
+        },
+        "borderColor": "oklch(1 0 0 / 0.1)",
+        "borderWidth": "0px",
+        "borderRadius": "0px",
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "boxShadow": "none",
+        "cursor": "auto",
+        "header": null,
+        "textarea": null,
+        "resizeHandle": {
+          "count": 0
+        }
+      },
+      "audio": {
+        "id": "audio-1790976916067-ttst3",
+        "text": "音频空音频节点",
+        "rect": {
+          "x": 1025,
+          "y": 498,
+          "width": 340,
+          "height": 160
+        },
+        "borderColor": "oklch(1 0 0 / 0.1)",
+        "borderWidth": "0px",
+        "borderRadius": "0px",
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "boxShadow": "none",
+        "cursor": "auto",
+        "header": null,
+        "textarea": null,
+        "resizeHandle": {
+          "count": 0
+        }
+      },
+      "selected": {
+        "id": "text-1790976914432-cdiyq",
+        "text": "文本双击编辑文字",
+        "rect": {
+          "x": 1036,
+          "y": 347,
+          "width": 340,
+          "height": 240
+        },
+        "borderColor": "oklch(1 0 0 / 0.1)",
+        "borderWidth": "0px",
+        "borderRadius": "0px",
+        "backgroundColor": "rgba(0, 0, 0, 0)",
+        "boxShadow": "none",
+        "cursor": "auto",
+        "header": null,
+        "textarea": null,
+        "resizeHandle": {
+          "count": 0
+        }
+      },
+      "selectedNodes": [
+        {
+          "id": "text-1790976914432-cdiyq",
+          "className": "node-element absolute flex select-none flex-col transition-shadow duration-200 z-10 ",
+          "boxShadow": "none",
+          "border": "0px solid oklch(1 0 0 / 0.1)"
+        },
+        {
+          "id": "image-1790976914980-2rrck",
+          "className": "node-element absolute flex select-none flex-col transition-shadow duration-200 z-10 ",
+          "boxShadow": "none",
+          "border": "0px solid oklch(1 0 0 / 0.1)"
+        },
+        {
+          "id": "video-1790976915492-haxls",
+          "className": "node-element absolute flex select-none flex-col transition-shadow duration-200 z-50 ",
+          "boxShadow": "none",
+          "border": "0px solid oklch(1 0 0 / 0.1)"
+        },
+        {
+          "id": "audio-1790976916067-ttst3",
+          "className": "node-element absolute flex select-none flex-col transition-shadow duration-200 z-10 ",
+          "boxShadow": "none",
+          "border": "0px solid oklch(1 0 0 / 0.1)"
+        }
+      ],
+      "nodesAfterFourTypes": [
+        {
+          "id": "text-1790976914432-cdiyq",
+          "text": "文本双击编辑文字",
+          "rect": {
+            "x": 1036,
+            "y": 347,
+            "width": 340,
+            "height": 240
+          },
+          "borderColor": "oklch(1 0 0 / 0.1)",
+          "borderWidth": "0px",
+          "borderRadius": "0px",
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "boxShadow": "none",
+          "cursor": "auto",
+          "header": null,
+          "textarea": null,
+          "resizeHandle": {
+            "count": 0
+          }
+        },
+        {
+          "id": "image-1790976914980-2rrck",
+          "text": "图片空图片节点",
+          "rect": {
+            "x": 996,
+            "y": 477,
+            "width": 340,
+            "height": 240
+          },
+          "borderColor": "oklch(1 0 0 / 0.1)",
+          "borderWidth": "0px",
+          "borderRadius": "0px",
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "boxShadow": "none",
+          "cursor": "auto",
+          "header": null,
+          "textarea": null,
+          "resizeHandle": {
+            "count": 0
+          }
+        },
+        {
+          "id": "video-1790976915492-haxls",
+          "text": "视频空视频节点参考内容描述要生成的视频内容grok-imagine-video720p · 横屏 · 6s摄像机0",
+          "rect": {
+            "x": 713,
+            "y": 348,
+            "width": 420,
+            "height": 236
+          },
+          "borderColor": "oklch(1 0 0 / 0.1)",
+          "borderWidth": "0px",
+          "borderRadius": "0px",
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "boxShadow": "none",
+          "cursor": "auto",
+          "header": null,
+          "textarea": null,
+          "resizeHandle": {
+            "count": 0
+          }
+        },
+        {
+          "id": "audio-1790976916067-ttst3",
+          "text": "音频空音频节点",
+          "rect": {
+            "x": 1025,
+            "y": 498,
+            "width": 340,
+            "height": 160
+          },
+          "borderColor": "oklch(1 0 0 / 0.1)",
+          "borderWidth": "0px",
+          "borderRadius": "0px",
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "boxShadow": "none",
+          "cursor": "auto",
+          "header": null,
+          "textarea": null,
+          "resizeHandle": {
+            "count": 0
+          }
+        }
+      ],
+      "spread8": [
+        {
+          "id": "text-1790976920797-1hr01",
+          "text": "文本双击编辑文字",
+          "rect": {
+            "x": 870,
+            "y": 338,
+            "width": 340,
+            "height": 240
+          },
+          "borderColor": "oklch(1 0 0 / 0.1)",
+          "borderWidth": "0px",
+          "borderRadius": "0px",
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "boxShadow": "none",
+          "cursor": "auto",
+          "header": null,
+          "textarea": null,
+          "resizeHandle": {
+            "count": 0
+          }
+        },
+        {
+          "id": "text-1790976921031-dz20q",
+          "text": "文本双击编辑文字",
+          "rect": {
+            "x": 771,
+            "y": 408,
+            "width": 340,
+            "height": 240
+          },
+          "borderColor": "oklch(1 0 0 / 0.1)",
+          "borderWidth": "0px",
+          "borderRadius": "0px",
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "boxShadow": "none",
+          "cursor": "auto",
+          "header": null,
+          "textarea": null,
+          "resizeHandle": {
+            "count": 0
+          }
+        },
+        {
+          "id": "text-1790976921198-dt69k",
+          "text": "文本双击编辑文字",
+          "rect": {
+            "x": 839,
+            "y": 488,
+            "width": 340,
+            "height": 240
+          },
+          "borderColor": "oklch(1 0 0 / 0.1)",
+          "borderWidth": "0px",
+          "borderRadius": "0px",
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "boxShadow": "none",
+          "cursor": "auto",
+          "header": null,
+          "textarea": null,
+          "resizeHandle": {
+            "count": 0
+          }
+        },
+        {
+          "id": "text-1790976921346-fj5ym",
+          "text": "文本双击编辑文字",
+          "rect": {
+            "x": 1089,
+            "y": 354,
+            "width": 340,
+            "height": 240
+          },
+          "borderColor": "oklch(1 0 0 / 0.1)",
+          "borderWidth": "0px",
+          "borderRadius": "0px",
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "boxShadow": "none",
+          "cursor": "auto",
+          "header": null,
+          "textarea": null,
+          "resizeHandle": {
+            "count": 0
+          }
+        },
+        {
+          "id": "text-1790976921479-bgazz",
+          "text": "文本双击编辑文字",
+          "rect": {
+            "x": 1033,
+            "y": 349,
+            "width": 340,
+            "height": 240
+          },
+          "borderColor": "oklch(1 0 0 / 0.1)",
+          "borderWidth": "0px",
+          "borderRadius": "0px",
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "boxShadow": "none",
+          "cursor": "auto",
+          "header": null,
+          "textarea": null,
+          "resizeHandle": {
+            "count": 0
+          }
+        },
+        {
+          "id": "text-1790976921612-dvxrh",
+          "text": "文本双击编辑文字",
+          "rect": {
+            "x": 1078,
+            "y": 344,
+            "width": 340,
+            "height": 240
+          },
+          "borderColor": "oklch(1 0 0 / 0.1)",
+          "borderWidth": "0px",
+          "borderRadius": "0px",
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "boxShadow": "none",
+          "cursor": "auto",
+          "header": null,
+          "textarea": null,
+          "resizeHandle": {
+            "count": 0
+          }
+        },
+        {
+          "id": "text-1790976921746-j6i2i",
+          "text": "文本双击编辑文字",
+          "rect": {
+            "x": 974,
+            "y": 452,
+            "width": 340,
+            "height": 240
+          },
+          "borderColor": "oklch(1 0 0 / 0.1)",
+          "borderWidth": "0px",
+          "borderRadius": "0px",
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "boxShadow": "none",
+          "cursor": "auto",
+          "header": null,
+          "textarea": null,
+          "resizeHandle": {
+            "count": 0
+          }
+        },
+        {
+          "id": "text-1790976921878-wh1zu",
+          "text": "文本双击编辑文字",
+          "rect": {
+            "x": 911,
+            "y": 492,
+            "width": 340,
+            "height": 240
+          },
+          "borderColor": "oklch(1 0 0 / 0.1)",
+          "borderWidth": "0px",
+          "borderRadius": "0px",
+          "backgroundColor": "rgba(0, 0, 0, 0)",
+          "boxShadow": "none",
+          "cursor": "auto",
+          "header": null,
+          "textarea": null,
+          "resizeHandle": {
+            "count": 0
+          }
+        }
+      ],
+      "finalCanvas": {
+        "canvas": {
+          "rect": {
+            "x": 281,
+            "y": 0,
+            "width": 1639,
+            "height": 1080,
+            "top": 0,
+            "right": 1920,
+            "bottom": 1080,
+            "left": 281
+          },
+          "background": "rgb(24, 23, 21)",
+          "cursor": "auto"
+        },
+        "grid": {
+          "backgroundImage": "linear-gradient(rgba(245, 245, 244, 0.1) 1px, rgba(0, 0, 0, 0) 1px), linear-gradient(90deg, rgba(245, 245, 244, 0.1) 1px, rgba(0, 0, 0, 0) 1px)",
+          "backgroundSize": "48px 48px, 48px 48px",
+          "backgroundPosition": "0px 0px, 0px 0px"
+        },
+        "contentTransform": null,
+        "toolbar": null,
+        "zoom": null
+      }
+    },
+    "listText": "TokenDance X 百亿 Token 补贴，一键登录即可接入，SD 2 Mini 低至 0.09元/秒 查看详情\n无限画布现已支持 RunningHub X ComfyUI 工作流\n微信交流群现已开放 扫码加入\n无限画布\n我的画布\n生图工作台\n视频创作台\n音乐创作台\n提示词库\n我的素材\n切换到浅色主题\nv0.8.0\n登录\n\n画布库\n\n无限画布\n导入画布\n新建画布\n还没有画布\n\n新建一个画布后，就可以独立保存节点、连线和画布外观。\n\n新建画布",
+    "emptyText": "画布\n资产\n提示词库\n画布元素\n0\n全部\n画布暂无节点\n无限画布 1\n切换到浅色主题\nv0.8.0\n登录\nAgent\n100%",
+    "shortcutText": "画布\n资产\n提示词库\n画布元素\n4\n全部\n文本\n图片\n图片\n视频\n视频\n音频\n音频\n无限画布 1\n切换到浅色主题\nv0.8.0\n登录\nAgent\n文本\n双击编辑文字\n图片\n空图片节点\n视频\n空视频节点\n参考内容\n描述要生成的视频内容\ngrok-imagine-video\n720p · 横屏 · 6s\n摄像机\n0\n音频\n空音频节点\n信息\n删除\n编辑\n上传视频\n100%\n快捷键\nSpace + 拖动\n临时反转选择/移动工具\n滚轮\n缩放画布\n拖动\n使用当前工具操作画布\nShift / Ctrl / Cmd + 点击\n追加选择节点\nCtrl / Cmd + G\n创建组\nCtrl / Cmd + C / V\n复制 / 粘贴节点\nDelete / Backspace\n删除选中",
+    "keyboard": {
+      "deleteCount": [
+        8,
+        7
+      ]
+    }
+  },
+  "shadow": {
+    "url": "http://localhost:13000/studio/canvas",
+    "errors": [
+      "console: Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "console: Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "requestfailed: GET http://localhost:13000/login?next=%2Fstudio%2Fcanvas&_rsc=tlsy5 net::ERR_ABORTED",
+      "console: Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "console: Failed to load resource: the server responded with a status of 404 (Not Found)"
+    ],
+    "requests": [
+      {
+        "method": "GET",
+        "status": 404,
+        "url": "http://localhost:13000/api/studio/bootstrap"
+      },
+      {
+        "method": "GET",
+        "status": 404,
+        "url": "http://localhost:13000/api/status"
+      },
+      {
+        "method": "GET",
+        "status": 404,
+        "url": "http://localhost:13000/api/status"
+      },
+      {
+        "method": "GET",
+        "status": 404,
+        "url": "http://localhost:13000/api/status"
+      }
+    ],
+    "screenshots": [
+      "影织-真实未登录-登录页.png"
+    ],
+    "metrics": {},
+    "realAccess": {
+      "url": "http://localhost:13000/login?next=%2Fstudio%2Fcanvas",
+      "text": "用一句话，编织影像\n全部图片与视频模型，影视级画质\n统一账号与余额，多端实时同步\n失败任务自动退款，消费记录可追踪\n作品云端同步，多端创作\n影织\nSHADOWWEAVE\n欢迎回来\n\n登录以继续你的创作之旅\n\n登录\n注册\n邮箱登录\n邮箱地址\n密码\n登录\n\n继续即表示同意平台的服务条款与隐私政策",
+      "errors": [
+        "console: Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "console: Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "requestfailed: GET http://localhost:13000/login?next=%2Fstudio%2Fcanvas&_rsc=tlsy5 net::ERR_ABORTED",
+        "console: Failed to load resource: the server responded with a status of 404 (Not Found)",
+        "console: Failed to load resource: the server responded with a status of 404 (Not Found)"
+      ]
+    },
+    "fakeClient": {
+      "errors": [
+        "requestfailed: GET http://localhost:13000/studio/canvas/e80ba695-8014-4b4e-b862-107566e5d731?_rsc=1lljq net::ERR_ABORTED",
+        "requestfailed: GET http://localhost:13000/studio/canvas/8d5c8f2a-7ccf-4e41-a701-eceffe1d11b4?_rsc=1gg9k net::ERR_ABORTED"
+      ],
+      "requests": [
+        {
+          "method": "GET",
+          "status": 200,
+          "url": "http://localhost:13000/api/studio/bootstrap"
+        },
+        {
+          "method": "GET",
+          "status": 200,
+          "url": "http://localhost:13000/api/status"
+        },
+        {
+          "method": "GET",
+          "status": 200,
+          "url": "http://localhost:13000/api/public/navigation"
+        },
+        {
+          "method": "GET",
+          "status": 200,
+          "url": "http://localhost:13000/api/public/navigation"
+        },
+        {
+          "method": "GET",
+          "status": 200,
+          "url": "http://localhost:13000/api/studio/bootstrap"
+        },
+        {
+          "method": "GET",
+          "status": 200,
+          "url": "http://localhost:13000/api/status"
+        },
+        {
+          "method": "GET",
+          "status": 200,
+          "url": "http://localhost:13000/api/public/navigation"
+        },
+        {
+          "method": "GET",
+          "status": 200,
+          "url": "http://localhost:13000/api/public/navigation"
+        },
+        {
+          "method": "GET",
+          "status": 200,
+          "url": "http://localhost:13000/api/studio/ai/models?type=image"
+        },
+        {
+          "method": "GET",
+          "status": 200,
+          "url": "http://localhost:13000/api/studio/bootstrap"
+        },
+        {
+          "method": "GET",
+          "status": 200,
+          "url": "http://localhost:13000/api/status"
+        },
+        {
+          "method": "GET",
+          "status": 200,
+          "url": "http://localhost:13000/api/public/navigation"
+        },
+        {
+          "method": "GET",
+          "status": 200,
+          "url": "http://localhost:13000/api/public/navigation"
+        },
+        {
+          "method": "GET",
+          "status": 200,
+          "url": "http://localhost:13000/api/studio/ai/models?type=image"
+        }
+      ],
+      "screenshots": [
+        "影织-画布列表页.png",
+        "影织-画布编辑器-空状态.png",
+        "影织-工具栏.png",
+        "影织-缩放控件.png",
+        "影织-文本节点.png",
+        "影织-图片节点.png",
+        "影织-视频节点.png",
+        "影织-音频节点.png",
+        "影织-节点-选中状态.png",
+        "影织-节点-多选状态.png",
+        "影织-节点右键菜单.png",
+        "影织-文本节点-生成UI.png",
+        "影织-文本节点-模型线路.png",
+        "影织-8个文本节点分布.png"
+      ],
+      "metrics": {
+        "list": {
+          "text": "影织\nSHADOWWEAVE\n新建创作\n\n探索\n\n灵感广场\n\n创作\n\n图片生成\n视频生成\nNew\n音频生成\n无限画布\n\n资源\n\n我的作品\n素材资产库\n账号与会员\n当前余额\n$200\n账户充值\n收起侧栏\n$200\n余额\nU\n无限画布\n\n在无限画布上自由组织你的创作\n\n导入\n新建画布\n还没有画布\n\n创建你的第一个无限画布，在画布上自由组织图片、视频、音频和文本节点\n\n新建画布"
+        },
+        "empty": {
+          "text": "影织\nSHADOWWEAVE\n新建创作\n\n探索\n\n灵感广场\n\n创作\n\n图片生成\n视频生成\nNew\n音频生成\n无限画布\n\n资源\n\n我的作品\n素材资产库\n账号与会员\n当前余额\n$200\n账户充值\n收起侧栏\n$200\n余额\nU\n无限画布 1\n导出\n添加节点\n缩放：100% · 工具：选择\n这张画布还是空的\n\n使用顶部的快速按钮或“添加节点”开始创作。\n\n拖动节点可调整位置，按 Shift 或 Ctrl 可多选。\n\n按住 Space 并拖动可平移画布，滚轮可缩放。\n\n按住 Space 并拖动可临时平移\n100%",
+          "canvas": {
+            "canvas": {
+              "rect": {
+                "x": 264,
+                "y": 120,
+                "width": 1656,
+                "height": 960,
+                "top": 120,
+                "right": 1920,
+                "bottom": 1080,
+                "left": 264
+              },
+              "background": "rgb(12, 10, 9)",
+              "cursor": "default"
+            },
+            "grid": {
+              "backgroundImage": "linear-gradient(to right, rgba(255, 255, 255, 0.055) 1px, rgba(0, 0, 0, 0) 1px), linear-gradient(rgba(255, 255, 255, 0.055) 1px, rgba(0, 0, 0, 0) 1px)",
+              "backgroundSize": "40px 40px, 40px 40px",
+              "backgroundPosition": "0px 0px, 0px 0px"
+            },
+            "contentTransform": "matrix(1, 0, 0, 1, 0, 0)",
+            "toolbar": {
+              "rect": {
+                "x": 280,
+                "y": 136,
+                "width": 301.515625,
+                "height": 58,
+                "top": 136,
+                "right": 581.515625,
+                "bottom": 194,
+                "left": 280
+              },
+              "className": "absolute left-4 top-4 z-10 flex items-center gap-2 rounded-xl border border-border bg-background/95 p-2 shadow-lg backdrop-blur"
+            },
+            "zoom": {
+              "rect": {
+                "x": 280,
+                "y": 1006,
+                "width": 222,
+                "height": 58,
+                "top": 1006,
+                "right": 502,
+                "bottom": 1064,
+                "left": 280
+              },
+              "className": "absolute bottom-4 left-4 z-10 flex items-center gap-1 rounded-xl border border-border bg-background/95 p-2 shadow-lg backdrop-blur"
+            }
+          }
+        },
+        "text": {
+          "id": "87b5a7cb-f963-4796-8120-006f987a1d50",
+          "text": "文本节点图片假图片模型生成假线路",
+          "rect": {
+            "x": 1092,
+            "y": 500,
+            "width": 300,
+            "height": 200
+          },
+          "borderColor": "rgb(59, 130, 246)",
+          "borderWidth": "2px",
+          "borderRadius": "12px",
+          "backgroundColor": "rgb(255, 255, 255)",
+          "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(59, 130, 246, 0.25) 0px 10px 15px -3px, rgba(59, 130, 246, 0.25) 0px 4px 6px -4px",
+          "cursor": "grab",
+          "header": {
+            "height": 40,
+            "backgroundColor": "rgb(244, 244, 245)",
+            "borderBottomColor": "rgb(228, 228, 231)",
+            "fontSize": "16px"
+          },
+          "textarea": {
+            "rect": {
+              "width": 272,
+              "height": 80
+            },
+            "border": "0px solid rgb(228, 228, 231)",
+            "padding": "0px",
+            "background": "rgba(0, 0, 0, 0)",
+            "fontSize": "14px"
+          },
+          "resizeHandle": {
+            "count": 1,
+            "width": 14,
+            "height": 14,
+            "background": "rgb(255, 255, 255)",
+            "borderColor": "rgb(59, 130, 246)"
+          }
+        },
+        "image": {
+          "id": "1337f0bb-33ed-49d5-8b1d-12230fa6eb63",
+          "text": "图片节点暂无图片",
+          "rect": {
+            "x": 998,
+            "y": 556,
+            "width": 400,
+            "height": 300
+          },
+          "borderColor": "rgb(59, 130, 246)",
+          "borderWidth": "2px",
+          "borderRadius": "12px",
+          "backgroundColor": "rgb(255, 255, 255)",
+          "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(59, 130, 246, 0.25) 0px 10px 15px -3px, rgba(59, 130, 246, 0.25) 0px 4px 6px -4px",
+          "cursor": "grab",
+          "header": {
+            "height": 40,
+            "backgroundColor": "rgb(244, 244, 245)",
+            "borderBottomColor": "rgb(228, 228, 231)",
+            "fontSize": "16px"
+          },
+          "textarea": null,
+          "resizeHandle": {
+            "count": 1,
+            "width": 14,
+            "height": 14,
+            "background": "rgb(255, 255, 255)",
+            "borderColor": "rgb(59, 130, 246)"
+          }
+        },
+        "video": {
+          "id": "d63be28e-a619-41d0-b19c-c6f157daa22e",
+          "text": "视频节点暂无视频",
+          "rect": {
+            "x": 852,
+            "y": 615,
+            "width": 480,
+            "height": 270
+          },
+          "borderColor": "rgb(59, 130, 246)",
+          "borderWidth": "2px",
+          "borderRadius": "12px",
+          "backgroundColor": "rgb(255, 255, 255)",
+          "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(59, 130, 246, 0.25) 0px 10px 15px -3px, rgba(59, 130, 246, 0.25) 0px 4px 6px -4px",
+          "cursor": "grab",
+          "header": {
+            "height": 40,
+            "backgroundColor": "rgb(244, 244, 245)",
+            "borderBottomColor": "rgb(228, 228, 231)",
+            "fontSize": "16px"
+          },
+          "textarea": null,
+          "resizeHandle": {
+            "count": 1,
+            "width": 14,
+            "height": 14,
+            "background": "rgb(255, 255, 255)",
+            "borderColor": "rgb(59, 130, 246)"
+          }
+        },
+        "audio": {
+          "id": "4330a26b-dab5-4578-b23d-3225ce162204",
+          "text": "音频节点暂无音频",
+          "rect": {
+            "x": 811,
+            "y": 646,
+            "width": 350,
+            "height": 120
+          },
+          "borderColor": "rgb(59, 130, 246)",
+          "borderWidth": "2px",
+          "borderRadius": "12px",
+          "backgroundColor": "rgb(255, 255, 255)",
+          "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(59, 130, 246, 0.25) 0px 10px 15px -3px, rgba(59, 130, 246, 0.25) 0px 4px 6px -4px",
+          "cursor": "grab",
+          "header": {
+            "height": 40,
+            "backgroundColor": "rgb(244, 244, 245)",
+            "borderBottomColor": "rgb(228, 228, 231)",
+            "fontSize": "16px"
+          },
+          "textarea": null,
+          "resizeHandle": {
+            "count": 1,
+            "width": 14,
+            "height": 14,
+            "background": "rgb(255, 255, 255)",
+            "borderColor": "rgb(59, 130, 246)"
+          }
+        },
+        "selected": [
+          {
+            "id": "87b5a7cb-f963-4796-8120-006f987a1d50",
+            "className": "absolute rounded-xl border-2 bg-background shadow-lg z-10 border-blue-500 shadow-blue-500/25 cursor-grab",
+            "border": "2px solid rgb(59, 130, 246)",
+            "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(59, 130, 246, 0.25) 0px 10px 15px -3px, rgba(59, 130, 246, 0.25) 0px 4px 6px -4px",
+            "cursor": "grab"
+          },
+          {
+            "id": "1337f0bb-33ed-49d5-8b1d-12230fa6eb63",
+            "className": "absolute rounded-xl border-2 bg-background shadow-lg border-border hover:border-blue-300 cursor-grab",
+            "border": "2px solid rgb(228, 228, 231)",
+            "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.1) 0px 10px 15px -3px, rgba(0, 0, 0, 0.1) 0px 4px 6px -4px",
+            "cursor": "grab"
+          },
+          {
+            "id": "d63be28e-a619-41d0-b19c-c6f157daa22e",
+            "className": "absolute rounded-xl border-2 bg-background shadow-lg border-border hover:border-blue-300 cursor-grab",
+            "border": "2px solid rgb(228, 228, 231)",
+            "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.1) 0px 10px 15px -3px, rgba(0, 0, 0, 0.1) 0px 4px 6px -4px",
+            "cursor": "grab"
+          },
+          {
+            "id": "4330a26b-dab5-4578-b23d-3225ce162204",
+            "className": "absolute rounded-xl border-2 bg-background shadow-lg border-border hover:border-blue-300 cursor-grab",
+            "border": "2px solid rgb(228, 228, 231)",
+            "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.1) 0px 10px 15px -3px, rgba(0, 0, 0, 0.1) 0px 4px 6px -4px",
+            "cursor": "grab"
+          }
+        ],
+        "resizeHandles": 1,
+        "resize": {
+          "before": {
+            "id": "87b5a7cb-f963-4796-8120-006f987a1d50",
+            "text": "文本节点图片假图片模型生成假线路",
+            "rect": {
+              "x": 1092,
+              "y": 500,
+              "width": 300,
+              "height": 200
+            },
+            "borderColor": "rgb(59, 130, 246)",
+            "borderWidth": "2px",
+            "borderRadius": "12px",
+            "backgroundColor": "rgb(255, 255, 255)",
+            "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(59, 130, 246, 0.25) 0px 10px 15px -3px, rgba(59, 130, 246, 0.25) 0px 4px 6px -4px",
+            "cursor": "grab",
+            "header": {
+              "height": 40,
+              "backgroundColor": "rgb(244, 244, 245)",
+              "borderBottomColor": "rgb(228, 228, 231)",
+              "fontSize": "16px"
+            },
+            "textarea": {
+              "rect": {
+                "width": 272,
+                "height": 80
+              },
+              "border": "0px solid rgb(228, 228, 231)",
+              "padding": "0px",
+              "background": "rgba(0, 0, 0, 0)",
+              "fontSize": "14px"
+            },
+            "resizeHandle": {
+              "count": 1,
+              "width": 14,
+              "height": 14,
+              "background": "rgb(255, 255, 255)",
+              "borderColor": "rgb(59, 130, 246)"
+            }
+          },
+          "after": {
+            "id": "87b5a7cb-f963-4796-8120-006f987a1d50",
+            "text": "文本节点图片假图片模型生成假线路",
+            "rect": {
+              "x": 1092,
+              "y": 500,
+              "width": 336,
+              "height": 226
+            },
+            "borderColor": "rgb(59, 130, 246)",
+            "borderWidth": "2px",
+            "borderRadius": "12px",
+            "backgroundColor": "rgb(255, 255, 255)",
+            "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(59, 130, 246, 0.25) 0px 10px 15px -3px, rgba(59, 130, 246, 0.25) 0px 4px 6px -4px",
+            "cursor": "grab",
+            "header": {
+              "height": 40,
+              "backgroundColor": "rgb(244, 244, 245)",
+              "borderBottomColor": "rgb(228, 228, 231)",
+              "fontSize": "16px"
+            },
+            "textarea": {
+              "rect": {
+                "width": 308,
+                "height": 80
+              },
+              "border": "0px solid rgb(228, 228, 231)",
+              "padding": "0px",
+              "background": "rgba(0, 0, 0, 0)",
+              "fontSize": "14px"
+            },
+            "resizeHandle": {
+              "count": 1,
+              "width": 14,
+              "height": 14,
+              "background": "rgb(255, 255, 255)",
+              "borderColor": "rgb(59, 130, 246)"
+            }
+          }
+        },
+        "drag": {
+          "firstId": "87b5a7cb-f963-4796-8120-006f987a1d50",
+          "after": {
+            "id": "87b5a7cb-f963-4796-8120-006f987a1d50",
+            "text": "文本节点图片假图片模型生成假线路",
+            "rect": {
+              "x": 1112,
+              "y": 565,
+              "width": 336,
+              "height": 226
+            },
+            "borderColor": "rgb(59, 130, 246)",
+            "borderWidth": "2px",
+            "borderRadius": "12px",
+            "backgroundColor": "rgb(255, 255, 255)",
+            "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(59, 130, 246, 0.25) 0px 10px 15px -3px, rgba(59, 130, 246, 0.25) 0px 4px 6px -4px",
+            "cursor": "grab",
+            "header": {
+              "height": 40,
+              "backgroundColor": "rgb(244, 244, 245)",
+              "borderBottomColor": "rgb(228, 228, 231)",
+              "fontSize": "16px"
+            },
+            "textarea": {
+              "rect": {
+                "width": 308,
+                "height": 80
+              },
+              "border": "0px solid rgb(228, 228, 231)",
+              "padding": "0px",
+              "background": "rgba(0, 0, 0, 0)",
+              "fontSize": "14px"
+            },
+            "resizeHandle": {
+              "count": 1,
+              "width": 14,
+              "height": 14,
+              "background": "rgb(255, 255, 255)",
+              "borderColor": "rgb(59, 130, 246)"
+            }
+          }
+        },
+        "multiSelect": [
+          {
+            "id": "87b5a7cb-f963-4796-8120-006f987a1d50",
+            "border": "2px solid rgb(59, 130, 246)",
+            "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(59, 130, 246, 0.25) 0px 10px 15px -3px, rgba(59, 130, 246, 0.25) 0px 4px 6px -4px"
+          },
+          {
+            "id": "1337f0bb-33ed-49d5-8b1d-12230fa6eb63",
+            "border": "2px solid rgb(59, 130, 246)",
+            "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(59, 130, 246, 0.25) 0px 10px 15px -3px, rgba(59, 130, 246, 0.25) 0px 4px 6px -4px"
+          },
+          {
+            "id": "d63be28e-a619-41d0-b19c-c6f157daa22e",
+            "border": "2px solid rgb(59, 130, 246)",
+            "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(59, 130, 246, 0.25) 0px 10px 15px -3px, rgba(59, 130, 246, 0.25) 0px 4px 6px -4px"
+          },
+          {
+            "id": "4330a26b-dab5-4578-b23d-3225ce162204",
+            "border": "2px solid rgb(228, 228, 231)",
+            "shadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.1) 0px 10px 15px -3px, rgba(0, 0, 0, 0.1) 0px 4px 6px -4px"
+          }
+        ],
+        "menuText": "影织\nSHADOWWEAVE\n新建创作\n\n探索\n\n灵感广场\n\n创作\n\n图片生成\n视频生成\nNew\n音频生成\n无限画布\n\n资源\n\n我的作品\n素材资产库\n账号与会员\n当前余额\n$200\n账户充值\n收起侧栏\n$200\n余额\nU\n无限画布 1\n删除（3）\n导出\n添加节点\n文本节点\n图片\n假图片模型\n生成\n假线路\n图片节点\n\n暂无图片\n\n视频节点\n\n暂无视频\n\n音频节点\n\n暂无音频\n\n缩放：100% · 工具：选择\n按住 Space 并拖动可临时平移\n100%\n复制\n删除",
+        "afterDuplicate": 5,
+        "keyboard": {
+          "countBeforeDelete": 5,
+          "countAfterDelete": 5,
+          "selectedAfterEscape": 1
+        },
+        "zoom": {
+          "start": "100%",
+          "in": "120%",
+          "out": "100%",
+          "reset": "100%",
+          "wheel": "100%",
+          "panPressed": "false",
+          "selectPressed": "true",
+          "spaceCursor": "grab",
+          "canvas": {
+            "canvas": {
+              "rect": {
+                "x": 264,
+                "y": 120,
+                "width": 1656,
+                "height": 960,
+                "top": 120,
+                "right": 1920,
+                "bottom": 1080,
+                "left": 264
+              },
+              "background": "rgb(12, 10, 9)",
+              "cursor": "default"
+            },
+            "grid": {
+              "backgroundImage": "linear-gradient(to right, rgba(255, 255, 255, 0.055) 1px, rgba(0, 0, 0, 0) 1px), linear-gradient(rgba(255, 255, 255, 0.055) 1px, rgba(0, 0, 0, 0) 1px)",
+              "backgroundSize": "40px 40px, 40px 40px",
+              "backgroundPosition": "0px 0px, 0px 0px"
+            },
+            "contentTransform": "matrix(1, 0, 0, 1, 0, 0)",
+            "toolbar": {
+              "rect": {
+                "x": 280,
+                "y": 136,
+                "width": 301.515625,
+                "height": 58,
+                "top": 136,
+                "right": 581.515625,
+                "bottom": 194,
+                "left": 280
+              },
+              "className": "absolute left-4 top-4 z-10 flex items-center gap-2 rounded-xl border border-border bg-background/95 p-2 shadow-lg backdrop-blur"
+            },
+            "zoom": {
+              "rect": {
+                "x": 280,
+                "y": 1006,
+                "width": 222,
+                "height": 58,
+                "top": 1006,
+                "right": 502,
+                "bottom": 1064,
+                "left": 280
+              },
+              "className": "absolute bottom-4 left-4 z-10 flex items-center gap-1 rounded-xl border border-border bg-background/95 p-2 shadow-lg backdrop-blur"
+            }
+          }
+        },
+        "generationUI": {
+          "body": "文本节点\n图片\n假图片模型\n生成\n假线路",
+          "typeSelect": 1,
+          "modelSelect": 1,
+          "routeSelect": 1,
+          "generateButton": 1
+        },
+        "generationLoaded": {
+          "body": "文本节点\n图片\n假图片模型\n生成\n假线路"
+        },
+        "spread8": [
+          {
+            "id": "7702db2f-7a98-4004-b06b-c30bd37a5ece",
+            "text": "文本节点图片假图片模型生成假线路",
+            "rect": {
+              "x": 1092,
+              "y": 500,
+              "width": 300,
+              "height": 200
+            },
+            "borderColor": "rgb(228, 228, 231)",
+            "borderWidth": "2px",
+            "borderRadius": "12px",
+            "backgroundColor": "rgb(255, 255, 255)",
+            "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.1) 0px 10px 15px -3px, rgba(0, 0, 0, 0.1) 0px 4px 6px -4px",
+            "cursor": "grab",
+            "header": {
+              "height": 40,
+              "backgroundColor": "rgb(244, 244, 245)",
+              "borderBottomColor": "rgb(228, 228, 231)",
+              "fontSize": "16px"
+            },
+            "textarea": {
+              "rect": {
+                "width": 272,
+                "height": 80
+              },
+              "border": "0px solid rgb(228, 228, 231)",
+              "padding": "0px",
+              "background": "rgba(0, 0, 0, 0)",
+              "fontSize": "14px"
+            },
+            "resizeHandle": {
+              "count": 0
+            }
+          },
+          {
+            "id": "19036cd9-be32-4f2f-af86-47e83c773f8b",
+            "text": "文本节点图片假图片模型生成假线路",
+            "rect": {
+              "x": 1048,
+              "y": 606,
+              "width": 300,
+              "height": 200
+            },
+            "borderColor": "rgb(228, 228, 231)",
+            "borderWidth": "2px",
+            "borderRadius": "12px",
+            "backgroundColor": "rgb(255, 255, 255)",
+            "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.1) 0px 10px 15px -3px, rgba(0, 0, 0, 0.1) 0px 4px 6px -4px",
+            "cursor": "grab",
+            "header": {
+              "height": 40,
+              "backgroundColor": "rgb(244, 244, 245)",
+              "borderBottomColor": "rgb(228, 228, 231)",
+              "fontSize": "16px"
+            },
+            "textarea": {
+              "rect": {
+                "width": 272,
+                "height": 80
+              },
+              "border": "0px solid rgb(228, 228, 231)",
+              "padding": "0px",
+              "background": "rgba(0, 0, 0, 0)",
+              "fontSize": "14px"
+            },
+            "resizeHandle": {
+              "count": 0
+            }
+          },
+          {
+            "id": "ed8ad24c-9a5d-496e-970c-b22427546b67",
+            "text": "文本节点图片假图片模型生成假线路",
+            "rect": {
+              "x": 942,
+              "y": 650,
+              "width": 300,
+              "height": 200
+            },
+            "borderColor": "rgb(228, 228, 231)",
+            "borderWidth": "2px",
+            "borderRadius": "12px",
+            "backgroundColor": "rgb(255, 255, 255)",
+            "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.1) 0px 10px 15px -3px, rgba(0, 0, 0, 0.1) 0px 4px 6px -4px",
+            "cursor": "grab",
+            "header": {
+              "height": 40,
+              "backgroundColor": "rgb(244, 244, 245)",
+              "borderBottomColor": "rgb(228, 228, 231)",
+              "fontSize": "16px"
+            },
+            "textarea": {
+              "rect": {
+                "width": 272,
+                "height": 80
+              },
+              "border": "0px solid rgb(228, 228, 231)",
+              "padding": "0px",
+              "background": "rgba(0, 0, 0, 0)",
+              "fontSize": "14px"
+            },
+            "resizeHandle": {
+              "count": 0
+            }
+          },
+          {
+            "id": "a087ad8e-4229-4b41-b0ae-de7adc926b22",
+            "text": "文本节点图片假图片模型生成假线路",
+            "rect": {
+              "x": 836,
+              "y": 606,
+              "width": 300,
+              "height": 200
+            },
+            "borderColor": "rgb(228, 228, 231)",
+            "borderWidth": "2px",
+            "borderRadius": "12px",
+            "backgroundColor": "rgb(255, 255, 255)",
+            "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.1) 0px 10px 15px -3px, rgba(0, 0, 0, 0.1) 0px 4px 6px -4px",
+            "cursor": "grab",
+            "header": {
+              "height": 40,
+              "backgroundColor": "rgb(244, 244, 245)",
+              "borderBottomColor": "rgb(228, 228, 231)",
+              "fontSize": "16px"
+            },
+            "textarea": {
+              "rect": {
+                "width": 272,
+                "height": 80
+              },
+              "border": "0px solid rgb(228, 228, 231)",
+              "padding": "0px",
+              "background": "rgba(0, 0, 0, 0)",
+              "fontSize": "14px"
+            },
+            "resizeHandle": {
+              "count": 0
+            }
+          },
+          {
+            "id": "03720f30-f605-4ad9-a128-77fe8a44e4f6",
+            "text": "文本节点图片假图片模型生成假线路",
+            "rect": {
+              "x": 792,
+              "y": 500,
+              "width": 300,
+              "height": 200
+            },
+            "borderColor": "rgb(228, 228, 231)",
+            "borderWidth": "2px",
+            "borderRadius": "12px",
+            "backgroundColor": "rgb(255, 255, 255)",
+            "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.1) 0px 10px 15px -3px, rgba(0, 0, 0, 0.1) 0px 4px 6px -4px",
+            "cursor": "grab",
+            "header": {
+              "height": 40,
+              "backgroundColor": "rgb(244, 244, 245)",
+              "borderBottomColor": "rgb(228, 228, 231)",
+              "fontSize": "16px"
+            },
+            "textarea": {
+              "rect": {
+                "width": 272,
+                "height": 80
+              },
+              "border": "0px solid rgb(228, 228, 231)",
+              "padding": "0px",
+              "background": "rgba(0, 0, 0, 0)",
+              "fontSize": "14px"
+            },
+            "resizeHandle": {
+              "count": 0
+            }
+          },
+          {
+            "id": "2b9c0a05-a05d-4df1-98f6-9ee723b49fac",
+            "text": "文本节点图片假图片模型生成假线路",
+            "rect": {
+              "x": 836,
+              "y": 394,
+              "width": 300,
+              "height": 200
+            },
+            "borderColor": "rgb(228, 228, 231)",
+            "borderWidth": "2px",
+            "borderRadius": "12px",
+            "backgroundColor": "rgb(255, 255, 255)",
+            "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.1) 0px 10px 15px -3px, rgba(0, 0, 0, 0.1) 0px 4px 6px -4px",
+            "cursor": "grab",
+            "header": {
+              "height": 40,
+              "backgroundColor": "rgb(244, 244, 245)",
+              "borderBottomColor": "rgb(228, 228, 231)",
+              "fontSize": "16px"
+            },
+            "textarea": {
+              "rect": {
+                "width": 272,
+                "height": 80
+              },
+              "border": "0px solid rgb(228, 228, 231)",
+              "padding": "0px",
+              "background": "rgba(0, 0, 0, 0)",
+              "fontSize": "14px"
+            },
+            "resizeHandle": {
+              "count": 0
+            }
+          },
+          {
+            "id": "0a63c319-c0c7-41db-b927-1f50e880031f",
+            "text": "文本节点图片假图片模型生成假线路",
+            "rect": {
+              "x": 942,
+              "y": 350,
+              "width": 300,
+              "height": 200
+            },
+            "borderColor": "rgb(228, 228, 231)",
+            "borderWidth": "2px",
+            "borderRadius": "12px",
+            "backgroundColor": "rgb(255, 255, 255)",
+            "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0.1) 0px 10px 15px -3px, rgba(0, 0, 0, 0.1) 0px 4px 6px -4px",
+            "cursor": "grab",
+            "header": {
+              "height": 40,
+              "backgroundColor": "rgb(244, 244, 245)",
+              "borderBottomColor": "rgb(228, 228, 231)",
+              "fontSize": "16px"
+            },
+            "textarea": {
+              "rect": {
+                "width": 272,
+                "height": 80
+              },
+              "border": "0px solid rgb(228, 228, 231)",
+              "padding": "0px",
+              "background": "rgba(0, 0, 0, 0)",
+              "fontSize": "14px"
+            },
+            "resizeHandle": {
+              "count": 0
+            }
+          },
+          {
+            "id": "a8c5870e-17ea-4e01-9098-ca802eaba580",
+            "text": "文本节点图片假图片模型生成假线路",
+            "rect": {
+              "x": 1048,
+              "y": 394,
+              "width": 300,
+              "height": 200
+            },
+            "borderColor": "rgb(59, 130, 246)",
+            "borderWidth": "2px",
+            "borderRadius": "12px",
+            "backgroundColor": "rgb(255, 255, 255)",
+            "boxShadow": "rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(0, 0, 0, 0) 0px 0px 0px 0px, rgba(59, 130, 246, 0.25) 0px 10px 15px -3px, rgba(59, 130, 246, 0.25) 0px 4px 6px -4px",
+            "cursor": "grab",
+            "header": {
+              "height": 40,
+              "backgroundColor": "rgb(244, 244, 245)",
+              "borderBottomColor": "rgb(228, 228, 231)",
+              "fontSize": "16px"
+            },
+            "textarea": {
+              "rect": {
+                "width": 272,
+                "height": 80
+              },
+              "border": "0px solid rgb(228, 228, 231)",
+              "padding": "0px",
+              "background": "rgba(0, 0, 0, 0)",
+              "fontSize": "14px"
+            },
+            "resizeHandle": {
+              "count": 1,
+              "width": 14,
+              "height": 14,
+              "background": "rgb(255, 255, 255)",
+              "borderColor": "rgb(59, 130, 246)"
+            }
+          }
+        ],
+        "finalCanvas": {
+          "canvas": {
+            "rect": {
+              "x": 264,
+              "y": 120,
+              "width": 1656,
+              "height": 960,
+              "top": 120,
+              "right": 1920,
+              "bottom": 1080,
+              "left": 264
+            },
+            "background": "rgb(12, 10, 9)",
+            "cursor": "default"
+          },
+          "grid": {
+            "backgroundImage": "linear-gradient(to right, rgba(255, 255, 255, 0.055) 1px, rgba(0, 0, 0, 0) 1px), linear-gradient(rgba(255, 255, 255, 0.055) 1px, rgba(0, 0, 0, 0) 1px)",
+            "backgroundSize": "40px 40px, 40px 40px",
+            "backgroundPosition": "0px 0px, 0px 0px"
+          },
+          "contentTransform": "matrix(1, 0, 0, 1, 0, 0)",
+          "toolbar": {
+            "rect": {
+              "x": 280,
+              "y": 136,
+              "width": 301.515625,
+              "height": 58,
+              "top": 136,
+              "right": 581.515625,
+              "bottom": 194,
+              "left": 280
+            },
+            "className": "absolute left-4 top-4 z-10 flex items-center gap-2 rounded-xl border border-border bg-background/95 p-2 shadow-lg backdrop-blur"
+          },
+          "zoom": {
+            "rect": {
+              "x": 280,
+              "y": 1006,
+              "width": 222,
+              "height": 58,
+              "top": 1006,
+              "right": 502,
+              "bottom": 1064,
+              "left": 280
+            },
+            "className": "absolute bottom-4 left-4 z-10 flex items-center gap-1 rounded-xl border border-border bg-background/95 p-2 shadow-lg backdrop-blur"
+          }
+        }
+      }
+    }
+  }
+}

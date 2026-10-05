@@ -1,0 +1,75 @@
+{
+  "app": "infinite-canvas",
+  "version": 3,
+  "exportedAt": "2026-10-04T00:26:19.415Z",
+  "projects": [
+    {
+      "project": {
+        "activeChatId": null,
+        "agentConfig": null,
+        "agentPanel": {
+          "open": false,
+          "width": 464
+        },
+        "autoTitlePending": true,
+        "backgroundMode": "lines",
+        "chatSessions": [],
+        "connections": [
+          {
+            "fromNodeId": "text-1791073567981-i3ljh",
+            "id": "conn-1791073574420",
+            "toNodeId": "video-1791073568951-o778q"
+          }
+        ],
+        "createdAt": "2026-10-04T00:26:06.577Z",
+        "id": "VIKwJgCC1djQwj_Ci6ql3",
+        "nodes": [
+          {
+            "height": 280,
+            "id": "text-1791073567981-i3ljh",
+            "metadata": {
+              "content": "",
+              "fontSize": 14,
+              "status": "idle"
+            },
+            "position": {
+              "x": 142.04119741747354,
+              "y": 360.3545570205506
+            },
+            "title": "文本",
+            "type": "text",
+            "width": 400
+          },
+          {
+            "height": 236,
+            "id": "video-1791073568951-o778q",
+            "metadata": {
+              "content": "",
+              "status": "idle"
+            },
+            "position": {
+              "x": 947.3380408145676,
+              "y": 540.6398269275838
+            },
+            "title": "视频",
+            "type": "video",
+            "width": 420
+          }
+        ],
+        "showImageInfo": false,
+        "sidePanel": {
+          "open": true,
+          "width": 280
+        },
+        "title": "无限画布 31",
+        "updatedAt": "2026-10-04T00:26:18.194Z",
+        "viewport": {
+          "k": 1,
+          "x": 0,
+          "y": 0
+        }
+      },
+      "files": []
+    }
+  ]
+}

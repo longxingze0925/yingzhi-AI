@@ -1,0 +1,9 @@
+[console.error] Failed to load resource: the server responded with a status of 401 (Unauthorized)
+[console.error] Failed to load resource: the server responded with a status of 401 (Unauthorized)
+[requestfailed] GET http://localhost:3002/login?next=%2Fstudio%2Fcanvas&_rsc=tlsy5 net::ERR_ABORTED
+[requestfailed] GET http://localhost:3002/studio/canvas/0016e016-75d2-4a83-b341-b891788496a1?_rsc=1yjtp net::ERR_ABORTED
+[requestfailed] GET http://localhost:3002/studio/canvas/df772a73-67b9-49dd-91c9-998c6d7c0f56?_rsc=1yu34 net::ERR_ABORTED
+[requestfailed] GET http://localhost:3002/studio/canvas/ad682315-54b1-45f9-baf7-1792c70cd801?_rsc=vmu6j net::ERR_ABORTED
+[requestfailed] GET http://localhost:3002/studio/canvas/ad682315-54b1-45f9-baf7-1792c70cd801?_rsc=ked5f net::ERR_ABORTED
+[requestfailed] GET http://localhost:3002/studio/canvas/862cc7c8-70b2-46cb-9411-33a67fb5b3ba?_rsc=oq6ag net::ERR_ABORTED
+[requestfailed] GET http://localhost:3002/studio/canvas/d3fb6e5b-a502-4242-a40a-5bea943accf4?_rsc=rc7a8 net::ERR_ABORTED

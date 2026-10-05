@@ -1,0 +1,43 @@
+{
+  "date": "2026-10-04",
+  "results": [
+    {
+      "name": "连线终点箭头",
+      "status": "PASS",
+      "detail": "url(#canvas-connection-arrow-conn-1791078619155)"
+    },
+    {
+      "name": "Ctrl/Cmd+D 同时复制节点和内部连线",
+      "status": "PASS",
+      "detail": "节点 2->4，连线 1->2"
+    },
+    {
+      "name": "视频默认时长服从 New API 模型能力",
+      "status": "PASS",
+      "detail": "720p · 横屏 · 30s"
+    },
+    {
+      "name": "本地提示词库可加载和筛选",
+      "status": "PASS",
+      "detail": "内置提示词已显示"
+    },
+    {
+      "name": "Agent Skill 本地导入可用",
+      "status": "PASS",
+      "detail": "已导入并选中"
+    },
+    {
+      "name": "模型图标资源可访问",
+      "status": "PASS",
+      "detail": "HTTP 200"
+    },
+    {
+      "name": "旧 404 请求已消除",
+      "status": "PASS",
+      "detail": "prompts / agent-skills / openai.svg 无 4xx"
+    }
+  ],
+  "errors": [],
+  "responses": [],
+  "forbidden": []
+}

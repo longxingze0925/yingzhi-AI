@@ -1,0 +1,279 @@
+{
+  "startedAt": "2026-10-03T13:55:48.344Z",
+  "completedAt": "2026-10-03T13:55:54.473Z",
+  "browser": "Google Chrome",
+  "viewport": "1920x1080",
+  "frontend": "http://localhost:3002",
+  "backend": "http://localhost:3000",
+  "projectName": "无限画布 3",
+  "projectId": "8a79a169-5177-451d-9ea0-ebd63c4e90e9",
+  "importedProjectId": "",
+  "exportDetails": null,
+  "summary": {
+    "total": 26,
+    "passed": 0,
+    "failed": 0,
+    "blocked": 26
+  },
+  "blocker": "download.saveAs: Target page, context or browser has been closed",
+  "cases": [
+    {
+      "number": 1,
+      "name": "修复1：导出/导入包含连线",
+      "purpose": "验证导出 JSON 字段和实际导入往返",
+      "status": "BLOCKED",
+      "actual": "测试脚本在到达该项前中断，未判定功能结果",
+      "evidence": []
+    },
+    {
+      "number": 2,
+      "name": "修复2：连接点不被调整手柄遮挡",
+      "purpose": "左右连接点命中、创建草稿及 hover 放大",
+      "status": "BLOCKED",
+      "actual": "测试脚本在到达该项前中断，未判定功能结果",
+      "evidence": []
+    },
+    {
+      "number": 3,
+      "name": "修复3：4 个方向的贝塞尔曲线",
+      "purpose": "左→右、右→右、左→左、右→左曲线与箭头",
+      "status": "BLOCKED",
+      "actual": "测试脚本在到达该项前中断，未判定功能结果",
+      "evidence": []
+    },
+    {
+      "number": 4,
+      "name": "修复4：删除节点清理关联连线",
+      "purpose": "右键菜单删除中间节点并清理两条关联线",
+      "status": "BLOCKED",
+      "actual": "测试脚本在到达该项前中断，未判定功能结果",
+      "evidence": []
+    },
+    {
+      "number": 5,
+      "name": "创建连线（两次点击）",
+      "purpose": "从起点连接点点击到目标连接点",
+      "status": "BLOCKED",
+      "actual": "测试脚本在到达该项前中断，未判定功能结果",
+      "evidence": []
+    },
+    {
+      "number": 6,
+      "name": "连线视觉效果",
+      "purpose": "路径为贝塞尔曲线并有终点箭头",
+      "status": "BLOCKED",
+      "actual": "测试脚本在到达该项前中断，未判定功能结果",
+      "evidence": []
+    },
+    {
+      "number": 7,
+      "name": "连线选中",
+      "purpose": "点击曲线后高亮，点击空白取消",
+      "status": "BLOCKED",
+      "actual": "测试脚本在到达该项前中断，未判定功能结果",
+      "evidence": []
+    },
+    {
+      "number": 8,
+      "name": "Delete/Backspace 删除连线",
+      "purpose": "两种快捷键分别删除选中连线",
+      "status": "BLOCKED",
+      "actual": "测试脚本在到达该项前中断，未判定功能结果",
+      "evidence": []
+    },
+    {
+      "number": 9,
+      "name": "Escape 取消选择",
+      "purpose": "取消连线创建草稿和连线选中",
+      "status": "BLOCKED",
+      "actual": "测试脚本在到达该项前中断，未判定功能结果",
+      "evidence": []
+    },
+    {
+      "number": 10,
+      "name": "同一连接点创建多条连线",
+      "purpose": "验证同一端口可以有多条连线",
+      "status": "BLOCKED",
+      "actual": "测试脚本在到达该项前中断，未判定功能结果",
+      "evidence": []
+    },
+    {
+      "number": 11,
+      "name": "节点拖动时连线跟随",
+      "purpose": "拖动源节点和目标节点观察端点",
+      "status": "BLOCKED",
+      "actual": "测试脚本在到达该项前中断，未判定功能结果",
+      "evidence": []
+    },
+    {
+      "number": 12,
+      "name": "调整节点大小时连线跟随",
+      "purpose": "拖动边/角调整柄并观察端点",
+      "status": "BLOCKED",
+      "actual": "测试脚本在到达该项前中断，未判定功能结果",
+      "evidence": []
+    },
+    {
+      "number": 13,
+      "name": "多选节点拖动时连线跟随",
+      "purpose": "拖动多选节点，确认线端点跟随",
+      "status": "BLOCKED",
+      "actual": "测试脚本在到达该项前中断，未判定功能结果",
+      "evidence": []
+    },
+    {
+      "number": 14,
+      "name": "拒绝自连接",
+      "purpose": "尝试从同一节点一侧连到另一侧",
+      "status": "BLOCKED",
+      "actual": "测试脚本在到达该项前中断，未判定功能结果",
+      "evidence": []
+    },
+    {
+      "number": 15,
+      "name": "复制节点不复制连线",
+      "purpose": "复制已连线节点，检查连线数量不变",
+      "status": "BLOCKED",
+      "actual": "测试脚本在到达该项前中断，未判定功能结果",
+      "evidence": []
+    },
+    {
+      "number": 16,
+      "name": "撤销/重做包含连线操作",
+      "purpose": "创建连线后测试 Ctrl+Z / Ctrl+Shift+Z",
+      "status": "BLOCKED",
+      "actual": "测试脚本在到达该项前中断，未判定功能结果",
+      "evidence": []
+    },
+    {
+      "number": 17,
+      "name": "刷新后连线保留",
+      "purpose": "刷新页面检查节点和连线恢复",
+      "status": "BLOCKED",
+      "actual": "测试脚本在到达该项前中断，未判定功能结果",
+      "evidence": []
+    },
+    {
+      "number": 18,
+      "name": "导出/导入包含连线",
+      "purpose": "实际 UI JSON 往返恢复连接数据",
+      "status": "BLOCKED",
+      "actual": "测试脚本在到达该项前中断，未判定功能结果",
+      "evidence": []
+    },
+    {
+      "number": 19,
+      "name": "连线颜色",
+      "purpose": "未选中灰色、选中蓝色",
+      "status": "BLOCKED",
+      "actual": "测试脚本在到达该项前中断，未判定功能结果",
+      "evidence": []
+    },
+    {
+      "number": 20,
+      "name": "连线宽度",
+      "purpose": "未选中 2px、选中 3px",
+      "status": "BLOCKED",
+      "actual": "测试脚本在到达该项前中断，未判定功能结果",
+      "evidence": []
+    },
+    {
+      "number": 21,
+      "name": "箭头颜色",
+      "purpose": "marker 箭头颜色随选中状态变化",
+      "status": "BLOCKED",
+      "actual": "测试脚本在到达该项前中断，未判定功能结果",
+      "evidence": []
+    },
+    {
+      "number": 22,
+      "name": "删除源节点清理连线",
+      "purpose": "删除 source 后对应连线消失",
+      "status": "BLOCKED",
+      "actual": "测试脚本在到达该项前中断，未判定功能结果",
+      "evidence": []
+    },
+    {
+      "number": 23,
+      "name": "删除目标节点清理连线",
+      "purpose": "删除 target 后对应连线消失",
+      "status": "BLOCKED",
+      "actual": "测试脚本在到达该项前中断，未判定功能结果",
+      "evidence": []
+    },
+    {
+      "number": 24,
+      "name": "空画布创建节点和连线",
+      "purpose": "从空画布开始完成连线",
+      "status": "BLOCKED",
+      "actual": "测试脚本在到达该项前中断，未判定功能结果",
+      "evidence": []
+    },
+    {
+      "number": 25,
+      "name": "节点堆叠时连线不错乱",
+      "purpose": "重叠节点区域的连线仍可辨识和命中",
+      "status": "BLOCKED",
+      "actual": "测试脚本在到达该项前中断，未判定功能结果",
+      "evidence": []
+    },
+    {
+      "number": 26,
+      "name": "20+ 条连线性能",
+      "purpose": "20 条线渲染及拖动帧率检查",
+      "status": "BLOCKED",
+      "actual": "测试脚本在到达该项前中断，未判定功能结果",
+      "evidence": []
+    }
+  ],
+  "browserLog": {
+    "console": [
+      {
+        "type": "info",
+        "text": "%cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold"
+      }
+    ],
+    "pageErrors": [],
+    "requestsFailed": [],
+    "apiResponses": [
+      {
+        "method": "GET",
+        "status": 200,
+        "url": "http://localhost:3002/api/status"
+      },
+      {
+        "method": "GET",
+        "status": 200,
+        "url": "http://localhost:3002/api/studio/bootstrap"
+      },
+      {
+        "method": "GET",
+        "status": 200,
+        "url": "http://localhost:3002/api/public/navigation"
+      },
+      {
+        "method": "GET",
+        "status": 200,
+        "url": "http://localhost:3002/api/public/navigation"
+      },
+      {
+        "method": "GET",
+        "status": 200,
+        "url": "http://localhost:3002/api/studio/ai/models?type=image"
+      }
+    ]
+  },
+  "screenshots": [
+    "screenshots/00-canvas-list-authenticated.png",
+    "screenshots/01-empty-canvas.png",
+    "screenshots/02-two-text-nodes.png",
+    "screenshots/fix-01-created-connection.png",
+    "screenshots/fix-01-export-json.png",
+    "screenshots/fix-01-exported-editor.png",
+    "screenshots/fix-01-import-connections-missing.png",
+    "screenshots/fix-01-import-result.png",
+    "screenshots/fix-02-connection-point-hover.png",
+    "screenshots/fix-02-connection-point.png",
+    "screenshots/preflight-current.png"
+  ]
+}

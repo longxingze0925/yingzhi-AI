@@ -1,0 +1,513 @@
+{
+  "results": [
+    {
+      "name": "真实账号登录态有效",
+      "status": "PASS",
+      "priority": "",
+      "detail": ""
+    },
+    {
+      "name": "New API 与影织服务可访问",
+      "status": "PASS",
+      "priority": "",
+      "detail": "{\"canvas\":200,\"api\":200}"
+    },
+    {
+      "name": "文本节点创建",
+      "status": "PASS",
+      "priority": "",
+      "detail": ""
+    },
+    {
+      "name": "文本节点拖动",
+      "status": "PASS",
+      "priority": "",
+      "detail": ""
+    },
+    {
+      "name": "文本节点双击编辑",
+      "status": "PASS",
+      "priority": "",
+      "detail": ""
+    },
+    {
+      "name": "节点四角调整大小",
+      "status": "PASS",
+      "priority": "",
+      "detail": ""
+    },
+    {
+      "name": "7 种节点类型可创建",
+      "status": "PASS",
+      "priority": "",
+      "detail": ""
+    },
+    {
+      "name": "画布缩放滑块",
+      "status": "PASS",
+      "priority": "",
+      "detail": ""
+    },
+    {
+      "name": "鼠标滚轮缩放",
+      "status": "PASS",
+      "priority": "",
+      "detail": ""
+    },
+    {
+      "name": "Space 临时平移",
+      "status": "PASS",
+      "priority": "",
+      "detail": ""
+    },
+    {
+      "name": "画布外观：主题与网格",
+      "status": "PASS",
+      "priority": "",
+      "detail": ""
+    },
+    {
+      "name": "小地图打开关闭",
+      "status": "PASS",
+      "priority": "",
+      "detail": ""
+    },
+    {
+      "name": "快捷键面板",
+      "status": "PASS",
+      "priority": "",
+      "detail": ""
+    },
+    {
+      "name": "左侧面板三个标签",
+      "status": "PASS",
+      "priority": "",
+      "detail": ""
+    },
+    {
+      "name": "Shift 多选",
+      "status": "PASS",
+      "priority": "",
+      "detail": ""
+    },
+    {
+      "name": "多选同步拖动",
+      "status": "PASS",
+      "priority": "",
+      "detail": ""
+    },
+    {
+      "name": "Ctrl/Cmd+C、V 复制粘贴",
+      "status": "PASS",
+      "priority": "",
+      "detail": ""
+    },
+    {
+      "name": "撤销与重做",
+      "status": "PASS",
+      "priority": "",
+      "detail": ""
+    },
+    {
+      "name": "右键菜单复制",
+      "status": "PASS",
+      "priority": "",
+      "detail": "补测通过：右键菜单复制后节点数从 1 增加到 2；证据 screenshots/11_右键菜单复制.png"
+    },
+    {
+      "name": "Ctrl/Cmd+G 创建组",
+      "status": "PASS",
+      "priority": "",
+      "detail": ""
+    },
+    {
+      "name": "Ctrl/Cmd+D 快速复制",
+      "status": "FAIL",
+      "priority": "P2",
+      "detail": "当前未实现 Ctrl/Cmd+D"
+    },
+    {
+      "name": "连接点左右各一个且 cursor=crosshair",
+      "status": "PASS",
+      "priority": "",
+      "detail": ""
+    },
+    {
+      "name": "拖出连线时显示虚线预览",
+      "status": "PASS",
+      "priority": "",
+      "detail": ""
+    },
+    {
+      "name": "创建连线并渲染 cubic Bézier",
+      "status": "PASS",
+      "priority": "",
+      "detail": ""
+    },
+    {
+      "name": "连线末端箭头",
+      "status": "FAIL",
+      "priority": "P1",
+      "detail": "SVG 未设置 marker-end，当前没有箭头"
+    },
+    {
+      "name": "连线选中与 Escape 取消",
+      "status": "PASS",
+      "priority": "",
+      "detail": ""
+    },
+    {
+      "name": "Delete 删除选中连线",
+      "status": "PASS",
+      "priority": "",
+      "detail": ""
+    },
+    {
+      "name": "Backspace 删除选中连线",
+      "status": "PASS",
+      "priority": "",
+      "detail": ""
+    },
+    {
+      "name": "节点拖动时连线跟随",
+      "status": "PASS",
+      "priority": "",
+      "detail": ""
+    },
+    {
+      "name": "节点调整大小时连线跟随",
+      "status": "PASS",
+      "priority": "",
+      "detail": ""
+    },
+    {
+      "name": "拒绝自连接",
+      "status": "PASS",
+      "priority": "",
+      "detail": ""
+    },
+    {
+      "name": "支持多条连线交叉渲染",
+      "status": "PASS",
+      "priority": "",
+      "detail": ""
+    },
+    {
+      "name": "删除节点自动清理相关连线",
+      "status": "PASS",
+      "priority": "",
+      "detail": ""
+    },
+    {
+      "name": "刷新后节点和连线恢复",
+      "status": "PASS",
+      "priority": "",
+      "detail": ""
+    },
+    {
+      "name": "导出画布 ZIP",
+      "status": "PASS",
+      "priority": "",
+      "detail": "connections=1"
+    },
+    {
+      "name": "导入画布 ZIP",
+      "status": "PASS",
+      "priority": "",
+      "detail": ""
+    },
+    {
+      "name": "上传图片素材并创建节点",
+      "status": "PASS",
+      "priority": "",
+      "detail": ""
+    },
+    {
+      "name": "素材库弹窗",
+      "status": "PASS",
+      "priority": "",
+      "detail": ""
+    },
+    {
+      "name": "我的素材弹窗",
+      "status": "PASS",
+      "priority": "",
+      "detail": ""
+    },
+    {
+      "name": "Agent 面板打开",
+      "status": "PASS",
+      "priority": "",
+      "detail": ""
+    },
+    {
+      "name": "真实模型目录加载",
+      "status": "PASS",
+      "priority": "",
+      "detail": "{\"image\":0,\"video\":1,\"audio\":0,\"text\":1}"
+    },
+    {
+      "name": "图片模型可用",
+      "status": "FAIL",
+      "priority": "P1",
+      "detail": "当前 New API 没有可用图片模型"
+    },
+    {
+      "name": "音频模型可用",
+      "status": "FAIL",
+      "priority": "P1",
+      "detail": "当前 New API 没有可用音频模型"
+    },
+    {
+      "name": "真实文本生成请求",
+      "status": "FAIL",
+      "priority": "P1",
+      "detail": "HTTP 500: {\"error\":{\"message\":\"upstream error: do request failed (request id: 202610040026250709570208268d9d6j9gUzeOS)\",\"type\":\"new_api_error\",\"param\":\"\",\"code\":\"do_request_failed\"}}"
+    },
+    {
+      "name": "真实视频生成提交",
+      "status": "FAIL",
+      "priority": "P1",
+      "detail": "改为模型允许的 30 秒后，POST /api/studio/generation/jobs 虽返回 HTTP 200，但业务返回 success:false、message=生成请求失败；查询任务状态为 failed"
+    }
+  ],
+  "consoleMessages": [
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "http://localhost:13000/icons/openai.svg"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "http://localhost:13000/icons/openai.svg"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "http://localhost:13000/icons/openai.svg"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "http://localhost:13000/api/prompts?page=1&pageSize=1"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "http://localhost:13000/api/prompts?category=system&page=1&pageSize=500"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "http://localhost:13000/icons/openai.svg"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "http://localhost:13000/icons/openai.svg"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "http://localhost:13000/icons/openai.svg"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "http://localhost:13000/icons/openai.svg"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "http://localhost:13000/api/v1/agent-skills"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "http://localhost:13000/api/agent-skills"
+    },
+    {
+      "type": "error",
+      "text": "Error gathering Skill keys in cleanupImages Error: 请求失败\n    at apiRequest (webpack-internal:///(app-pages-browser)/./app/studio/canvas/_upstream-deps/services/api/request.ts:82:15)\n    at async Promise.all (index 1)\n    at async eval (webpack-internal:///(app-pages-browser)/./app/studio/canvas/_upstream-deps/stores/use-asset-store.ts:275:21)",
+      "url": "webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/app-index.js"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "http://localhost:13000/icons/openai.svg"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+      "url": "http://localhost:13000/icons/openai.svg"
+    },
+    {
+      "type": "error",
+      "text": "Failed to load resource: the server responded with a status of 500 (Internal Server Error)",
+      "url": "http://localhost:13000/api/studio/text/completions"
+    }
+  ],
+  "httpErrors": [
+    {
+      "status": 404,
+      "method": "GET",
+      "url": "http://localhost:13000/icons/openai.svg"
+    },
+    {
+      "status": 404,
+      "method": "GET",
+      "url": "http://localhost:13000/icons/openai.svg"
+    },
+    {
+      "status": 404,
+      "method": "GET",
+      "url": "http://localhost:13000/icons/openai.svg"
+    },
+    {
+      "status": 404,
+      "method": "GET",
+      "url": "http://localhost:13000/api/prompts?page=1&pageSize=1"
+    },
+    {
+      "status": 404,
+      "method": "GET",
+      "url": "http://localhost:13000/api/prompts?category=system&page=1&pageSize=500"
+    },
+    {
+      "status": 404,
+      "method": "GET",
+      "url": "http://localhost:13000/icons/openai.svg"
+    },
+    {
+      "status": 404,
+      "method": "GET",
+      "url": "http://localhost:13000/icons/openai.svg"
+    },
+    {
+      "status": 404,
+      "method": "GET",
+      "url": "http://localhost:13000/icons/openai.svg"
+    },
+    {
+      "status": 404,
+      "method": "GET",
+      "url": "http://localhost:13000/icons/openai.svg"
+    },
+    {
+      "status": 404,
+      "method": "GET",
+      "url": "http://localhost:13000/api/v1/agent-skills"
+    },
+    {
+      "status": 404,
+      "method": "GET",
+      "url": "http://localhost:13000/api/agent-skills"
+    },
+    {
+      "status": 404,
+      "method": "GET",
+      "url": "http://localhost:13000/icons/openai.svg"
+    },
+    {
+      "status": 404,
+      "method": "GET",
+      "url": "http://localhost:13000/icons/openai.svg"
+    },
+    {
+      "status": 500,
+      "method": "POST",
+      "url": "http://localhost:13000/api/studio/text/completions"
+    }
+  ],
+  "generationResponses": [
+    {
+      "status": 500,
+      "method": "POST",
+      "url": "http://localhost:13000/api/studio/text/completions",
+      "body": "{\"error\":{\"message\":\"upstream error: do request failed (request id: 202610040026250709570208268d9d6j9gUzeOS)\",\"type\":\"new_api_error\",\"param\":\"\",\"code\":\"do_request_failed\"}}"
+    },
+    {
+      "status": 200,
+      "method": "POST",
+      "url": "http://localhost:13000/api/studio/generation/jobs",
+      "body": "{\"message\":\"生成时长不符合该模型的能力范围\",\"success\":false}"
+    },
+    {
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:13000/api/studio/generation/jobs/lookup?idempotencyKey=cf2b2afa-e790-4a41-b768-5257f653b90a",
+      "body": "{\"data\":{\"job\":null},\"message\":\"\",\"success\":true}"
+    },
+    {
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:13000/api/studio/generation/jobs/lookup?idempotencyKey=a676ee93-6098-44a5-8327-c006f9a02505",
+      "body": "{\"data\":{\"job\":{\"id\":\"studio_1b19d4295717c3ab60de08f22a05bc987bd5853e2c1391c428942839289b3332\",\"type\":\"video\",\"status\":\"submitting\",\"progress\":0,\"prompt\":\"日落海面，固定镜头，测试视频\",\"model\":\"seedance-2-5\",\"aspectRatio\":\"16:9\",\"count\":1,\"createdAt\":1791073959,\"results\":[],\"durationSec\":30}},\"message\":\"\",\"success\":true}"
+    },
+    {
+      "status": 200,
+      "method": "POST",
+      "url": "http://localhost:13000/api/studio/generation/jobs",
+      "body": "{\"message\":\"生成请求失败\",\"success\":false}"
+    },
+    {
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:13000/api/studio/generation/jobs/studio_1b19d4295717c3ab60de08f22a05bc987bd5853e2c1391c428942839289b3332",
+      "body": "{\"data\":{\"job\":{\"id\":\"studio_1b19d4295717c3ab60de08f22a05bc987bd5853e2c1391c428942839289b3332\",\"type\":\"video\",\"status\":\"failed\",\"progress\":0,\"prompt\":\"日落海面，固定镜头，测试视频\",\"model\":\"seedance-2-5\",\"aspectRatio\":\"16:9\",\"count\":1,\"createdAt\":1791073959,\"results\":[],\"error\":\"生成请求失败\",\"durationSec\":30}},\"message\":\"\",\"success\":true}"
+    }
+  ],
+  "created": [
+    {
+      "id": "V5TvYu9TRE5LzwtYJ8BEc",
+      "title": "无限画布 29",
+      "suffix": "基础功能"
+    },
+    {
+      "id": "TVR7i2_RjXHkVZf7xm_Lh",
+      "title": "无限画布 30",
+      "suffix": "选择复制"
+    },
+    {
+      "id": "VIKwJgCC1djQwj_Ci6ql3",
+      "title": "无限画布 31",
+      "suffix": "连线"
+    },
+    {
+      "id": "UMX4e4Xs6imTKLIDLAXgs",
+      "title": "无限画布 33",
+      "suffix": "素材Agent"
+    },
+    {
+      "id": "CXLCbuMAetA6DsPVbAGfv",
+      "title": "无限画布 34",
+      "suffix": "真实生成"
+    }
+  ],
+  "prefix": "真实验收-1791073539445",
+  "retest": {
+    "contextMenuCopy": {
+      "before": 1,
+      "after": 2,
+      "passed": true,
+      "screenshot": "screenshots/11_右键菜单复制.png"
+    },
+    "videoDefaultConfig": {
+      "model": "seedance-2-5",
+      "uiDurationSec": 6,
+      "allowedDurationSec": [
+        30
+      ],
+      "passed": false,
+      "screenshot": "screenshots/12_视频生成默认配置.png"
+    },
+    "video30SecSubmission": {
+      "httpStatus": 200,
+      "success": false,
+      "jobStatus": "failed",
+      "error": "生成请求失败",
+      "screenshot": "screenshots/13_视频30秒真实提交.png"
+    }
+  }
+}

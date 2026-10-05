@@ -1,0 +1,54 @@
+{
+  "scope": "只读静态源码核对；不等价于真实浏览器验收",
+  "findings": [
+    {
+      "id": "SRC-01",
+      "severity": "P1",
+      "finding": "连接点位于节点左右中点，且仅在节点选中、选择工具激活时渲染。左右中点调整手柄也在同一位置，调整手柄 z-20 高于连接点 z-10，存在连接点被遮挡、点击误触调整的高风险。",
+      "files": ["app/studio/canvas/components/canvas-node.tsx"],
+      "verification": "源码确认重叠位置和层级；浏览器命中测试因登录/API阻断未执行"
+    },
+    {
+      "id": "SRC-02",
+      "severity": "P1",
+      "finding": "贝塞尔控制点方向固定为起点 x 向右、终点 x 向左，不根据 sourceSide/targetSide 调整，左侧起点或右侧终点可能出现方向不自然的曲线。",
+      "files": ["app/studio/canvas/components/canvas-connection.tsx"],
+      "verification": "源码确认；视觉效果未能浏览器验证"
+    },
+    {
+      "id": "SRC-03",
+      "severity": "P1",
+      "finding": "画布 JSON 导出仅包含 name/nodes/viewport/时间字段；解析类型与导入更新也没有 connections 字段，因此 UI 导入导出不会保留连线。",
+      "files": ["app/studio/canvas/lib/canvas-export.ts", "app/studio/canvas/page.tsx"],
+      "verification": "源码确认；未生成伪造的 test_canvas_export.json"
+    },
+    {
+      "id": "SRC-04",
+      "severity": "P2",
+      "finding": "deleteNodes 会清理关联连线，但节点菜单调用的 deleteNode 只删除节点，不删除连线数据；端点节点不存在时连线虽不渲染，仍可能残留在项目数据中。",
+      "files": ["stores/use-canvas-store.ts", "app/studio/canvas/[id]/page.tsx"],
+      "verification": "源码确认；实际删除路径未能浏览器验证"
+    },
+    {
+      "id": "SRC-05",
+      "severity": "P2",
+      "finding": "连接创建状态只记录 sourceNodeId/sourceSide，未发现临时草稿线绘制；同节点自连接会被拒绝。",
+      "files": ["app/studio/canvas/[id]/page.tsx"],
+      "verification": "源码确认；实际交互未执行"
+    },
+    {
+      "id": "SRC-06",
+      "severity": "P2",
+      "finding": "Zustand persist 使用 localStorage 键 canvas-storage；项目对象含 connections，代码路径支持刷新持久化，但真实刷新验证被登录阻断。",
+      "files": ["stores/use-canvas-store.ts", "app/studio/canvas/types/index.ts"],
+      "verification": "源码确认；真实浏览器刷新恢复未执行"
+    },
+    {
+      "id": "SRC-07",
+      "severity": "P2",
+      "finding": "Delete/Backspace 有选中连线删除分支；Escape 清理连接草稿/选中线，但 Escape 分支会跳过 button/select 焦点。连接点本身是 button，实际按键行为需要浏览器验证。",
+      "files": ["app/studio/canvas/[id]/page.tsx", "app/studio/canvas/components/canvas-node.tsx"],
+      "verification": "源码确认；真实焦点键盘行为未执行"
+    }
+  ]
+}

@@ -61,7 +61,7 @@ function Grid({
           key={m.id}
           item={m}
           onClick={onOpen}
-          onDelete={onDelete}
+          onDelete={m.isOwner ? onDelete : undefined}
           onFavorite={onFavorite}
           onDownload={onDownload}
           favorited={favoriteIds.has(m.id)}
@@ -80,10 +80,7 @@ export default function LibraryPage() {
   const [tab, setTab] = React.useState<AssetTab>("all");
   const [selected, setSelected] = React.useState<MediaItem | null>(null);
   const [open, setOpen] = React.useState(false);
-  const favoriteItems = useLocalWorkspaceStore((s) => s.favoriteItems);
-  const isFavorite = useLocalWorkspaceStore((s) => s.isFavorite);
   const deletedWorkIds = useLocalWorkspaceStore((s) => s.deletedWorkIds);
-  const setFavorite = useLocalWorkspaceStore((s) => s.setFavorite);
   const deleteWork = useLocalWorkspaceStore((s) => s.deleteWork);
   const markDownloaded = useLocalWorkspaceStore((s) => s.markDownloaded);
   const addNotification = useLocalWorkspaceStore((s) => s.addNotification);
@@ -103,7 +100,7 @@ export default function LibraryPage() {
         ]);
         if (!alive) return;
         setWorks(worksData);
-        setFavs(favsData);
+        setFavs(favsData.filter((item) => !item.demo));
       } catch (err) {
         if (!alive) return;
         setWorks([]);
@@ -122,33 +119,36 @@ export default function LibraryPage() {
   }, []);
 
   const onOpen = (m: MediaItem) => {
-    setSelected(m);
+    const selectedItem = favs.some((favorite) => favorite.id === m.id)
+      ? { ...m, favoritedAt: m.favoritedAt ?? m.createdAt }
+      : m;
+    setSelected(selectedItem);
     setOpen(true);
+  };
+
+  const refreshAccountFavorites = React.useCallback(async () => {
+    const accountFavorites = await listMyFavorites();
+    setFavs(accountFavorites.filter((item) => !item.demo));
+  }, []);
+
+  const onDetailOpenChange = (nextOpen: boolean) => {
+    setOpen(nextOpen);
+    if (!nextOpen) {
+      void refreshAccountFavorites().catch(() => undefined);
+    }
   };
 
   const visibleWorks = React.useMemo(
     () => works.filter((work) => !deletedWorkIds.includes(work.id)),
-    [deletedWorkIds, works]
+    [deletedWorkIds, works],
   );
-  const visibleFavs = React.useMemo(() => {
-    const merged = new Map<string, MediaItem>();
-    favs
-      .filter((item) => isFavorite(item))
-      .forEach((item) => merged.set(item.id, item));
-    Object.values(favoriteItems).forEach((item) => merged.set(item.id, item));
-    deletedWorkIds.forEach((id) => merged.delete(id));
-    return Array.from(merged.values());
-  }, [deletedWorkIds, favoriteItems, favs, isFavorite]);
+  const visibleFavs = favs;
   const images = visibleWorks.filter((w) => w.type === "image");
   const videos = visibleWorks.filter((w) => w.type === "video");
   const audios = visibleWorks.filter((w) => w.type === "audio");
   const favoriteIds = React.useMemo(
-    () =>
-      new Set([
-        ...favs.filter((item) => isFavorite(item)).map((item) => item.id),
-        ...Object.keys(favoriteItems),
-      ]),
-    [favoriteItems, favs, isFavorite]
+    () => new Set(favs.map((item) => item.id)),
+    [favs],
   );
 
   const deleteItem = async (item: MediaItem) => {
@@ -163,39 +163,49 @@ export default function LibraryPage() {
         setSelected(null);
       }
     } catch {
-      addNotification("删除失败", "AiSaaS 删除接口返回失败，请稍后重试。");
+      addNotification("删除失败", "平台删除接口返回失败，请稍后重试。");
     }
   };
 
   const favoriteItem = async (item: MediaItem) => {
     const currentlyFavorite = favoriteIds.has(item.id);
+    let updatedWork: MediaItem | null = null;
     try {
-      const remoteWork = await favoriteWorkRemote(item.id, !currentlyFavorite);
-      const updated = remoteWork ?? {
-        ...item,
-        favoritedAt: currentlyFavorite ? null : Date.now(),
-      };
-      setWorks((items) =>
-        items.map((work) => (work.id === item.id ? { ...work, ...updated } : work))
-      );
-      setFavs((items) => {
-        if (currentlyFavorite) {
-          return items.filter((work) => work.id !== item.id);
-        }
-        const next = items.filter((work) => work.id !== item.id);
-        return [updated, ...next];
-      });
-      setFavorite(updated, !currentlyFavorite);
-      addNotification(
-        currentlyFavorite ? "已取消收藏" : "已加入收藏",
-        item.prompt
-      );
+      updatedWork = await favoriteWorkRemote(item.id, !currentlyFavorite);
     } catch {
       addNotification(
         currentlyFavorite ? "取消收藏失败" : "收藏失败",
-        "AiSaaS 收藏接口返回失败，请稍后重试。"
+        "平台收藏接口返回失败，请稍后重试。",
+      );
+      return;
+    }
+
+    if (updatedWork) {
+      setWorks((items) =>
+        items.map((work) =>
+          work.id === item.id ? { ...work, ...updatedWork } : work,
+        ),
       );
     }
+
+    try {
+      await refreshAccountFavorites();
+    } catch {
+      // The mutation succeeded; keep the confirmed removal visible if the list refresh fails.
+      if (currentlyFavorite) {
+        setFavs((items) => items.filter((work) => work.id !== item.id));
+      } else if (updatedWork) {
+        setFavs((items) => [
+          updatedWork!,
+          ...items.filter((work) => work.id !== item.id),
+        ]);
+      }
+    }
+
+    addNotification(
+      currentlyFavorite ? "已取消收藏" : "已加入收藏",
+      item.prompt,
+    );
   };
 
   const downloadItem = async (item: MediaItem) => {
@@ -206,13 +216,15 @@ export default function LibraryPage() {
         downloadedAt: result.downloadedAt ?? Date.now(),
       };
       setWorks((items) =>
-        items.map((work) => (work.id === item.id ? { ...work, ...nextItem } : work))
+        items.map((work) =>
+          work.id === item.id ? { ...work, ...nextItem } : work,
+        ),
       );
       await downloadMediaItem(nextItem, result.downloadUrl);
       addNotification("作品已开始下载", item.prompt);
       markDownloaded(item.id);
     } catch {
-      addNotification("下载失败", "AiSaaS 下载登记失败，请稍后重试。");
+      addNotification("下载失败", "平台下载登记失败，请稍后重试。");
     }
   };
 
@@ -239,12 +251,22 @@ export default function LibraryPage() {
     anchor.click();
     anchor.remove();
     window.setTimeout(() => URL.revokeObjectURL(url), 1000);
-    addNotification("作品清单已导出", `共导出 ${payload.length} 条作品元数据。`);
+    addNotification(
+      "作品清单已导出",
+      `共导出 ${payload.length} 条作品元数据。`,
+    );
   };
 
   const copyAllPrompts = async () => {
-    await navigator.clipboard.writeText(visibleWorks.map((item) => item.fullPrompt ?? item.prompt).join("\n\n---\n\n"));
-    addNotification("提示词已复制", `共复制 ${visibleWorks.length} 条作品提示词。`);
+    await navigator.clipboard.writeText(
+      visibleWorks
+        .map((item) => item.fullPrompt ?? item.prompt)
+        .join("\n\n---\n\n"),
+    );
+    addNotification(
+      "提示词已复制",
+      `共复制 ${visibleWorks.length} 条作品提示词。`,
+    );
   };
 
   const tabItems: Array<{
@@ -253,7 +275,12 @@ export default function LibraryPage() {
     icon?: React.ElementType;
     count: number;
   }> = [
-    { value: "all", label: "全部", icon: LayoutGrid, count: visibleWorks.length },
+    {
+      value: "all",
+      label: "全部",
+      icon: LayoutGrid,
+      count: visibleWorks.length,
+    },
     { value: "image", label: "图片", count: images.length },
     { value: "video", label: "视频", count: videos.length },
     { value: "audio", label: "音频", count: audios.length },
@@ -267,13 +294,16 @@ export default function LibraryPage() {
         ? videos
         : tab === "audio"
           ? audios
-        : tab === "fav"
-          ? visibleFavs
-          : visibleWorks;
+          : tab === "fav"
+            ? visibleFavs
+            : visibleWorks;
 
   return (
     <PageContainer>
-      <PageHeader title="我的作品" description="管理你生成的全部图片、视频与音频">
+      <PageHeader
+        title="我的作品"
+        description="管理你生成的全部图片、视频与音频"
+      >
         <Button
           variant="outline"
           size="sm"
@@ -306,7 +336,7 @@ export default function LibraryPage() {
                   "inline-flex items-center justify-center gap-1.5 whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                   active
                     ? "bg-background text-foreground shadow-sm"
-                    : "hover:text-foreground"
+                    : "hover:text-foreground",
                 )}
               >
                 {Icon && <Icon className="h-4 w-4" />}
@@ -335,7 +365,11 @@ export default function LibraryPage() {
         </div>
       </div>
 
-      <MediaDetailDialog item={selected} open={open} onOpenChange={setOpen} />
+      <MediaDetailDialog
+        item={selected}
+        open={open}
+        onOpenChange={onDetailOpenChange}
+      />
     </PageContainer>
   );
 }

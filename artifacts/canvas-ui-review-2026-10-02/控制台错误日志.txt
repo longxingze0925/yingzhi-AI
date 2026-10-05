@@ -1,0 +1,22 @@
+[original]
+console: Failed to load resource: the server responded with a status of 502 (Bad Gateway)
+pageerror: 接口连接失败，请确认后端服务已启动
+console: Failed to load resource: the server responded with a status of 502 (Bad Gateway)
+pageerror: 接口连接失败，请确认后端服务已启动
+console: Failed to load resource: the server responded with a status of 502 (Bad Gateway)
+pageerror: 接口连接失败，请确认后端服务已启动
+console: Failed to load resource: the server responded with a status of 502 (Bad Gateway)
+console: Error gathering Skill keys in cleanupImages Error: 接口连接失败，请确认后端服务已启动
+    at apiRequest (webpack-internal:///(app-pages-browser)/./src/services/api/request.ts:78:15)
+    at async Promise.all (index 0)
+    at async eval (webpack-internal:///(app-pages-browser)/./src/stores/use-asset-store.ts:271:21)
+
+[shadow]
+console: Failed to load resource: the server responded with a status of 404 (Not Found)
+console: Failed to load resource: the server responded with a status of 404 (Not Found)
+requestfailed: GET http://localhost:13000/login?next=%2Fstudio%2Fcanvas&_rsc=tlsy5 net::ERR_ABORTED
+console: Failed to load resource: the server responded with a status of 404 (Not Found)
+console: Failed to load resource: the server responded with a status of 404 (Not Found)
+[shadow.fakeClient]
+requestfailed: GET http://localhost:13000/studio/canvas/e80ba695-8014-4b4e-b862-107566e5d731?_rsc=1lljq net::ERR_ABORTED
+requestfailed: GET http://localhost:13000/studio/canvas/8d5c8f2a-7ccf-4e41-a701-eceffe1d11b4?_rsc=1gg9k net::ERR_ABORTED

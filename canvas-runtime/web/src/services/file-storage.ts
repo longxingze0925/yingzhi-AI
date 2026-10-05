@@ -1,0 +1,133 @@
+import localforage from "localforage";
+import { nanoid } from "nanoid";
+
+import { withLocalProxy } from "@/stores/use-config-store";
+import { canvasDatabaseName, isYingzhiEmbedded } from "@/yingzhi/embedded-mode";
+import { fetchStudioMedia, studioMediaUrlForStorageKey, studioStorageKeyFromUrl, studioStoragePath, uploadStudioAsset } from "@/yingzhi/studio-api";
+
+export type UploadedFile = { url: string; storageKey: string; bytes: number; mimeType: string; width?: number; height?: number; durationMs?: number };
+
+const store = localforage.createInstance({ name: canvasDatabaseName, storeName: "media_files" });
+const objectUrls = new Map<string, string>();
+
+export async function uploadMediaFile(input: string | Blob, prefix = "file"): Promise<UploadedFile> {
+    if (isYingzhiEmbedded && typeof input === "string") {
+        const existingKey = studioStorageKeyFromUrl(input);
+        if (existingKey) {
+            return {
+                url: studioMediaUrlForStorageKey(existingKey),
+                storageKey: existingKey,
+                bytes: 0,
+                mimeType: existingKey.startsWith("studio-job:") ? "video/mp4" : "application/octet-stream",
+            };
+        }
+    }
+    if (isYingzhiEmbedded) return uploadMediaFileToStudio(input, prefix);
+    const blob = typeof input === "string" ? await (await fetch(withLocalProxy(input))).blob() : input;
+    const storageKey = `${prefix}:${nanoid()}`;
+    await store.setItem(storageKey, blob);
+    const url = URL.createObjectURL(blob);
+    objectUrls.set(storageKey, url);
+    const meta = blob.type.startsWith("video/") ? await readVideoMeta(url) : blob.type.startsWith("audio/") ? await readAudioMeta(url) : {};
+    return { url, storageKey, bytes: blob.size, mimeType: blob.type || "application/octet-stream", ...meta };
+}
+
+async function uploadMediaFileToStudio(input: string | Blob, prefix: string): Promise<UploadedFile> {
+    let blob: Blob;
+    if (typeof input !== "string") blob = input;
+    else {
+        const response = await fetch(withLocalProxy(input));
+        if (!response.ok) throw new Error(`媒体下载失败：${response.status}`);
+        blob = await response.blob();
+    }
+    const kind = blob.type.startsWith("video/") ? "video" : blob.type.startsWith("audio/") ? "audio" : "file";
+    const filename = `${prefix}-${nanoid()}`;
+    const uploaded = await uploadStudioAsset(blob, filename, kind);
+    const storageKey = `server:${uploaded.assetId}`;
+    await store.setItem(storageKey, blob);
+    const url = URL.createObjectURL(blob);
+    objectUrls.set(storageKey, url);
+    const meta = blob.type.startsWith("video/") ? await readVideoMeta(url) : blob.type.startsWith("audio/") ? await readAudioMeta(url) : {};
+    return { url, storageKey, bytes: blob.size, mimeType: uploaded.mimeType || blob.type || "application/octet-stream", ...meta };
+}
+
+export async function resolveMediaUrl(storageKey?: string, fallback = "", options: { stream?: boolean } = {}) {
+    if (!storageKey) return fallback;
+    if (isYingzhiEmbedded && options.stream && (storageKey.startsWith("server:") || storageKey.startsWith("studio-job:"))) {
+        return studioMediaUrlForStorageKey(storageKey) || fallback;
+    }
+    const cached = objectUrls.get(storageKey);
+    if (cached) return cached;
+    const blob = await getMediaBlob(storageKey);
+    if (!blob) return fallback;
+    const url = URL.createObjectURL(blob);
+    objectUrls.set(storageKey, url);
+    return url;
+}
+
+export async function getMediaBlob(storageKey: string) {
+    if (isYingzhiEmbedded && (storageKey.startsWith("server:") || storageKey.startsWith("studio-job:"))) {
+        const cached = await store.getItem<Blob>(storageKey);
+        if (cached) return cached;
+        const path = studioStoragePath(storageKey);
+        if (!path) return null;
+        const blob = await fetchStudioMedia(path);
+        await store.setItem(storageKey, blob);
+        return blob;
+    }
+    return store.getItem<Blob>(storageKey);
+}
+
+export async function setMediaBlob(storageKey: string, blob: Blob) {
+    await store.setItem(storageKey, blob);
+    const url = URL.createObjectURL(blob);
+    objectUrls.set(storageKey, url);
+    return url;
+}
+
+export async function deleteStoredMedia(keys: Iterable<string>) {
+    await Promise.all(
+        Array.from(new Set(keys)).map(async (key) => {
+            const url = objectUrls.get(key);
+            if (url) URL.revokeObjectURL(url);
+            objectUrls.delete(key);
+            await store.removeItem(key);
+        }),
+    );
+}
+
+export async function cleanupUnusedMedia(usedData: unknown) {
+    const usedKeys = collectMediaStorageKeys(usedData);
+    const unused: string[] = [];
+    await store.iterate((_value, key) => {
+        if (!usedKeys.has(key)) unused.push(key);
+    });
+    await Promise.all(unused.map((key) => store.removeItem(key)));
+}
+
+export function collectMediaStorageKeys(value: unknown, keys = new Set<string>()) {
+    if (!value || typeof value !== "object") return keys;
+    if ("storageKey" in value && typeof value.storageKey === "string" && value.storageKey.includes(":")) keys.add(value.storageKey);
+    Object.values(value).forEach((item) => (Array.isArray(item) ? item.forEach((child) => collectMediaStorageKeys(child, keys)) : collectMediaStorageKeys(item, keys)));
+    return keys;
+}
+
+function readVideoMeta(url: string) {
+    return new Promise<{ width: number; height: number; durationMs?: number }>((resolve) => {
+        const video = document.createElement("video");
+        const done = () => resolve({ width: video.videoWidth || 1280, height: video.videoHeight || 720, durationMs: Number.isFinite(video.duration) ? Math.round(video.duration * 1000) : undefined });
+        video.onloadedmetadata = done;
+        video.onerror = done;
+        video.src = url;
+    });
+}
+
+function readAudioMeta(url: string) {
+    return new Promise<{ durationMs?: number }>((resolve) => {
+        const audio = document.createElement("audio");
+        const done = () => resolve({ durationMs: Number.isFinite(audio.duration) ? Math.round(audio.duration * 1000) : undefined });
+        audio.onloadedmetadata = done;
+        audio.onerror = done;
+        audio.src = url;
+    });
+}

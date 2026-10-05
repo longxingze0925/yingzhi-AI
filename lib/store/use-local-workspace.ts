@@ -55,7 +55,7 @@ function initialNotifications(): WorkspaceNotification[] {
     {
       id: "welcome",
       title: "本地工作区已就绪",
-      body: "页面通知和偏好设置会保存在当前浏览器；作品与素材以 AiSaaS 为准。",
+      body: "页面通知和偏好设置会保存在当前浏览器；作品与素材以统一后端为准。",
       createdAt: now - 1000 * 60 * 8,
       read: false,
     },
@@ -80,9 +80,9 @@ export const useLocalWorkspaceStore = create<LocalWorkspaceState>()(
       localMaterials: [],
       notifications: initialNotifications(),
       preferences: {
-        "作品默认公开到灵感广场": false,
-        "生成完成邮件通知": true,
-        "新模型与活动推送": true,
+        作品默认公开到灵感广场: false,
+        生成完成邮件通知: true,
+        新模型与活动推送: true,
       },
 
       isFavorite: (item) => isItemFavorited(get(), item),
@@ -92,7 +92,7 @@ export const useLocalWorkspaceStore = create<LocalWorkspaceState>()(
         set((state) => {
           const favoriteItems = { ...state.favoriteItems };
           const unfavoritedWorkIds = state.unfavoritedWorkIds.filter(
-            (id) => id !== item.id
+            (id) => id !== item.id,
           );
           if (exists) {
             delete favoriteItems[item.id];
@@ -112,7 +112,7 @@ export const useLocalWorkspaceStore = create<LocalWorkspaceState>()(
         set((state) => {
           const favoriteItems = { ...state.favoriteItems };
           let unfavoritedWorkIds = state.unfavoritedWorkIds.filter(
-            (id) => id !== item.id
+            (id) => id !== item.id,
           );
           if (favorite) {
             favoriteItems[item.id] = {
@@ -140,7 +140,9 @@ export const useLocalWorkspaceStore = create<LocalWorkspaceState>()(
 
       restoreWork: (id) =>
         set((state) => ({
-          deletedWorkIds: state.deletedWorkIds.filter((workId) => workId !== id),
+          deletedWorkIds: state.deletedWorkIds.filter(
+            (workId) => workId !== id,
+          ),
         })),
 
       markDownloaded: (id) =>
@@ -181,7 +183,7 @@ export const useLocalWorkspaceStore = create<LocalWorkspaceState>()(
           localFolders: state.localFolders.map((folder) =>
             folder.id === folderId
               ? { ...folder, count: folder.count + items.length }
-              : folder
+              : folder,
           ),
         }));
         return items;
@@ -189,16 +191,18 @@ export const useLocalWorkspaceStore = create<LocalWorkspaceState>()(
 
       deleteLocalMaterial: (id) =>
         set((state) => {
-          const item = state.localMaterials.find((material) => material.id === id);
+          const item = state.localMaterials.find(
+            (material) => material.id === id,
+          );
           return {
             localMaterials: state.localMaterials.filter(
-              (material) => material.id !== id
+              (material) => material.id !== id,
             ),
             localFolders: item
               ? state.localFolders.map((folder) =>
                   folder.id === item.folderId
                     ? { ...folder, count: Math.max(0, folder.count - 1) }
-                    : folder
+                    : folder,
                 )
               : state.localFolders,
           };
@@ -253,6 +257,6 @@ export const useLocalWorkspaceStore = create<LocalWorkspaceState>()(
               : currentState.preferences,
         };
       },
-    }
-  )
+    },
+  ),
 );

@@ -16,3 +16,16 @@ Dockerfile*
 deploy
 ops
 README.md
+
+# Infinite canvas is paused; keep its source locally but leave it out of the web image build.
+.next.*
+canvas-runtime/
+public/canvas-runtime/
+app/studio/canvas/_upstream-deps/
+app/studio/canvas/agent/
+app/studio/canvas/components/
+app/studio/canvas/stores/
+app/studio/canvas/utils/
+app/studio/canvas/**/canvas-client-page.tsx
+.canvas-paused-backup/
+.env.local

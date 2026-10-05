@@ -1,0 +1,419 @@
+{
+  "startedAt": "2026-10-03T14:04:59.262Z",
+  "completedAt": "2026-10-03T14:05:12.878Z",
+  "browser": "Google Chrome",
+  "viewport": "1920x1080",
+  "frontend": "http://localhost:3002",
+  "backend": "http://localhost:3000",
+  "projectName": "无限画布 1",
+  "projectId": "0016e016-75d2-4a83-b341-b891788496a1",
+  "importedProjectId": "df772a73-67b9-49dd-91c9-998c6d7c0f56",
+  "exportDetails": {
+    "version": "1.0",
+    "projects": 1,
+    "nodes": 2,
+    "connections": 1,
+    "connectionFields": [
+      "sourceNodeId",
+      "sourceSide",
+      "targetNodeId",
+      "targetSide",
+      "id",
+      "createdAt"
+    ],
+    "missingFields": [],
+    "downloadFilename": "无限画布 1.json",
+    "downloadElapsedMs": 40,
+    "expectedSourceNodeId": "ed7e3bd6-d9f5-4e0b-ac03-131f844e477d",
+    "expectedTargetNodeId": "840132e4-76df-45fe-8274-821d08784aed"
+  },
+  "summary": {
+    "total": 26,
+    "passed": 3,
+    "failed": 1,
+    "blocked": 22
+  },
+  "blocker": "第 4 项未通过：修复4：删除节点清理关联连线",
+  "cases": [
+    {
+      "number": 1,
+      "name": "修复1：导出/导入包含连线",
+      "purpose": "验证导出 JSON 字段和实际导入往返",
+      "status": "PASS",
+      "actual": "导出 JSON 及真实 UI 导入往返均恢复节点、连线字段、位置和方向。",
+      "evidence": [
+        "screenshots/fix-01-created-connection.png",
+        "fix-01-export-json.png",
+        "screenshots/fix-01-import-result.png"
+      ]
+    },
+    {
+      "number": 2,
+      "name": "修复2：连接点不被调整手柄遮挡",
+      "purpose": "左右连接点命中、创建草稿及 hover 放大",
+      "status": "PASS",
+      "actual": "左右连接点均可点击并创建连线；hover computed transform 为 scale(1.25)。",
+      "evidence": [
+        "screenshots/fix-02-connection-point.png",
+        "screenshots/fix-02-connection-points-clickable.png"
+      ]
+    },
+    {
+      "number": 3,
+      "name": "修复3：4 个方向的贝塞尔曲线",
+      "purpose": "左→右、右→右、左→左、右→左曲线与箭头",
+      "status": "PASS",
+      "actual": "四种连接侧组合的 Bézier 控制点方向及终点箭头检查通过。",
+      "evidence": [
+        "screenshots/fix-03-bezier-curves.png"
+      ]
+    },
+    {
+      "number": 4,
+      "name": "修复4：删除节点清理关联连线",
+      "purpose": "右键菜单删除中间节点并清理两条关联线",
+      "status": "FAIL",
+      "actual": "右键节点 B 后没有出现“删除”菜单项，无法按指定方式删除节点。",
+      "evidence": [
+        "screenshots/fix-04-right-click-delete-menu.png"
+      ]
+    },
+    {
+      "number": 5,
+      "name": "创建连线（两次点击）",
+      "purpose": "从起点连接点点击到目标连接点",
+      "status": "BLOCKED",
+      "actual": "第 4 项未通过，按测试提示停止后续测试",
+      "evidence": []
+    },
+    {
+      "number": 6,
+      "name": "连线视觉效果",
+      "purpose": "路径为贝塞尔曲线并有终点箭头",
+      "status": "BLOCKED",
+      "actual": "第 4 项未通过，按测试提示停止后续测试",
+      "evidence": []
+    },
+    {
+      "number": 7,
+      "name": "连线选中",
+      "purpose": "点击曲线后高亮，点击空白取消",
+      "status": "BLOCKED",
+      "actual": "第 4 项未通过，按测试提示停止后续测试",
+      "evidence": []
+    },
+    {
+      "number": 8,
+      "name": "Delete/Backspace 删除连线",
+      "purpose": "两种快捷键分别删除选中连线",
+      "status": "BLOCKED",
+      "actual": "第 4 项未通过，按测试提示停止后续测试",
+      "evidence": []
+    },
+    {
+      "number": 9,
+      "name": "Escape 取消选择",
+      "purpose": "取消连线创建草稿和连线选中",
+      "status": "BLOCKED",
+      "actual": "第 4 项未通过，按测试提示停止后续测试",
+      "evidence": []
+    },
+    {
+      "number": 10,
+      "name": "同一连接点创建多条连线",
+      "purpose": "验证同一端口可以有多条连线",
+      "status": "BLOCKED",
+      "actual": "第 4 项未通过，按测试提示停止后续测试",
+      "evidence": []
+    },
+    {
+      "number": 11,
+      "name": "节点拖动时连线跟随",
+      "purpose": "拖动源节点和目标节点观察端点",
+      "status": "BLOCKED",
+      "actual": "第 4 项未通过，按测试提示停止后续测试",
+      "evidence": []
+    },
+    {
+      "number": 12,
+      "name": "调整节点大小时连线跟随",
+      "purpose": "拖动边/角调整柄并观察端点",
+      "status": "BLOCKED",
+      "actual": "第 4 项未通过，按测试提示停止后续测试",
+      "evidence": []
+    },
+    {
+      "number": 13,
+      "name": "多选节点拖动时连线跟随",
+      "purpose": "拖动多选节点，确认线端点跟随",
+      "status": "BLOCKED",
+      "actual": "第 4 项未通过，按测试提示停止后续测试",
+      "evidence": []
+    },
+    {
+      "number": 14,
+      "name": "拒绝自连接",
+      "purpose": "尝试从同一节点一侧连到另一侧",
+      "status": "BLOCKED",
+      "actual": "第 4 项未通过，按测试提示停止后续测试",
+      "evidence": []
+    },
+    {
+      "number": 15,
+      "name": "复制节点不复制连线",
+      "purpose": "复制已连线节点，检查连线数量不变",
+      "status": "BLOCKED",
+      "actual": "第 4 项未通过，按测试提示停止后续测试",
+      "evidence": []
+    },
+    {
+      "number": 16,
+      "name": "撤销/重做包含连线操作",
+      "purpose": "创建连线后测试 Ctrl+Z / Ctrl+Shift+Z",
+      "status": "BLOCKED",
+      "actual": "第 4 项未通过，按测试提示停止后续测试",
+      "evidence": []
+    },
+    {
+      "number": 17,
+      "name": "刷新后连线保留",
+      "purpose": "刷新页面检查节点和连线恢复",
+      "status": "BLOCKED",
+      "actual": "第 4 项未通过，按测试提示停止后续测试",
+      "evidence": []
+    },
+    {
+      "number": 18,
+      "name": "导出/导入包含连线",
+      "purpose": "实际 UI JSON 往返恢复连接数据",
+      "status": "BLOCKED",
+      "actual": "第 4 项未通过，按测试提示停止后续测试",
+      "evidence": []
+    },
+    {
+      "number": 19,
+      "name": "连线颜色",
+      "purpose": "未选中灰色、选中蓝色",
+      "status": "BLOCKED",
+      "actual": "第 4 项未通过，按测试提示停止后续测试",
+      "evidence": []
+    },
+    {
+      "number": 20,
+      "name": "连线宽度",
+      "purpose": "未选中 2px、选中 3px",
+      "status": "BLOCKED",
+      "actual": "第 4 项未通过，按测试提示停止后续测试",
+      "evidence": []
+    },
+    {
+      "number": 21,
+      "name": "箭头颜色",
+      "purpose": "marker 箭头颜色随选中状态变化",
+      "status": "BLOCKED",
+      "actual": "第 4 项未通过，按测试提示停止后续测试",
+      "evidence": []
+    },
+    {
+      "number": 22,
+      "name": "删除源节点清理连线",
+      "purpose": "删除 source 后对应连线消失",
+      "status": "BLOCKED",
+      "actual": "第 4 项未通过，按测试提示停止后续测试",
+      "evidence": []
+    },
+    {
+      "number": 23,
+      "name": "删除目标节点清理连线",
+      "purpose": "删除 target 后对应连线消失",
+      "status": "BLOCKED",
+      "actual": "第 4 项未通过，按测试提示停止后续测试",
+      "evidence": []
+    },
+    {
+      "number": 24,
+      "name": "空画布创建节点和连线",
+      "purpose": "从空画布开始完成连线",
+      "status": "BLOCKED",
+      "actual": "第 4 项未通过，按测试提示停止后续测试",
+      "evidence": []
+    },
+    {
+      "number": 25,
+      "name": "节点堆叠时连线不错乱",
+      "purpose": "重叠节点区域的连线仍可辨识和命中",
+      "status": "BLOCKED",
+      "actual": "第 4 项未通过，按测试提示停止后续测试",
+      "evidence": []
+    },
+    {
+      "number": 26,
+      "name": "20+ 条连线性能",
+      "purpose": "20 条线渲染及拖动帧率检查",
+      "status": "BLOCKED",
+      "actual": "第 4 项未通过，按测试提示停止后续测试",
+      "evidence": []
+    }
+  ],
+  "browserLog": {
+    "console": [
+      {
+        "type": "info",
+        "text": "%cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold"
+      },
+      {
+        "type": "error",
+        "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+      },
+      {
+        "type": "error",
+        "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+      },
+      {
+        "type": "verbose",
+        "text": "[DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o"
+      }
+    ],
+    "pageErrors": [],
+    "requestsFailed": [
+      {
+        "method": "GET",
+        "url": "http://localhost:3002/login?next=%2Fstudio%2Fcanvas&_rsc=tlsy5",
+        "failure": "net::ERR_ABORTED"
+      },
+      {
+        "method": "GET",
+        "url": "http://localhost:3002/studio/canvas/0016e016-75d2-4a83-b341-b891788496a1?_rsc=1yjtp",
+        "failure": "net::ERR_ABORTED"
+      },
+      {
+        "method": "GET",
+        "url": "http://localhost:3002/studio/canvas/df772a73-67b9-49dd-91c9-998c6d7c0f56?_rsc=1yu34",
+        "failure": "net::ERR_ABORTED"
+      },
+      {
+        "method": "GET",
+        "url": "http://localhost:3002/studio/canvas/ad682315-54b1-45f9-baf7-1792c70cd801?_rsc=vmu6j",
+        "failure": "net::ERR_ABORTED"
+      },
+      {
+        "method": "GET",
+        "url": "http://localhost:3002/studio/canvas/ad682315-54b1-45f9-baf7-1792c70cd801?_rsc=ked5f",
+        "failure": "net::ERR_ABORTED"
+      },
+      {
+        "method": "GET",
+        "url": "http://localhost:3002/studio/canvas/862cc7c8-70b2-46cb-9411-33a67fb5b3ba?_rsc=oq6ag",
+        "failure": "net::ERR_ABORTED"
+      },
+      {
+        "method": "GET",
+        "url": "http://localhost:3002/studio/canvas/d3fb6e5b-a502-4242-a40a-5bea943accf4?_rsc=rc7a8",
+        "failure": "net::ERR_ABORTED"
+      }
+    ],
+    "apiResponses": [
+      {
+        "method": "GET",
+        "status": 401,
+        "url": "http://localhost:3002/api/studio/bootstrap"
+      },
+      {
+        "method": "GET",
+        "status": 200,
+        "url": "http://localhost:3002/api/status"
+      },
+      {
+        "method": "POST",
+        "status": 401,
+        "url": "http://localhost:3002/api/studio/auth/refresh"
+      },
+      {
+        "method": "GET",
+        "status": 200,
+        "url": "http://localhost:3002/api/status"
+      },
+      {
+        "method": "GET",
+        "status": 200,
+        "url": "http://localhost:3002/api/status"
+      },
+      {
+        "method": "POST",
+        "status": 200,
+        "url": "http://localhost:3002/api/studio/auth/register"
+      },
+      {
+        "method": "GET",
+        "status": 200,
+        "url": "http://localhost:3002/api/studio/auth/encryption-key"
+      },
+      {
+        "method": "POST",
+        "status": 200,
+        "url": "http://localhost:3002/api/studio/auth/login"
+      },
+      {
+        "method": "GET",
+        "status": 200,
+        "url": "http://localhost:3002/api/status"
+      },
+      {
+        "method": "GET",
+        "status": 200,
+        "url": "http://localhost:3002/api/studio/bootstrap"
+      },
+      {
+        "method": "GET",
+        "status": 200,
+        "url": "http://localhost:3002/api/public/navigation"
+      },
+      {
+        "method": "GET",
+        "status": 200,
+        "url": "http://localhost:3002/api/public/navigation"
+      },
+      {
+        "method": "GET",
+        "status": 200,
+        "url": "http://localhost:3002/api/studio/ai/models?type=image"
+      },
+      {
+        "method": "GET",
+        "status": 200,
+        "url": "http://localhost:3002/api/studio/ai/models?type=image"
+      },
+      {
+        "method": "GET",
+        "status": 200,
+        "url": "http://localhost:3002/api/studio/ai/models?type=image"
+      },
+      {
+        "method": "GET",
+        "status": 200,
+        "url": "http://localhost:3002/api/studio/ai/models?type=image"
+      },
+      {
+        "method": "GET",
+        "status": 200,
+        "url": "http://localhost:3002/api/studio/ai/models?type=image"
+      }
+    ]
+  },
+  "screenshots": [
+    "screenshots/00-canvas-list-authenticated.png",
+    "screenshots/01-empty-canvas.png",
+    "screenshots/02-two-text-nodes.png",
+    "screenshots/fix-01-created-connection.png",
+    "screenshots/fix-01-export-json.png",
+    "screenshots/fix-01-exported-editor.png",
+    "screenshots/fix-01-import-connections-missing.png",
+    "screenshots/fix-01-import-result.png",
+    "screenshots/fix-02-connection-point-hover.png",
+    "screenshots/fix-02-connection-point.png",
+    "screenshots/fix-02-connection-points-clickable.png",
+    "screenshots/fix-03-bezier-curves.png",
+    "screenshots/fix-04-right-click-delete-menu.png",
+    "screenshots/preflight-current.png"
+  ]
+}

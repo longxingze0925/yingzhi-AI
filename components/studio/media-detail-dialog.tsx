@@ -18,25 +18,23 @@ import {
   Lock,
   Pencil,
 } from "lucide-react";
-import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { GradientThumb } from "@/components/brand/gradient-thumb";
-import { ratioClass, ratioStyle } from "@/components/shared/media-card";
 import {
-  downloadMediaItem,
-  shareMediaItem,
-} from "@/lib/local-actions";
+  GradientThumb,
+  StudioVideoPlayer,
+} from "@/components/brand/gradient-thumb";
+import { ratioClass, ratioStyle } from "@/components/shared/media-card";
+import { downloadMediaItem, shareMediaItem } from "@/lib/local-actions";
 import {
   downloadWorkRemote,
   favoriteWorkRemote,
+  getStudioVideoRetention,
   publishWorkRemote,
   unpublishWorkRemote,
 } from "@/lib/api/client";
 import { useLocalWorkspaceStore } from "@/lib/store/use-local-workspace";
+import { useCurrentUser } from "@/lib/store/use-current-user";
 import { type MediaItem } from "@/lib/api/types";
 import { cn } from "@/lib/utils";
 
@@ -53,15 +51,32 @@ export function MediaDetailDialog({
   const [copied, setCopied] = React.useState(false);
   const [shared, setShared] = React.useState(false);
   const [downloaded, setDownloaded] = React.useState(false);
-  const [published, setPublished] = React.useState(item?.visibility === "gallery");
-  const [busyAction, setBusyAction] = React.useState<string | null>(null);
-  const setFavorite = useLocalWorkspaceStore((s) => s.setFavorite);
-  const isFavorite = useLocalWorkspaceStore((s) =>
-    item ? s.isFavorite(item) : false
+  const [published, setPublished] = React.useState(
+    item?.visibility === "gallery",
   );
+  const [busyAction, setBusyAction] = React.useState<string | null>(null);
+  const [retentionDays, setRetentionDays] = React.useState<number | null>(null);
+  const [favoriteOverride, setFavoriteOverride] = React.useState<{
+    key: string;
+    value: boolean;
+  } | null>(null);
+  const { user, loading: userLoading, loaded: userLoaded } = useCurrentUser();
   const markDownloaded = useLocalWorkspaceStore((s) => s.markDownloaded);
   const markShared = useLocalWorkspaceStore((s) => s.markShared);
   const addNotification = useLocalWorkspaceStore((s) => s.addNotification);
+  const favoriteKey = item && user ? `${user.id}:${item.id}` : null;
+  const isFavorite = Boolean(
+    user &&
+      item &&
+      (favoriteKey && favoriteOverride?.key === favoriteKey
+        ? favoriteOverride.value
+        : item.favoritedAt),
+  );
+  const canManageWork = item?.isOwner === true;
+  const canManageRetention = Boolean(
+    item?.type === "video" && canManageWork && !item.demo,
+  );
+  const retentionWorkId = canManageRetention ? item?.id : undefined;
 
   React.useEffect(() => {
     if (!open) {
@@ -75,6 +90,28 @@ export function MediaDetailDialog({
   React.useEffect(() => {
     setPublished(item?.visibility === "gallery");
   }, [item?.id, item?.visibility]);
+
+  React.useEffect(() => {
+    if (!open || !retentionWorkId) {
+      setRetentionDays(null);
+      return;
+    }
+
+    let cancelled = false;
+    getStudioVideoRetention(retentionWorkId)
+      .then((retention) => {
+        if (cancelled) return;
+        setRetentionDays(retention.retentionDays);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setRetentionDays(null);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [open, retentionWorkId, isFavorite, published]);
 
   if (!item) return null;
 
@@ -108,7 +145,10 @@ export function MediaDetailDialog({
 
   const editWithReference = () => {
     if (!item.assetId) {
-      addNotification("无法编辑", "这个作品没有关联 AiSaaS 素材，不能自动填入参考。");
+      addNotification(
+        "无法编辑",
+        "这个作品没有关联平台素材，不能自动填入参考。",
+      );
       return;
     }
     const target =
@@ -142,7 +182,7 @@ export function MediaDetailDialog({
       markShared(item.id);
       addNotification(
         result === "shared" ? "作品已分享" : "分享信息已复制",
-        item.prompt
+        item.prompt,
       );
       setShared(true);
       setTimeout(() => setShared(false), 1600);
@@ -161,22 +201,29 @@ export function MediaDetailDialog({
       setDownloaded(true);
       setTimeout(() => setDownloaded(false), 1600);
     } catch {
-      addNotification("下载失败", "AiSaaS 下载登记失败，请稍后重试。");
+      addNotification("下载失败", "平台下载登记失败，请稍后重试。");
     } finally {
       setBusyAction(null);
     }
   };
 
   const favoriteItem = async () => {
+    if (!userLoaded || userLoading) return;
+    if (!user) {
+      router.push("/login?next=%2Fstudio%2Fexplore");
+      return;
+    }
+    if (!item || !favoriteKey) return;
+
     setBusyAction("favorite");
     try {
       await favoriteWorkRemote(item.id, !isFavorite);
-      setFavorite(item, !isFavorite);
+      setFavoriteOverride({ key: favoriteKey, value: !isFavorite });
       addNotification(isFavorite ? "已取消收藏" : "已加入收藏", item.prompt);
     } catch {
       addNotification(
         isFavorite ? "取消收藏失败" : "收藏失败",
-        "AiSaaS 收藏接口返回失败，请稍后重试。"
+        "平台收藏接口返回失败，请稍后重试。",
       );
     } finally {
       setBusyAction(null);
@@ -184,6 +231,7 @@ export function MediaDetailDialog({
   };
 
   const togglePublish = async () => {
+    if (!item || !canManageWork) return;
     setBusyAction("publish");
     try {
       if (published) {
@@ -196,7 +244,10 @@ export function MediaDetailDialog({
         addNotification("作品已发布到灵感广场", item.prompt);
       }
     } catch {
-      addNotification("发布状态更新失败", "请稍后重试，或确认 AiSaaS 发布接口配置。");
+      addNotification(
+        "发布状态更新失败",
+        "请稍后重试，或确认平台发布服务配置。",
+      );
     } finally {
       setBusyAction(null);
     }
@@ -215,32 +266,54 @@ export function MediaDetailDialog({
       <DialogContent className="h-[720px] max-h-[92vh] w-[1040px] max-w-[94vw] gap-0 overflow-hidden p-0">
         <DialogTitle className="sr-only">作品详情</DialogTitle>
         <div className="grid h-full grid-cols-1 md:grid-cols-[1.25fr_1fr]">
-          {/* 预览：固定区域，模糊背景填充 + 原图按比例 contain 居中 */}
-          <div className="relative hidden items-center justify-center overflow-hidden bg-muted/30 p-6 md:flex">
-            {/* 模糊背景层：同 seed 放大模糊铺满 */}
-            <div className="pointer-events-none absolute inset-0 scale-125 opacity-50 blur-2xl">
+          {/* 预览：背景只做氛围填充，真实视频始终位于背景之上。 */}
+          <div className="relative isolate hidden items-center justify-center overflow-hidden bg-muted/30 p-6 md:flex">
+            {item.type === "video" ? (
+              <div className="pointer-events-none absolute inset-0 z-0 overflow-hidden bg-muted/30">
+                <GradientThumb
+                  seed={item.seed}
+                  thumbnailSrc={item.thumbnailUrl}
+                  alt=""
+                  mediaType="video"
+                  eagerMedia
+                  className="h-full w-full scale-110 opacity-45 blur-2xl"
+                />
+                <div className="absolute inset-0 bg-black/10" />
+              </div>
+            ) : (
+              <div className="pointer-events-none absolute inset-0 scale-125 opacity-50 blur-2xl">
+                <GradientThumb
+                  seed={item.seed}
+                  alt={item.prompt}
+                  mediaType={item.type}
+                  className="h-full w-full"
+                />
+              </div>
+            )}
+            {/* 视频控件放在画面外，首帧仅作 poster，不再作为覆盖层常驻。 */}
+            {item.type === "video" ? (
+              <StudioVideoPlayer
+                src={item.url}
+                thumbnailSrc={item.thumbnailUrl}
+                alt={item.prompt}
+                aspectRatio={item.aspectRatio}
+              />
+            ) : (
               <GradientThumb
                 seed={item.seed}
                 src={item.url}
+                thumbnailSrc={item.thumbnailUrl}
                 alt={item.prompt}
                 mediaType={item.type}
-                className="h-full w-full"
-              />
-            </div>
-            {/* 前景清晰层：按比例 contain（宽图限宽、高图限高） */}
-            <GradientThumb
-              seed={item.seed}
-              src={item.url}
-              alt={item.prompt}
-              mediaType={item.type}
-              className={cn(
-                ratioClass(item.aspectRatio),
-                "relative max-h-full max-w-full rounded-xl shadow-2xl",
-                fitClass
-              )}
-              style={ratioStyle(item.aspectRatio)}
-            >
-              {item.type === "audio" && (
+                eagerMedia
+                className={cn(
+                  ratioClass(item.aspectRatio),
+                  "relative max-h-full max-w-full rounded-xl shadow-2xl",
+                  fitClass,
+                )}
+                style={ratioStyle(item.aspectRatio)}
+              >
+                {item.type === "audio" && (
                 <div className="absolute inset-0 flex flex-col items-center justify-center gap-5 p-6 text-white">
                   <span className="grid h-16 w-16 place-items-center rounded-full bg-black/30 backdrop-blur">
                     <Music2 className="h-7 w-7" />
@@ -253,8 +326,9 @@ export function MediaDetailDialog({
                     />
                   )}
                 </div>
-              )}
-            </GradientThumb>
+                )}
+              </GradientThumb>
+            )}
           </div>
 
           {/* 信息 */}
@@ -278,7 +352,11 @@ export function MediaDetailDialog({
                   className="grid h-7 w-7 place-items-center rounded-lg text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
                   title={shared ? "已分享" : "分享"}
                 >
-                  {shared ? <Check className="h-4 w-4 text-emerald-500" /> : <Share2 className="h-4 w-4" />}
+                  {shared ? (
+                    <Check className="h-4 w-4 text-emerald-500" />
+                  ) : (
+                    <Share2 className="h-4 w-4" />
+                  )}
                 </button>
                 <button
                   onClick={downloadItem}
@@ -286,7 +364,11 @@ export function MediaDetailDialog({
                   className="grid h-7 w-7 place-items-center rounded-lg text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
                   title={downloaded ? "已开始下载" : "下载"}
                 >
-                  {downloaded ? <Check className="h-4 w-4 text-emerald-500" /> : <Download className="h-4 w-4" />}
+                  {downloaded ? (
+                    <Check className="h-4 w-4 text-emerald-500" />
+                  ) : (
+                    <Download className="h-4 w-4" />
+                  )}
                 </button>
               </div>
             </div>
@@ -300,7 +382,8 @@ export function MediaDetailDialog({
                   >
                     {String(label).includes("音频") ? (
                       <Music2 className="h-3.5 w-3.5" />
-                    ) : String(label).includes("视频") || String(label).includes("帧") ? (
+                    ) : String(label).includes("视频") ||
+                      String(label).includes("帧") ? (
                       <Film className="h-3.5 w-3.5" />
                     ) : (
                       <ImagePlus className="h-3.5 w-3.5" />
@@ -309,6 +392,12 @@ export function MediaDetailDialog({
                   </span>
                 ))}
               </div>
+            )}
+
+            {canManageRetention && retentionDays !== null && (
+              <p className="mt-4 text-xs text-muted-foreground" aria-live="polite">
+                系统默认保留 {retentionDays} 天。
+              </p>
             )}
 
             {/* 提示词主体 */}
@@ -342,36 +431,52 @@ export function MediaDetailDialog({
                   variant="outline"
                   className="flex-1"
                   onClick={favoriteItem}
-                  disabled={busyAction === "favorite"}
+                  disabled={
+                    busyAction === "favorite" || !userLoaded || userLoading
+                  }
+                  title={!user ? "请先登录" : undefined}
                 >
-                  <Heart className={cn("h-4 w-4", isFavorite && "fill-current text-rose-500")} />
-                  {isFavorite ? "已收藏" : "收藏"}
+                  <Heart
+                    className={cn(
+                      "h-4 w-4",
+                      isFavorite && "fill-current text-rose-500",
+                    )}
+                  />
+                  {!user && userLoaded
+                    ? "请先登录"
+                    : isFavorite
+                      ? "已收藏"
+                      : "收藏"}
                 </Button>
               </div>
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={togglePublish}
-                disabled={busyAction === "publish"}
-              >
-                {published ? (
-                  <>
-                    <Lock className="h-4 w-4" /> 取消发布
-                  </>
-                ) : (
-                  <>
-                    <Globe2 className="h-4 w-4" /> 发布到广场
-                  </>
-                )}
-              </Button>
-              <Button
-                variant="outline"
-                className="w-full"
-                onClick={editWithReference}
-                disabled={!item.assetId}
-              >
-                <Pencil className="h-4 w-4" /> 编辑
-              </Button>
+              {canManageWork && (
+                <>
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={togglePublish}
+                    disabled={busyAction === "publish"}
+                  >
+                    {published ? (
+                      <>
+                        <Lock className="h-4 w-4" /> 取消发布
+                      </>
+                    ) : (
+                      <>
+                        <Globe2 className="h-4 w-4" /> 发布到广场
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={editWithReference}
+                    disabled={!item.assetId}
+                  >
+                    <Pencil className="h-4 w-4" /> 编辑
+                  </Button>
+                </>
+              )}
               <Button variant="brand" className="w-full" onClick={usePrompt}>
                 <Sparkles className="h-4 w-4" /> 用此提示词创作
               </Button>

@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="zh-CN" class="font-sans">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="description" content="无限画布" />
+        <title>影织 · 无限画布</title>
+        <script>
+            try {
+                var s = JSON.parse(localStorage.getItem("infinite-canvas:theme_store") || "{}");
+                var t = s.state && s.state.theme === "light" ? "light" : "dark";
+                document.documentElement.classList.toggle("dark", t === "dark");
+                document.documentElement.style.colorScheme = t;
+            } catch (e) {}
+        </script>
+      <script type="module" crossorigin src="/canvas-runtime/assets/index-embedded-BCfCCTnc.js"></script>
+      <link rel="stylesheet" crossorigin href="/canvas-runtime/assets/index-embedded-DQQ8NbL_.css">
+    </head>
+    <body class="bg-background text-foreground antialiased">
+        <div id="root"></div>
+    </body>
+</html>

@@ -1,9 +1,10 @@
 "use client";
 
-import * as React from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  ExternalLink,
   PanelLeftClose,
   PanelLeftOpen,
   Sparkles,
@@ -11,7 +12,6 @@ import {
 } from "lucide-react";
 import { Logo, LogoMark } from "@/components/brand/logo";
 import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
 import {
   Tooltip,
   TooltipContent,
@@ -24,7 +24,13 @@ import {
   type NavItem,
 } from "@/components/studio/nav-config";
 import { useCurrentUser } from "@/lib/store/use-current-user";
-import { cn, formatNumber } from "@/lib/utils";
+import {
+  getPublicPlatformNavigation,
+  startNewApiSSO,
+} from "@/lib/api/client";
+import type { PlatformNavigation } from "@/lib/api/types";
+import { useLocalWorkspaceStore } from "@/lib/store/use-local-workspace";
+import { cn } from "@/lib/utils";
 
 function NavLink({
   item,
@@ -37,34 +43,60 @@ function NavLink({
   active: boolean;
   onNavigate?: () => void;
 }) {
+  const handleAction = () => {
+    onNavigate?.();
+    item.onAction?.();
+  };
   const content = (
-    <Link
-      href={item.href}
-      onClick={onNavigate}
-      className={cn(
-        "group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
-        collapsed && "justify-center px-0",
-        active
-          ? "bg-accent text-foreground"
-          : "text-muted-foreground hover:bg-accent/60 hover:text-foreground"
-      )}
-    >
-      {active && (
-        <span className="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-brand-gradient" />
-      )}
-      <item.icon
+    item.onAction ? (
+      <button
+        type="button"
+        onClick={handleAction}
+        disabled={item.disabled}
         className={cn(
-          "h-[18px] w-[18px] shrink-0",
-          active && "text-primary"
+          "group relative flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-colors",
+          collapsed && "justify-center px-0",
+          "text-muted-foreground hover:bg-accent/60 hover:text-foreground",
+          item.disabled && "cursor-wait opacity-60"
         )}
-      />
-      {!collapsed && <span className="flex-1">{item.label}</span>}
-      {!collapsed && item.badge && (
-        <span className="rounded-full bg-brand-gradient px-1.5 py-0.5 text-[10px] font-semibold text-white">
-          {item.badge}
-        </span>
-      )}
-    </Link>
+      >
+        <item.icon className="h-[18px] w-[18px] shrink-0" />
+        {!collapsed && <span className="flex-1">{item.label}</span>}
+        {!collapsed && item.badge && (
+          <span className="rounded-full bg-brand-gradient px-1.5 py-0.5 text-[10px] font-semibold text-white">
+            {item.badge}
+          </span>
+        )}
+      </button>
+    ) : (
+      <Link
+        href={item.href}
+        onClick={onNavigate}
+        className={cn(
+          "group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
+          collapsed && "justify-center px-0",
+          active
+            ? "bg-accent text-foreground"
+            : "text-muted-foreground hover:bg-accent/60 hover:text-foreground"
+        )}
+      >
+        {active && (
+          <span className="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-brand-gradient" />
+        )}
+        <item.icon
+          className={cn(
+            "h-[18px] w-[18px] shrink-0",
+            active && "text-primary"
+          )}
+        />
+        {!collapsed && <span className="flex-1">{item.label}</span>}
+        {!collapsed && item.badge && (
+          <span className="rounded-full bg-brand-gradient px-1.5 py-0.5 text-[10px] font-semibold text-white">
+            {item.badge}
+          </span>
+        )}
+      </Link>
+    )
   );
 
   if (collapsed) {
@@ -91,11 +123,75 @@ export function Sidebar({
 }) {
   const pathname = usePathname();
   const { user } = useCurrentUser();
+  const addNotification = useLocalWorkspaceStore((s) => s.addNotification);
+  const [platformNavigation, setPlatformNavigation] =
+    useState<PlatformNavigation | null>(null);
+  const [startingNewApiSSO, setStartingNewApiSSO] = useState(false);
+  const startingNewApiSSORef = useRef(false);
   const isActive = (href: string) =>
     pathname === href || pathname.startsWith(href + "/");
-  const creditPct = Math.round(
-    ((user?.credits ?? 0) / Math.max(user?.creditsTotal ?? 0, 1)) * 100
+  // The canvas entry is status-only while the feature is paused; showing it grants no canvas access.
+  const visibleNavigation = STUDIO_NAV;
+
+  useEffect(() => {
+    let mounted = true;
+    void getPublicPlatformNavigation()
+      .then((value) => {
+        if (mounted) setPlatformNavigation(value);
+      })
+      .catch(() => {
+        if (mounted) setPlatformNavigation(null);
+      });
+    return () => {
+      mounted = false;
+    };
+  }, []);
+
+  const openNewApi = useCallback(() => {
+    if (startingNewApiSSORef.current) return;
+
+    // Open the tab synchronously from the click handler so browsers do not
+    // block it as a popup after the asynchronous SSO request completes.
+    const newApiWindow = window.open("about:blank", "_blank");
+    if (!newApiWindow) {
+      addNotification("无法进入 New API", "请稍后重试。");
+      return;
+    }
+
+    newApiWindow.opener = null;
+    startingNewApiSSORef.current = true;
+    setStartingNewApiSSO(true);
+    void startNewApiSSO()
+      .then((result) => {
+        newApiWindow.location.replace(result.redirect_url);
+      })
+      .catch((error) => {
+        newApiWindow.close();
+        addNotification(
+          "无法进入 New API",
+          error instanceof Error ? error.message : "请稍后重试。"
+        );
+      })
+      .finally(() => {
+        startingNewApiSSORef.current = false;
+        setStartingNewApiSSO(false);
+      });
+  }, [addNotification]);
+
+  const showNewApiEntry = Boolean(
+    platformNavigation?.sso_enabled &&
+      platformNavigation.new_api.enabled &&
+      platformNavigation.new_api.url
   );
+  const newApiEntry: NavItem = {
+    label: startingNewApiSSO ? "正在进入 New API" : "进入 New API",
+    href: "#new-api",
+    icon: ExternalLink,
+    onAction: () => {
+      openNewApi();
+    },
+    disabled: startingNewApiSSO,
+  };
 
   return (
     <TooltipProvider>
@@ -144,7 +240,7 @@ export function Sidebar({
 
         {/* 导航 */}
         <nav className="flex-1 space-y-5 overflow-y-auto px-3 py-2">
-          {STUDIO_NAV.map((group) => (
+          {visibleNavigation.map((group) => (
             <div key={group.title}>
               {!collapsed && (
                 <p className="mb-1.5 px-3 text-[11px] font-medium uppercase tracking-wider text-muted-foreground/70">
@@ -166,7 +262,18 @@ export function Sidebar({
           ))}
         </nav>
 
-        {/* 底部：算力 + 设置 + 折叠 */}
+        {showNewApiEntry && (
+          <div className="border-t border-border/60 px-3 py-2">
+            <NavLink
+              item={newApiEntry}
+              collapsed={collapsed}
+              active={false}
+              onNavigate={onNavigate}
+            />
+          </div>
+        )}
+
+        {/* 底部：余额 + 设置 + 折叠 */}
         <div className="space-y-1 border-t border-border/60 p-3">
           {STUDIO_NAV_BOTTOM.map((item) => (
             <NavLink
@@ -183,15 +290,14 @@ export function Sidebar({
               <div className="flex items-center justify-between text-xs">
                 <span className="flex items-center gap-1.5 font-medium">
                   <Zap className="h-3.5 w-3.5 text-primary" />
-                  算力余额
+                  当前余额
                 </span>
-                <span className="text-muted-foreground">
-                  {formatNumber(user?.credits ?? 0)}/{formatNumber(user?.creditsTotal ?? 0)}
+                <span className="font-medium text-foreground">
+                  {user?.balanceDisplay ?? "$0"}
                 </span>
               </div>
-              <Progress value={creditPct} className="mt-2 h-1.5" />
               <Button asChild size="sm" variant="outline" className="mt-3 w-full">
-                <Link href="/studio/settings">升级套餐</Link>
+                <Link href="/studio/settings?tab=plan">账户充值</Link>
               </Button>
             </div>
           )}

@@ -69,7 +69,7 @@ function CardShell({
     <div
       className={cn(
         "group flex flex-col overflow-hidden rounded-xl border border-border/60 bg-card/40 transition-colors hover:border-border",
-        className
+        className,
       )}
     >
       {children}
@@ -81,32 +81,65 @@ function CardShell({
 function CardHeader({
   time,
   model,
+  routeName,
   status,
 }: {
   time: number;
   model: string;
-  status: "succeeded" | "running" | "queued" | "review" | "failed" | "cancelled";
+  routeName?: string;
+  status:
+    "succeeded" | "running" | "queued" | "review" | "failed" | "cancelled";
 }) {
   const statusMap = {
-    succeeded: { label: "已完成", cls: "bg-emerald-500/15 text-emerald-500", icon: Check },
-    running: { label: "生成中", cls: "bg-primary/15 text-primary", icon: Loader2 },
-    queued: { label: "排队中", cls: "bg-amber-500/15 text-amber-500", icon: Clock },
+    succeeded: {
+      label: "已完成",
+      cls: "bg-emerald-500/15 text-emerald-500",
+      icon: Check,
+    },
+    running: {
+      label: "生成中",
+      cls: "bg-primary/15 text-primary",
+      icon: Loader2,
+    },
+    queued: {
+      label: "排队中",
+      cls: "bg-amber-500/15 text-amber-500",
+      icon: Clock,
+    },
     review: { label: "待审核", cls: "bg-sky-500/15 text-sky-500", icon: Clock },
-    failed: { label: "失败", cls: "bg-destructive/15 text-destructive", icon: AlertCircle },
-    cancelled: { label: "已取消", cls: "bg-muted text-muted-foreground", icon: X },
+    failed: {
+      label: "失败",
+      cls: "bg-destructive/15 text-destructive",
+      icon: AlertCircle,
+    },
+    cancelled: {
+      label: "已取消",
+      cls: "bg-muted text-muted-foreground",
+      icon: X,
+    },
   }[status];
   const Icon = statusMap.icon;
   return (
     <div className="flex items-center gap-2 px-2.5 py-2 text-xs">
       <span className="font-mono text-muted-foreground">{fmtTime(time)}</span>
       <span className="truncate font-medium text-foreground/80">{model}</span>
+      {routeName && (
+        <span
+          className="max-w-20 truncate rounded bg-secondary/70 px-1.5 py-0.5 text-[10px] text-muted-foreground"
+          title={`分组：${routeName}`}
+        >
+          {routeName}
+        </span>
+      )}
       <span
         className={cn(
           "ml-auto flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 font-medium",
-          statusMap.cls
+          statusMap.cls,
         )}
       >
-        <Icon className={cn("h-3 w-3", status === "running" && "animate-spin")} />
+        <Icon
+          className={cn("h-3 w-3", status === "running" && "animate-spin")}
+        />
         {statusMap.label}
       </span>
     </div>
@@ -120,7 +153,12 @@ function MetaRow({
   onDownload,
   onShare,
 }: {
-  item: { type: string; aspectRatio: string; durationSec?: number; resolution?: string };
+  item: {
+    type: string;
+    aspectRatio: string;
+    durationSec?: number;
+    resolution?: string;
+  };
   muted?: boolean;
   onDownload?: () => void;
   onShare?: () => void;
@@ -218,7 +256,7 @@ export function WorkCard({
       markShared(item.id);
       addNotification(
         result === "shared" ? "作品已分享" : "分享信息已复制",
-        item.prompt
+        item.prompt,
       );
     } catch {
       /* 用户取消系统分享时无需提示 */
@@ -232,7 +270,7 @@ export function WorkCard({
       markDownloaded(item.id);
       addNotification("作品已开始下载", item.prompt);
     } catch {
-      addNotification("下载失败", "AiSaaS 下载登记失败，请稍后重试。");
+      addNotification("下载失败", "平台下载登记失败，请稍后重试。");
     }
   };
 
@@ -244,14 +282,17 @@ export function WorkCard({
     } catch {
       addNotification(
         isFavorite ? "取消收藏失败" : "收藏失败",
-        "AiSaaS 收藏接口返回失败，请稍后重试。"
+        "平台收藏接口返回失败，请稍后重试。",
       );
     }
   };
 
   const handleEdit = () => {
     if (!item.assetId) {
-      addNotification("无法编辑", "这个作品没有关联 AiSaaS 素材，不能自动填入参考。");
+      addNotification(
+        "无法编辑",
+        "这个作品没有关联平台素材，不能自动填入参考。",
+      );
       return;
     }
     const target =
@@ -287,6 +328,7 @@ export function WorkCard({
         <GradientThumb
           seed={item.seed}
           src={item.url}
+          thumbnailSrc={item.thumbnailUrl}
           alt={item.prompt}
           mediaType={item.type}
           className={cn("w-full", ratioClass(item.aspectRatio))}
@@ -334,7 +376,7 @@ export function WorkCard({
           title={isFavorite ? "取消收藏" : "收藏"}
           className={cn(
             "grid h-7 w-7 place-items-center rounded-md transition-colors hover:bg-accent hover:text-foreground",
-            isFavorite && "text-rose-500"
+            isFavorite && "text-rose-500",
           )}
         >
           <Heart className={cn("h-3.5 w-3.5", isFavorite && "fill-current")} />
@@ -354,7 +396,11 @@ export function WorkCard({
             title={copied ? "已复制" : "复制提示词"}
             className="grid h-7 w-7 place-items-center rounded-md transition-colors hover:bg-accent hover:text-foreground"
           >
-            {copied ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
+            {copied ? (
+              <Check className="h-3.5 w-3.5 text-emerald-500" />
+            ) : (
+              <Copy className="h-3.5 w-3.5" />
+            )}
           </button>
           <button
             onClick={() => onDelete?.(item)}
@@ -373,25 +419,42 @@ export function WorkCard({
 export function PendingCard({
   job,
   onCancel,
+  onResync,
 }: {
   job: GenerationJob;
   onCancel: (id: string) => void;
+  onResync?: (id: string) => void;
 }) {
+  const isImage = job.type === "image";
+  const isSyncRetrying = job.syncState === "retrying";
+  const isSyncLost = job.syncState === "lost";
   const status =
-    job.status === "queued" || job.status === "review" || job.status === "cancelled"
+    job.status === "queued" ||
+    job.status === "review" ||
+    job.status === "cancelled"
       ? job.status
       : "running";
-  const statusText =
-    job.status === "queued"
-      ? "正在排队…"
-      : job.status === "review"
-        ? "等待审核…"
-        : job.status === "cancelled"
-          ? "任务已取消"
-          : "正在编织影像…";
+  const statusText = isSyncLost
+    ? "状态同步已中断"
+    : isSyncRetrying
+      ? "正在重新同步状态…"
+      : job.syncState === "submitting"
+        ? "正在提交…"
+        : job.status === "queued"
+          ? "正在排队…"
+          : job.status === "review"
+            ? "等待审核…"
+            : job.status === "cancelled"
+              ? "任务已取消"
+              : "正在编织影像…";
   return (
     <CardShell>
-      <CardHeader time={job.createdAt} model={job.model} status={status} />
+      <CardHeader
+        time={job.createdAt}
+        model={job.model}
+        routeName={job.routeName ?? job.routeId}
+        status={status}
+      />
       <MetaRow item={job} muted />
       <PromptRow prompt={job.prompt} />
       <div
@@ -403,19 +466,44 @@ export function PendingCard({
           <Loader2
             className={cn(
               "h-6 w-6 text-primary/70",
-              job.status !== "review" && job.status !== "cancelled" && "animate-spin"
+              job.status !== "review" &&
+                job.status !== "cancelled" &&
+                !isSyncLost &&
+                "animate-spin",
             )}
           />
-          <span className="text-xs text-muted-foreground">
-            {statusText}
-          </span>
-          <div className="w-full max-w-[80%]">
-            <Progress value={job.progress} className="h-1" />
-          </div>
-          <span className="text-[11px] text-muted-foreground">{job.progress}%</span>
+          <span className="text-xs text-muted-foreground">{statusText}</span>
+          {isImage ? (
+            <div className="h-1 w-full max-w-[80%] overflow-hidden rounded-full bg-secondary">
+              <div className="h-full w-1/3 animate-pulse rounded-full bg-primary/70" />
+            </div>
+          ) : (
+            <>
+              <div className="w-full max-w-[80%]">
+                <Progress value={job.progress} className="h-1" />
+              </div>
+              <span className="text-[11px] text-muted-foreground">
+                {job.progress}%
+              </span>
+            </>
+          )}
+          {job.syncError && (
+            <span className="max-w-[85%] text-center text-[11px] text-amber-500">
+              {job.syncError}
+            </span>
+          )}
         </div>
       </div>
-      <div className="flex items-center justify-end px-1.5 py-1.5">
+      <div className="flex items-center justify-end gap-1 px-1.5 py-1.5">
+        {isSyncLost && (
+          <button
+            onClick={() => onResync?.(job.id)}
+            className="grid h-7 w-7 place-items-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground"
+            title="重新同步"
+          >
+            <RotateCw className="h-3.5 w-3.5" />
+          </button>
+        )}
         <button
           onClick={() => onCancel(job.id)}
           className="grid h-7 w-7 place-items-center rounded-md text-muted-foreground hover:bg-accent hover:text-foreground"
@@ -441,6 +529,7 @@ export function FailedCard({
       <CardHeader
         time={job.createdAt}
         model={job.model}
+        routeName={job.routeName ?? job.routeId}
         status={job.status === "cancelled" ? "cancelled" : "failed"}
       />
       <MetaRow item={job} muted />
@@ -448,7 +537,7 @@ export function FailedCard({
       <div
         className={cn(
           "grid place-items-center bg-destructive/5",
-          ratioClass(job.aspectRatio)
+          ratioClass(job.aspectRatio),
         )}
         style={ratioStyle(job.aspectRatio)}
       >

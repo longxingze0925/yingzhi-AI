@@ -1,6 +1,7 @@
 "use client";
 
-import type { MediaItem, MediaType } from "@/lib/api/types";
+import { fetchStudioMedia } from "@/lib/api/client";
+import type { MediaItem } from "@/lib/api/types";
 
 type ShareResult = "shared" | "copied";
 
@@ -42,11 +43,13 @@ function downloadBlob(blob: Blob, filename: string) {
 }
 
 function safeFilename(value: string) {
-  return value
-    .trim()
-    .replace(/[\\/:*?"<>|]+/g, "-")
-    .replace(/\s+/g, "-")
-    .slice(0, 42) || "shadowweave";
+  return (
+    value
+      .trim()
+      .replace(/[\\/:*?"<>|]+/g, "-")
+      .replace(/\s+/g, "-")
+      .slice(0, 42) || "shadowweave"
+  );
 }
 
 function itemSummary(item: MediaItem) {
@@ -116,7 +119,9 @@ export async function downloadMediaItem(item: MediaItem, overrideUrl?: string) {
 
   if (sourceUrl) {
     try {
-      const res = await fetch(sourceUrl, { credentials: "include" });
+      const res = sourceUrl.startsWith("/api/studio/")
+        ? await fetchStudioMedia(sourceUrl)
+        : await fetch(sourceUrl, { credentials: "include" });
       if (!res.ok) throw new Error("download failed");
       const blob = await res.blob();
       const ext =
@@ -131,44 +136,8 @@ export async function downloadMediaItem(item: MediaItem, overrideUrl?: string) {
   }
 
   const svg = fallbackSvg(item);
-  downloadBlob(new Blob([svg], { type: "image/svg+xml;charset=utf-8" }), `${base}.svg`);
-}
-
-export function enhancePromptLocally(params: {
-  prompt: string;
-  type: MediaType;
-  styleName?: string;
-}) {
-  const prompt = params.prompt.trim();
-  if (!prompt) return prompt;
-
-  const base = params.type === "audio"
-    ? [
-        `[Audio Brief] ${prompt}`,
-        "[Voice / Sound] define timbre, texture, language, and emotional delivery",
-        "[Pacing] natural rhythm, clean pauses, no abrupt volume changes",
-        "[Mix] studio-clean output, balanced loudness, no clipping or background noise",
-        "[Quality] consistent tone, clear intelligibility, production-ready master",
-      ]
-    : params.type === "video"
-    ? [
-        `[Scene] ${prompt}`,
-        "[Camera] slow cinematic motion with clear subject tracking",
-        "[Lighting] layered key light, rim light, and natural atmosphere",
-        "[Motion] smooth pacing, stable composition, no abrupt cuts",
-        "[Quality] high detail, consistent subject, clean background separation",
-      ]
-    : [
-        `Cinematic key visual: ${prompt}`,
-        "Composition: clear subject hierarchy, balanced negative space, refined framing",
-        "Lighting: studio-grade soft key light with realistic highlights and shadows",
-        "Details: high micro-contrast, clean materials, coherent color palette",
-        "Quality: sharp focus, premium finish, no artifacts",
-      ];
-
-  if (params.styleName && params.styleName !== "无风格") {
-    base.push(`Style reference: ${params.styleName}`);
-  }
-
-  return base.join("\n");
+  downloadBlob(
+    new Blob([svg], { type: "image/svg+xml;charset=utf-8" }),
+    `${base}.svg`,
+  );
 }

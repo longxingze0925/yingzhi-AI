@@ -86,15 +86,14 @@ export default function AssetsPage() {
     () =>
       library.folders.map((folder) => ({
         ...folder,
-        count: library.materials.filter((item) => item.folderId === folder.id).length,
+        count: library.materials.filter((item) => item.folderId === folder.id)
+          .length,
       })),
-    [library.folders, library.materials]
+    [library.folders, library.materials],
   );
   const materials = library.materials;
   const activeFolderId =
-    selectedFolder === "all"
-      ? folders[0]?.id
-      : selectedFolder;
+    selectedFolder === "all" ? folders[0]?.id : selectedFolder;
   const visibleMaterials =
     selectedFolder === "all"
       ? materials
@@ -112,14 +111,17 @@ export default function AssetsPage() {
       const folder = await createAssetFolder({ name, kind: "folder" });
       setLibrary((current) => ({
         ...current,
-        folders: [folder, ...current.folders.filter((item) => item.id !== folder.id)],
+        folders: [
+          folder,
+          ...current.folders.filter((item) => item.id !== folder.id),
+        ],
       }));
       setSelectedFolder(folder.id);
       addNotification("已新建文件夹", name);
       setFolderName("");
       setFolderDialogOpen(false);
     } catch {
-      addNotification("新建文件夹失败", "AiSaaS 文件夹接口返回失败，请稍后重试。");
+      addNotification("新建文件夹失败", "平台文件夹接口返回失败，请稍后重试。");
     }
   };
 
@@ -141,7 +143,9 @@ export default function AssetsPage() {
 
   const uploadFiles = async (fileList: FileList | File[]) => {
     const candidates = Array.from(fileList);
-    const oversized = candidates.filter((file) => file.size > MAX_LOCAL_ASSET_BYTES);
+    const oversized = candidates.filter(
+      (file) => file.size > MAX_LOCAL_ASSET_BYTES,
+    );
     const files = candidates.filter((file) => {
       const name = file.name.toLowerCase();
       const supported =
@@ -155,11 +159,14 @@ export default function AssetsPage() {
     if (oversized.length > 0) {
       addNotification(
         "部分素材超过大小限制",
-        `已跳过 ${oversized.length} 个超过 ${MAX_LOCAL_ASSET_MB}MB 的文件。`
+        `已跳过 ${oversized.length} 个超过 ${MAX_LOCAL_ASSET_MB}MB 的文件。`,
       );
     }
     if (files.length === 0) {
-      addNotification("没有可上传的素材", "支持图片、视频、音频、WebP 与 safetensors 文件。");
+      addNotification(
+        "没有可上传的素材",
+        "支持图片、视频、音频、WebP 与 safetensors 文件。",
+      );
       return;
     }
 
@@ -171,7 +178,7 @@ export default function AssetsPage() {
       await reloadLibrary();
       addNotification("素材已上传", `新增 ${files.length} 个素材`);
     } catch {
-      addNotification("素材上传失败", "AiSaaS 上传接口返回失败，请稍后重试。");
+      addNotification("素材上传失败", "平台上传接口返回失败，请稍后重试。");
     }
   };
 
@@ -180,17 +187,22 @@ export default function AssetsPage() {
       await deleteAssetRemote(item.id);
       setLibrary((current) => ({
         ...current,
-        materials: current.materials.filter((material) => material.id !== item.id),
+        materials: current.materials.filter(
+          (material) => material.id !== item.id,
+        ),
       }));
       addNotification("素材已删除", item.name);
     } catch {
-      addNotification("素材删除失败", "请稍后重试，或确认 AiSaaS 素材删除接口配置。");
+      addNotification("素材删除失败", "请稍后重试，或确认平台素材服务配置。");
     }
   };
 
   return (
     <PageContainer>
-      <PageHeader title="素材资产库" description="集中管理参考图、参考视频、参考音频、首尾帧与品牌资产">
+      <PageHeader
+        title="素材资产库"
+        description="集中管理参考图、参考视频、参考音频、首尾帧与品牌资产"
+      >
         <Button
           variant="outline"
           size="sm"
@@ -222,7 +234,7 @@ export default function AssetsPage() {
 
       {/* 文件夹 */}
       <div className="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          {folders.map((f) => {
+        {folders.map((f) => {
           const Icon =
             FOLDER_ICONS[f.kind as keyof typeof FOLDER_ICONS] ?? Folder;
           return (
@@ -233,7 +245,7 @@ export default function AssetsPage() {
                 "flex items-center gap-3 rounded-xl border p-4 text-left transition-colors",
                 selectedFolder === f.id
                   ? "border-primary/50 bg-primary/10"
-                  : "border-border/60 bg-card/40 hover:border-primary/30"
+                  : "border-border/60 bg-card/40 hover:border-primary/30",
               )}
             >
               <span className="grid h-10 w-10 shrink-0 place-items-center rounded-lg bg-primary/10 text-primary">
@@ -282,7 +294,7 @@ export default function AssetsPage() {
           "mt-6 flex w-full flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-border bg-background/40 py-10 transition-colors",
           dragging
             ? "border-primary bg-primary/10"
-            : "hover:border-primary/50 hover:bg-primary/5"
+            : "hover:border-primary/50 hover:bg-primary/5",
         )}
       >
         <span className="grid h-12 w-12 place-items-center rounded-full bg-primary/10 text-primary">
@@ -290,7 +302,8 @@ export default function AssetsPage() {
         </span>
         <p className="text-sm font-medium">拖拽文件到此处，或点击上传</p>
         <p className="text-xs text-muted-foreground">
-          支持 JPG / PNG / WebP / MP4 / MP3 / WAV，单文件最大 {MAX_LOCAL_ASSET_MB}MB
+          支持 JPG / PNG / WebP / MP4 / MP3 / WAV，单文件最大{" "}
+          {MAX_LOCAL_ASSET_MB}MB
         </p>
       </button>
 
@@ -325,7 +338,11 @@ export default function AssetsPage() {
                     src={m.url}
                     alt={m.name}
                     mediaType={
-                      m.kind === "audio" ? "audio" : m.kind === "video" ? "video" : "image"
+                      m.kind === "audio"
+                        ? "audio"
+                        : m.kind === "video"
+                          ? "video"
+                          : "image"
                     }
                     className="aspect-square w-full"
                   >
@@ -348,7 +365,9 @@ export default function AssetsPage() {
                   </button>
                 </div>
                 <div className="flex items-center justify-between gap-2 px-2 py-1.5">
-                  <p className="truncate text-xs text-muted-foreground">{m.name}</p>
+                  <p className="truncate text-xs text-muted-foreground">
+                    {m.name}
+                  </p>
                 </div>
               </div>
             ))}
@@ -360,9 +379,7 @@ export default function AssetsPage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>新建文件夹</DialogTitle>
-            <DialogDescription>
-              文件夹会创建到 AiSaaS 素材库。
-            </DialogDescription>
+            <DialogDescription>文件夹会创建到统一素材库。</DialogDescription>
           </DialogHeader>
           <Input
             autoFocus
@@ -374,10 +391,17 @@ export default function AssetsPage() {
             placeholder="例如：品牌参考图"
           />
           <DialogFooter>
-            <Button variant="outline" onClick={() => setFolderDialogOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => setFolderDialogOpen(false)}
+            >
               取消
             </Button>
-            <Button variant="brand" onClick={() => void createFolder()} disabled={!folderName.trim()}>
+            <Button
+              variant="brand"
+              onClick={() => void createFolder()}
+              disabled={!folderName.trim()}
+            >
               创建
             </Button>
           </DialogFooter>

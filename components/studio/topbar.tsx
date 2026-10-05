@@ -26,7 +26,7 @@ import {
 import { ThemeToggle } from "@/components/theme/theme-toggle";
 import { useCurrentUser } from "@/lib/store/use-current-user";
 import { useLocalWorkspaceStore } from "@/lib/store/use-local-workspace";
-import { formatNumber, timeAgo } from "@/lib/utils";
+import { timeAgo } from "@/lib/utils";
 
 export function Topbar({ onOpenMobile }: { onOpenMobile: () => void }) {
   const router = useRouter();
@@ -48,14 +48,14 @@ export function Topbar({ onOpenMobile }: { onOpenMobile: () => void }) {
       </button>
 
       <div className="flex flex-1 items-center justify-end gap-1.5">
-        {/* 算力 */}
+        {/* 账户余额 */}
         <Link
-          href="/studio/settings"
+          href="/studio/settings?tab=plan"
           className="flex items-center gap-1.5 rounded-full border border-border bg-card/60 px-3 py-1.5 text-sm font-medium transition-colors hover:border-primary/40"
         >
           <Zap className="h-3.5 w-3.5 text-primary" />
-          {formatNumber(user?.credits ?? 0)}
-          <span className="hidden text-muted-foreground sm:inline">算力</span>
+          {user?.balanceDisplay ?? "$0"}
+          <span className="hidden text-muted-foreground sm:inline">余额</span>
         </Link>
 
         <ThemeToggle />

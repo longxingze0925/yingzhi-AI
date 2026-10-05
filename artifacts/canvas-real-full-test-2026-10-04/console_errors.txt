@@ -1,0 +1,151 @@
+[
+  {
+    "type": "error",
+    "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "url": "http://localhost:13000/icons/openai.svg"
+  },
+  {
+    "type": "error",
+    "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "url": "http://localhost:13000/icons/openai.svg"
+  },
+  {
+    "type": "error",
+    "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "url": "http://localhost:13000/icons/openai.svg"
+  },
+  {
+    "type": "error",
+    "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "url": "http://localhost:13000/api/prompts?page=1&pageSize=1"
+  },
+  {
+    "type": "error",
+    "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "url": "http://localhost:13000/api/prompts?category=system&page=1&pageSize=500"
+  },
+  {
+    "type": "error",
+    "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "url": "http://localhost:13000/icons/openai.svg"
+  },
+  {
+    "type": "error",
+    "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "url": "http://localhost:13000/icons/openai.svg"
+  },
+  {
+    "type": "error",
+    "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "url": "http://localhost:13000/icons/openai.svg"
+  },
+  {
+    "type": "error",
+    "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "url": "http://localhost:13000/icons/openai.svg"
+  },
+  {
+    "type": "error",
+    "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "url": "http://localhost:13000/api/v1/agent-skills"
+  },
+  {
+    "type": "error",
+    "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "url": "http://localhost:13000/api/agent-skills"
+  },
+  {
+    "type": "error",
+    "text": "Error gathering Skill keys in cleanupImages Error: 请求失败\n    at apiRequest (webpack-internal:///(app-pages-browser)/./app/studio/canvas/_upstream-deps/services/api/request.ts:82:15)\n    at async Promise.all (index 1)\n    at async eval (webpack-internal:///(app-pages-browser)/./app/studio/canvas/_upstream-deps/stores/use-asset-store.ts:275:21)",
+    "url": "webpack-internal:///(app-pages-browser)/./node_modules/next/dist/client/app-index.js"
+  },
+  {
+    "type": "error",
+    "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "url": "http://localhost:13000/icons/openai.svg"
+  },
+  {
+    "type": "error",
+    "text": "Failed to load resource: the server responded with a status of 404 (Not Found)",
+    "url": "http://localhost:13000/icons/openai.svg"
+  },
+  {
+    "type": "error",
+    "text": "Failed to load resource: the server responded with a status of 500 (Internal Server Error)",
+    "url": "http://localhost:13000/api/studio/text/completions"
+  }
+]
+
+HTTP_ERRORS
+[
+  {
+    "status": 404,
+    "method": "GET",
+    "url": "http://localhost:13000/icons/openai.svg"
+  },
+  {
+    "status": 404,
+    "method": "GET",
+    "url": "http://localhost:13000/icons/openai.svg"
+  },
+  {
+    "status": 404,
+    "method": "GET",
+    "url": "http://localhost:13000/icons/openai.svg"
+  },
+  {
+    "status": 404,
+    "method": "GET",
+    "url": "http://localhost:13000/api/prompts?page=1&pageSize=1"
+  },
+  {
+    "status": 404,
+    "method": "GET",
+    "url": "http://localhost:13000/api/prompts?category=system&page=1&pageSize=500"
+  },
+  {
+    "status": 404,
+    "method": "GET",
+    "url": "http://localhost:13000/icons/openai.svg"
+  },
+  {
+    "status": 404,
+    "method": "GET",
+    "url": "http://localhost:13000/icons/openai.svg"
+  },
+  {
+    "status": 404,
+    "method": "GET",
+    "url": "http://localhost:13000/icons/openai.svg"
+  },
+  {
+    "status": 404,
+    "method": "GET",
+    "url": "http://localhost:13000/icons/openai.svg"
+  },
+  {
+    "status": 404,
+    "method": "GET",
+    "url": "http://localhost:13000/api/v1/agent-skills"
+  },
+  {
+    "status": 404,
+    "method": "GET",
+    "url": "http://localhost:13000/api/agent-skills"
+  },
+  {
+    "status": 404,
+    "method": "GET",
+    "url": "http://localhost:13000/icons/openai.svg"
+  },
+  {
+    "status": 404,
+    "method": "GET",
+    "url": "http://localhost:13000/icons/openai.svg"
+  },
+  {
+    "status": 500,
+    "method": "POST",
+    "url": "http://localhost:13000/api/studio/text/completions"
+  }
+]

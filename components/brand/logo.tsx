@@ -20,7 +20,7 @@ export function Logo({
         <LogoMark className="relative h-5 w-5 text-white" />
       </span>
       {showText && (
-        <span className="flex flex-col leading-none">
+        <span className="flex flex-col gap-0.5 leading-none">
           <span className="text-[15px] font-semibold tracking-tight">影织</span>
           <span className="text-[10px] font-medium uppercase tracking-[0.2em] text-muted-foreground">
             Shadowweave

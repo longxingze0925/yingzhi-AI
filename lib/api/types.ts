@@ -1,18 +1,31 @@
-/** 影织 · 领域类型定义（前端契约，后续与 Rust 后端对齐） */
+/** 影织 · 领域类型定义（前端与统一后端契约） */
 
 export type MediaType = "image" | "video" | "audio";
+export type AiModelType = MediaType | "text";
+
+export interface PlatformNavigation {
+  sso_enabled: boolean;
+  new_api: {
+    enabled: boolean;
+    url: string;
+  };
+  yingzhi: {
+    enabled: boolean;
+    url: string;
+  };
+}
+
+export interface PlatformSSOStartResponse {
+  redirect_url: string;
+  expires_at: number;
+}
 
 export type SourceMode = "text" | "image" | "video" | "audio" | "frames";
 
 export type WorkVisibility = "private" | "gallery";
 
 export type MediaCategory =
-  | "portrait"
-  | "landscape"
-  | "product"
-  | "anime"
-  | "architecture"
-  | "abstract";
+  "portrait" | "landscape" | "product" | "anime" | "architecture" | "abstract";
 
 export const CATEGORY_LABELS: Record<MediaCategory, string> = {
   portrait: "人像",
@@ -32,12 +45,14 @@ export interface Author {
 export interface MediaItem {
   id: string;
   type: MediaType;
-  /** AiSaaS 资产 id，用于把作品作为下一次生成的参考素材 */
+  /** 统一素材 id，用于把作品作为下一次生成的参考素材 */
   assetId?: string | null;
   /** 占位渲染用的种子（替换为真实 url 后弃用） */
-  seed: string;
-  url?: string;
-  prompt: string;
+	seed: string;
+	url?: string;
+	/** 视频首帧缩略图；浏览器无法解码 HEVC 等编码时仍可展示真实画面 */
+	thumbnailUrl?: string | null;
+	prompt: string;
   /** 完整专业提示词（详情页展示、复制、用此提示词创作；缺省时回退到 prompt） */
   fullPrompt?: string;
   model: string;
@@ -55,6 +70,8 @@ export interface MediaItem {
   hasFirstFrame?: boolean | null;
   hasLastFrame?: boolean | null;
   visibility?: WorkVisibility | null;
+  /** Whether the signed-in user owns this work. */
+  isOwner?: boolean;
   publishedAt?: number | null;
   favoritedAt?: number | null;
   downloadedAt?: number | null;
@@ -75,9 +92,16 @@ export interface AspectRatioOption {
 export interface ModelBilling {
   currency: string;
   mode: string;
+  unit?: "second" | "request";
+  unitPriceMinor?: number | null;
   secondPriceMinor?: number | null;
   requestPriceMinor?: number | null;
+  /** 视频按请求计费时，按所选分辨率展示的单次请求价格。 */
+  requestResolutionPricesMinor?: Record<string, number> | null;
   imagePriceMinor?: number | null;
+  imageResolutionPricesMinor?: Record<string, number> | null;
+  /** 视频按秒计费时，按所选分辨率展示的单价（人民币 quota/秒）。 */
+  secondResolutionPricesMinor?: Record<string, number> | null;
 }
 
 export interface ModelCapabilities {
@@ -111,8 +135,21 @@ export interface ModelCapabilities {
 export interface AiModel {
   id: string;
   name: string;
-  modality: MediaType;
+  sortOrder?: number;
+  modality: AiModelType;
   providerModel?: string | null;
+  billing: ModelBilling;
+  capabilities: ModelCapabilities;
+  /** New API 用户可选的模型分组；具体渠道仍由服务端在分组内调度。 */
+  routes?: AiModelRoute[];
+  defaultRouteId?: string;
+}
+
+export interface AiModelRoute {
+  id: string;
+  name: string;
+  description?: string;
+  groupRatio?: number;
   billing: ModelBilling;
   capabilities: ModelCapabilities;
 }
@@ -124,15 +161,14 @@ export interface StylePreset {
 }
 
 export type JobStatus =
-  | "queued"
-  | "running"
-  | "review"
-  | "succeeded"
-  | "failed"
-  | "cancelled";
+  "queued" | "running" | "review" | "succeeded" | "failed" | "cancelled";
 
 export interface GenerationJob {
   id: string;
+  /** 服务端持久化任务 id；本地提交占位卡保留自己的 id。 */
+  serverId?: string;
+  /** 用于在创建响应丢失时找回同一条服务端任务。 */
+  idempotencyKey?: string;
   type: MediaType;
   status: JobStatus;
   progress: number; // 0 - 100
@@ -140,6 +176,8 @@ export interface GenerationJob {
   negativePrompt?: string;
   /** 原始模型 id，重试本地任务时使用；model 字段可展示为名称 */
   modelId?: string;
+  routeId?: string;
+  routeName?: string;
   model: string;
   modelName?: string;
   aspectRatio: AspectRatio;
@@ -154,6 +192,11 @@ export interface GenerationJob {
   referenceCount?: number | null;
   hasFirstFrame?: boolean | null;
   hasLastFrame?: boolean | null;
+  /** 客户端与服务端任务状态的同步阶段。 */
+  syncState?: "submitting" | "polling" | "synced" | "retrying" | "lost";
+  syncError?: string;
+  syncAttempts?: number;
+  syncDeadlineAt?: number;
 }
 
 export interface GenerateParams {
@@ -162,11 +205,14 @@ export interface GenerateParams {
   negativePrompt?: string;
   model: string;
   modelName?: string;
+  routeId?: string;
+  routeName?: string;
   aspectRatio: AspectRatio;
   resolution?: string;
   count: number;
   styleId?: string;
   durationSec?: number;
+  voice?: string;
   sourceMode?: SourceMode;
   referenceAssets?: ReferenceAssetInput[];
   referenceAssetIds?: string[];
@@ -269,6 +315,9 @@ export interface User {
   avatarSeed: string;
   avatarUrl?: string;
   plan: string;
+  canvasEnabled?: boolean;
+  quota: number;
+  balanceDisplay: string;
   credits: number;
   creditsTotal: number;
 }

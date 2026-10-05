@@ -1,8 +1,12 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { X } from "lucide-react";
+import { Logo } from "@/components/brand/logo";
+import { ThemeToggle } from "@/components/theme/theme-toggle";
+import { Button } from "@/components/ui/button";
 import { Sidebar } from "@/components/studio/sidebar";
 import { Topbar } from "@/components/studio/topbar";
 import { useCurrentUser } from "@/lib/store/use-current-user";
@@ -27,18 +31,39 @@ function StudioShellInner({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { user, loading, loaded } = useCurrentUser();
+  const isPublicExplore = pathname === "/studio/explore";
+  // Paused canvas routes contain only a public development notice, never canvas data or generation UI.
+  const isCanvasPaused =
+    pathname === "/studio/canvas" || pathname.startsWith("/studio/canvas/");
   const [collapsed, setCollapsed] = React.useState(false);
   const [mobileOpen, setMobileOpen] = React.useState(false);
 
   React.useEffect(() => {
-    if (loaded && !loading && !user) {
+    if (!isPublicExplore && !isCanvasPaused && loaded && !loading && !user) {
       const query = searchParams.toString();
       const next = query ? `${pathname}?${query}` : pathname;
       router.replace(`/login?next=${encodeURIComponent(next)}`);
     }
-  }, [loaded, loading, pathname, router, searchParams, user]);
+  }, [isCanvasPaused, isPublicExplore, loaded, loading, pathname, router, searchParams, user]);
 
   if (!user) {
+    if (isPublicExplore || isCanvasPaused) {
+      return (
+        <div className="flex h-screen flex-col overflow-hidden bg-background">
+          <header className="flex h-16 shrink-0 items-center justify-between border-b border-border/60 px-4 sm:px-6">
+            <Logo />
+            <div className="flex items-center gap-2">
+              <ThemeToggle />
+              <Button asChild variant="brand" size="sm">
+                <Link href={`/login?next=${encodeURIComponent(isPublicExplore ? "/studio/explore" : pathname)}`}>登录</Link>
+              </Button>
+            </div>
+          </header>
+          <main className="flex min-h-0 flex-1 flex-col overflow-y-auto">{children}</main>
+        </div>
+      );
+    }
+
     return (
       <div className="grid h-screen place-items-center bg-background text-sm text-muted-foreground">
         {loading || !loaded ? "正在确认登录状态..." : "正在跳转登录..."}
@@ -86,9 +111,9 @@ function StudioShellInner({ children }: { children: React.ReactNode }) {
       )}
 
       {/* 主区 */}
-      <div className="flex min-w-0 flex-1 flex-col">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         <Topbar onOpenMobile={() => setMobileOpen(true)} />
-        <main className="flex-1 overflow-y-auto">{children}</main>
+        <main className="flex min-h-0 flex-1 flex-col overflow-y-auto">{children}</main>
       </div>
     </div>
   );

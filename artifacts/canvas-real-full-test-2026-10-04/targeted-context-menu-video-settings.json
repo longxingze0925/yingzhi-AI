@@ -1,0 +1,240 @@
+{
+  "contextMenu": {
+    "before": 1,
+    "after": 2,
+    "passed": true
+  },
+  "body": "影织\nSHADOWWEAVE\n新建创作\n\n探索\n\n灵感广场\n\n创作\n\n图片生成\n视频生成\nNew\n音频生成\n无限画布\n\n资源\n\n我的作品\n素材资产库\n进入 New API\n账号与会员\n当前余额\n$210\n账户充值\n收起侧栏\n$210\n余额\nR\n画布\n资产\n提示词库\n画布元素\n1\n全部\n视频\n视频\n无限画布 40\n切换到浅色主题\ndev\n210.001\nR\nAgent\n视频\n空视频节点\n参考内容\n描述要生成的视频内容\nseedance-2-5\n720p · 横屏 · 6s\n摄像机\n0\n音频\n100%",
+  "buttons": [
+    {
+      "text": "进入 New API",
+      "aria": null,
+      "title": ""
+    },
+    {
+      "text": "收起侧栏",
+      "aria": null,
+      "title": ""
+    },
+    {
+      "text": "",
+      "aria": "打开菜单",
+      "title": ""
+    },
+    {
+      "text": "",
+      "aria": "切换主题",
+      "title": ""
+    },
+    {
+      "text": "",
+      "aria": "通知",
+      "title": ""
+    },
+    {
+      "text": "R",
+      "aria": null,
+      "title": ""
+    },
+    {
+      "text": "画布",
+      "aria": null,
+      "title": ""
+    },
+    {
+      "text": "资产",
+      "aria": null,
+      "title": ""
+    },
+    {
+      "text": "提示词库",
+      "aria": null,
+      "title": ""
+    },
+    {
+      "text": "视频\n视频",
+      "aria": null,
+      "title": ""
+    },
+    {
+      "text": "",
+      "aria": "调整左侧面板宽度",
+      "title": ""
+    },
+    {
+      "text": "",
+      "aria": "收起左侧面板",
+      "title": ""
+    },
+    {
+      "text": "",
+      "aria": "打开画布菜单",
+      "title": ""
+    },
+    {
+      "text": "无限画布 40",
+      "aria": null,
+      "title": "双击修改画布名称"
+    },
+    {
+      "text": "",
+      "aria": "配置",
+      "title": "配置"
+    },
+    {
+      "text": "切换到浅色主题",
+      "aria": "切换到浅色主题",
+      "title": "切换到浅色主题"
+    },
+    {
+      "text": "dev",
+      "aria": null,
+      "title": "查看版本更新"
+    },
+    {
+      "text": "R",
+      "aria": "账户菜单",
+      "title": ""
+    },
+    {
+      "text": "Agent",
+      "aria": null,
+      "title": ""
+    },
+    {
+      "text": "视频",
+      "aria": null,
+      "title": "双击修改节点名称"
+    },
+    {
+      "text": "",
+      "aria": null,
+      "title": "从画布选择参考节点"
+    },
+    {
+      "text": "",
+      "aria": "放大编辑",
+      "title": ""
+    },
+    {
+      "text": "",
+      "aria": "提示词库",
+      "title": ""
+    },
+    {
+      "text": "seedance-2-5",
+      "aria": null,
+      "title": "seedance-2-5"
+    },
+    {
+      "text": "720p · 横屏 · 6s",
+      "aria": null,
+      "title": ""
+    },
+    {
+      "text": "摄像机",
+      "aria": null,
+      "title": ""
+    },
+    {
+      "text": "0",
+      "aria": "生成",
+      "title": ""
+    },
+    {
+      "text": "",
+      "aria": "选择",
+      "title": ""
+    },
+    {
+      "text": "",
+      "aria": "撤销",
+      "title": ""
+    },
+    {
+      "text": "",
+      "aria": "重做",
+      "title": ""
+    },
+    {
+      "text": "",
+      "aria": "文本",
+      "title": ""
+    },
+    {
+      "text": "",
+      "aria": "图片",
+      "title": ""
+    },
+    {
+      "text": "",
+      "aria": "视频",
+      "title": ""
+    },
+    {
+      "text": "",
+      "aria": "音频",
+      "title": ""
+    },
+    {
+      "text": "",
+      "aria": "全景图",
+      "title": ""
+    },
+    {
+      "text": "",
+      "aria": "导演台",
+      "title": ""
+    },
+    {
+      "text": "",
+      "aria": "生成配置",
+      "title": ""
+    },
+    {
+      "text": "",
+      "aria": "上传素材",
+      "title": ""
+    },
+    {
+      "text": "",
+      "aria": "素材库",
+      "title": ""
+    },
+    {
+      "text": "",
+      "aria": "我的素材",
+      "title": ""
+    },
+    {
+      "text": "",
+      "aria": "画布外观",
+      "title": ""
+    },
+    {
+      "text": "",
+      "aria": "删除选中",
+      "title": ""
+    },
+    {
+      "text": "",
+      "aria": "清空画布",
+      "title": ""
+    },
+    {
+      "text": "",
+      "aria": "打开小地图",
+      "title": ""
+    },
+    {
+      "text": "",
+      "aria": "重置视图",
+      "title": ""
+    },
+    {
+      "text": "",
+      "aria": "快捷键",
+      "title": ""
+    }
+  ]
+}

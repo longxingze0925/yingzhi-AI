@@ -1,0 +1,56 @@
+{
+  "version": "1.0",
+  "exportedAt": "2026-10-03T13:39:12.133Z",
+  "projects": [
+    {
+      "name": "无限画布 1",
+      "nodes": [
+        {
+          "type": "text",
+          "position": {
+            "x": 658,
+            "y": 360
+          },
+          "title": "文本节点",
+          "width": 340,
+          "height": 240,
+          "content": "",
+          "id": "71232f66-0e73-4fba-a5a2-5ddc401e4b02",
+          "createdAt": "2026-10-03T13:39:10.638Z",
+          "updatedAt": "2026-10-03T13:39:10.638Z"
+        },
+        {
+          "type": "text",
+          "position": {
+            "x": 1098.0047676347458,
+            "y": 360.0047676347459
+          },
+          "title": "文本节点",
+          "width": 340,
+          "height": 240,
+          "content": "",
+          "id": "8cc97093-b697-4061-a8dd-02d479c18824",
+          "createdAt": "2026-10-03T13:39:11.133Z",
+          "updatedAt": "2026-10-03T13:39:11.518Z"
+        }
+      ],
+      "connections": [
+        {
+          "sourceNodeId": "71232f66-0e73-4fba-a5a2-5ddc401e4b02",
+          "sourceSide": "right",
+          "targetNodeId": "8cc97093-b697-4061-a8dd-02d479c18824",
+          "targetSide": "left",
+          "id": "1d6fc107-c2e0-4a6e-9f0f-97867141bf64",
+          "createdAt": "2026-10-03T13:39:12.032Z"
+        }
+      ],
+      "viewport": {
+        "x": 0,
+        "y": 0,
+        "k": 1
+      },
+      "createdAt": "2026-10-03T13:39:10.149Z",
+      "updatedAt": "2026-10-03T13:39:12.032Z"
+    }
+  ]
+}

@@ -1,0 +1,41 @@
+[
+  {
+    "name": "frontend_api_status",
+    "url": "http://localhost:3002/api/status",
+    "status": "404",
+    "contentType": "text/html; charset=utf-8",
+    "bytes": 21136,
+    "bodyPrefix": "<!DOCTYPE html><html lang=\"zh-CN\"><head><meta charSet=\"utf-8\"/><meta name=\"viewport\" content=\"width="
+  },
+  {
+    "name": "frontend_bootstrap",
+    "url": "http://localhost:3002/api/studio/bootstrap",
+    "status": "404",
+    "contentType": "text/html; charset=utf-8",
+    "bytes": 21150,
+    "bodyPrefix": "<!DOCTYPE html><html lang=\"zh-CN\"><head><meta charSet=\"utf-8\"/><meta name=\"viewport\" content=\"width="
+  },
+  {
+    "name": "api_status",
+    "url": "http://localhost:3000/api/status",
+    "status": "200",
+    "contentType": "application/json; charset=utf-8",
+    "bytes": 2752,
+    "jsonSummary": {
+      "success": true,
+      "message": ""
+    }
+  },
+  {
+    "name": "api_bootstrap",
+    "url": "http://localhost:3000/api/studio/bootstrap",
+    "status": "401",
+    "contentType": "application/json; charset=utf-8",
+    "bytes": 91,
+    "jsonSummary": {
+      "success": false,
+      "code": "AUTH_UNAUTHORIZED",
+      "message": "Unauthorized, invalid access token"
+    }
+  }
+]

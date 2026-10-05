@@ -1,0 +1,56 @@
+{
+  "date": "2026-10-04",
+  "services": {
+    "shadowweave": "http://localhost:13000",
+    "newApi": "http://localhost:3000",
+    "status": {
+      "shadowweave": 200,
+      "newApi": 200
+    }
+  },
+  "tests": {
+    "contextMenuCopy": {
+      "before": 1,
+      "after": 2,
+      "passed": true,
+      "screenshot": "screenshots/11_右键菜单复制.png"
+    },
+    "videoDefaultConfig": {
+      "model": "seedance-2-5",
+      "uiDurationSec": 6,
+      "allowedDurationSec": [
+        30
+      ],
+      "passed": false,
+      "screenshot": "screenshots/12_视频生成默认配置.png"
+    },
+    "video30SecSubmission": {
+      "httpStatus": 200,
+      "success": false,
+      "jobStatus": "failed",
+      "error": "生成请求失败",
+      "screenshot": "screenshots/13_视频30秒真实提交.png"
+    }
+  },
+  "videoResponses": [
+    {
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:13000/api/studio/generation/jobs/lookup?idempotencyKey=a676ee93-6098-44a5-8327-c006f9a02505",
+      "body": "{\"data\":{\"job\":{\"id\":\"studio_1b19d4295717c3ab60de08f22a05bc987bd5853e2c1391c428942839289b3332\",\"type\":\"video\",\"status\":\"submitting\",\"progress\":0,\"prompt\":\"日落海面，固定镜头，测试视频\",\"model\":\"seedance-2-5\",\"aspectRatio\":\"16:9\",\"count\":1,\"createdAt\":1791073959,\"results\":[],\"durationSec\":30}},\"message\":\"\",\"success\":true}"
+    },
+    {
+      "status": 200,
+      "method": "POST",
+      "url": "http://localhost:13000/api/studio/generation/jobs",
+      "body": "{\"message\":\"生成请求失败\",\"success\":false}"
+    },
+    {
+      "status": 200,
+      "method": "GET",
+      "url": "http://localhost:13000/api/studio/generation/jobs/studio_1b19d4295717c3ab60de08f22a05bc987bd5853e2c1391c428942839289b3332",
+      "body": "{\"data\":{\"job\":{\"id\":\"studio_1b19d4295717c3ab60de08f22a05bc987bd5853e2c1391c428942839289b3332\",\"type\":\"video\",\"status\":\"failed\",\"progress\":0,\"prompt\":\"日落海面，固定镜头，测试视频\",\"model\":\"seedance-2-5\",\"aspectRatio\":\"16:9\",\"count\":1,\"createdAt\":1791073959,\"results\":[],\"error\":\"生成请求失败\",\"durationSec\":30}},\"message\":\"\",\"success\":true}"
+    }
+  ],
+  "conclusion": "右键菜单复制通过；视频默认 6 秒与模型仅允许 30 秒不匹配；改成 30 秒后真实生成仍失败。"
+}

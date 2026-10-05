@@ -28,7 +28,6 @@ jobs:
           repo="${GITHUB_REPOSITORY#*/}"
           repo="${repo,,}"
           echo "web=ghcr.io/${owner}/${repo}-web" >> "$GITHUB_OUTPUT"
-          echo "backend=ghcr.io/${owner}/${repo}-backend" >> "$GITHUB_OUTPUT"
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -49,15 +48,6 @@ jobs:
             type=raw,value=latest,enable={{is_default_branch}}
             type=sha,prefix=sha-
 
-      - name: Extract backend metadata
-        id: meta-backend
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ steps.images.outputs.backend }}
-          tags: |
-            type=raw,value=latest,enable={{is_default_branch}}
-            type=sha,prefix=sha-
-
       - name: Build and push web image
         uses: docker/build-push-action@v6
         with:
@@ -71,14 +61,3 @@ jobs:
           labels: ${{ steps.meta-web.outputs.labels }}
           cache-from: type=gha,scope=web
           cache-to: type=gha,mode=max,scope=web
-
-      - name: Build and push backend image
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          file: Dockerfile.backend
-          push: true
-          tags: ${{ steps.meta-backend.outputs.tags }}
-          labels: ${{ steps.meta-backend.outputs.labels }}
-          cache-from: type=gha,scope=backend
-          cache-to: type=gha,mode=max,scope=backend

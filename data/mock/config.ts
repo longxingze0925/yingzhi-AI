@@ -100,6 +100,8 @@ export const MOCK_USER: User = {
   email: "creator@shadowweave.ai",
   avatarSeed: "user-linyichuan",
   plan: "专业版",
+  quota: 1_240_000_000,
+  balanceDisplay: "$2,480",
   credits: 2480,
   creditsTotal: 3000,
 };

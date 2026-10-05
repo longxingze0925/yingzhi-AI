@@ -17,7 +17,11 @@ import {
   validateFileAgainstModel,
   type ReferenceAssetKind,
 } from "@/lib/model-capabilities";
-import type { AssetItem, AssetsLibrary, ModelCapabilities } from "@/lib/api/types";
+import type {
+  AssetItem,
+  AssetsLibrary,
+  ModelCapabilities,
+} from "@/lib/api/types";
 import { cn } from "@/lib/utils";
 
 type AssetPickerType = "image" | "video" | "audio";
@@ -60,7 +64,11 @@ function assetMatchesSource(asset: AssetItem, source: SourceFilter) {
     return value.includes("ai") || value.includes("generate");
   }
   if (source === "digital-human") {
-    return value.includes("digital") || value.includes("human") || value.includes("avatar");
+    return (
+      value.includes("digital") ||
+      value.includes("human") ||
+      value.includes("avatar")
+    );
   }
   return value.includes("product");
 }
@@ -104,6 +112,8 @@ export function AssetPickerDialog({
   open,
   type,
   selectedAssetId,
+  selectedAssetIds,
+  maxSelections = 1,
   capabilities,
   onOpenChange,
   onSelectAsset,
@@ -112,10 +122,12 @@ export function AssetPickerDialog({
   open: boolean;
   type: AssetPickerType;
   selectedAssetId?: string | null;
+  selectedAssetIds?: string[];
+  maxSelections?: number;
   capabilities?: ModelCapabilities;
   onOpenChange: (open: boolean) => void;
   onSelectAsset: (asset: AssetItem) => void;
-  onUploadFile: (file: File) => void;
+  onUploadFile: (file: File) => void | Promise<void>;
 }) {
   const inputRef = React.useRef<HTMLInputElement | null>(null);
   const [library, setLibrary] = React.useState<AssetsLibrary>(EMPTY_LIBRARY);
@@ -125,6 +137,9 @@ export function AssetPickerDialog({
   const [sourceFilter, setSourceFilter] = React.useState<SourceFilter>("all");
   const [onlyMine, setOnlyMine] = React.useState(false);
   const [dragActive, setDragActive] = React.useState(false);
+  const [uploading, setUploading] = React.useState(false);
+  const selectedIds =
+    selectedAssetIds ?? (selectedAssetId ? [selectedAssetId] : []);
 
   React.useEffect(() => {
     if (!open) return;
@@ -163,24 +178,37 @@ export function AssetPickerDialog({
 
   const typedAssets = React.useMemo(
     () => library.materials.filter((asset) => assetMatchesType(asset, type)),
-    [library.materials, type]
+    [library.materials, type],
   );
 
   const visibleAssets = React.useMemo(
     () =>
       typedAssets.filter(
         (asset) =>
-          assetMatchesSource(asset, sourceFilter) && assetMatchesOwner(asset, onlyMine)
+          assetMatchesSource(asset, sourceFilter) &&
+          assetMatchesOwner(asset, onlyMine),
       ),
-    [onlyMine, sourceFilter, typedAssets]
+    [onlyMine, sourceFilter, typedAssets],
   );
 
   const title =
-    type === "image" ? "选择参考图片" : type === "video" ? "选择参考视频" : "选择参考音频";
+    type === "image"
+      ? "选择参考图片"
+      : type === "video"
+        ? "选择参考视频"
+        : "选择参考音频";
   const uploadText =
-    type === "image" ? "从本地上传图片" : type === "video" ? "从本地上传视频" : "从本地上传音频";
+    type === "image"
+      ? "从本地上传图片"
+      : type === "video"
+        ? "从本地上传视频"
+        : "从本地上传音频";
   const dropText =
-    type === "image" ? "松开以上传图片" : type === "video" ? "松开以上传视频" : "松开以上传音频";
+    type === "image"
+      ? "松开以上传图片"
+      : type === "video"
+        ? "松开以上传视频"
+        : "松开以上传音频";
   const emptyText =
     type === "image" ? "图片" : type === "video" ? "视频" : "音频";
   const accept =
@@ -188,7 +216,7 @@ export function AssetPickerDialog({
   const Icon = type === "image" ? ImagePlus : type === "video" ? Film : Music2;
   const kind = type as ReferenceAssetKind;
   const uploadDisabledReason =
-    type === "image" && capabilities?.maxReferenceImages === 0
+    type === "image" && maxSelections === 0
       ? "当前模型不支持参考图片"
       : type === "video" && capabilities?.maxReferenceVideos === 0
         ? "当前模型不支持参考视频"
@@ -196,24 +224,37 @@ export function AssetPickerDialog({
           ? "当前模型不支持参考音频"
           : null;
   const handleUploadFile = React.useCallback(
-    (file: File) => {
+    async (file: File) => {
+      if (uploadDisabledReason) {
+        setLocalError(uploadDisabledReason);
+        return;
+      }
+
       if (!fileMatchesType(file, type)) {
         setLocalError(`请上传${emptyText}文件`);
         return;
       }
 
       const error = validateFileAgainstModel(file, kind, capabilities);
-      if (!error) {
-        setLocalError(null);
-        onUploadFile(file);
-      } else {
+      if (error) {
         setLocalError(error);
+        return;
+      }
+
+      setLocalError(null);
+      setUploading(true);
+      try {
+        await onUploadFile(file);
+      } catch (err) {
+        setLocalError(err instanceof Error ? err.message : "上传失败，请重试");
+      } finally {
+        setUploading(false);
       }
     },
-    [capabilities, emptyText, kind, onUploadFile, type]
+    [capabilities, emptyText, kind, onUploadFile, type, uploadDisabledReason],
   );
   const handleUploadDrop = React.useCallback(
-    (event: React.DragEvent<HTMLButtonElement>) => {
+    async (event: React.DragEvent<HTMLButtonElement>) => {
       event.preventDefault();
       setDragActive(false);
       if (uploadDisabledReason) {
@@ -223,14 +264,11 @@ export function AssetPickerDialog({
 
       const files = Array.from(event.dataTransfer.files);
       if (files.length === 0) return;
-      if (files.length > 1) {
-        setLocalError("当前仅支持选择 1 个素材");
-        return;
+      for (const file of files.slice(0, maxSelections)) {
+        await handleUploadFile(file);
       }
-
-      handleUploadFile(files[0]);
     },
-    [handleUploadFile, uploadDisabledReason]
+    [handleUploadFile, maxSelections, uploadDisabledReason],
   );
 
   return (
@@ -250,8 +288,10 @@ export function AssetPickerDialog({
           <div className="flex min-h-0 flex-1 flex-col gap-4 p-4 sm:flex-row">
             <button
               type="button"
-              disabled={Boolean(uploadDisabledReason)}
-              title={uploadDisabledReason ?? (dragActive ? dropText : uploadText)}
+              disabled={Boolean(uploadDisabledReason) || uploading}
+              title={
+                uploadDisabledReason ?? (dragActive ? dropText : uploadText)
+              }
               onClick={() => inputRef.current?.click()}
               onDragEnter={(event) => {
                 event.preventDefault();
@@ -259,13 +299,18 @@ export function AssetPickerDialog({
               }}
               onDragOver={(event) => {
                 event.preventDefault();
-                event.dataTransfer.dropEffect = uploadDisabledReason ? "none" : "copy";
+                event.dataTransfer.dropEffect = uploadDisabledReason
+                  ? "none"
+                  : "copy";
                 if (!uploadDisabledReason) setDragActive(true);
               }}
               onDragLeave={(event) => {
                 event.preventDefault();
                 const nextTarget = event.relatedTarget;
-                if (!(nextTarget instanceof Node) || !event.currentTarget.contains(nextTarget)) {
+                if (
+                  !(nextTarget instanceof Node) ||
+                  !event.currentTarget.contains(nextTarget)
+                ) {
                   setDragActive(false);
                 }
               }}
@@ -274,24 +319,30 @@ export function AssetPickerDialog({
                 "flex min-h-36 w-full shrink-0 flex-col items-center justify-center gap-3 rounded-xl border border-dashed bg-background/40 px-5 text-center text-sm text-muted-foreground transition-colors hover:border-primary/50 hover:bg-primary/5 hover:text-primary disabled:cursor-not-allowed disabled:opacity-55 disabled:hover:border-border disabled:hover:bg-background/40 disabled:hover:text-muted-foreground sm:h-full sm:w-56 lg:w-60",
                 dragActive
                   ? "border-primary bg-primary/10 text-primary"
-                  : "border-border"
+                  : "border-border",
               )}
             >
               <span className="grid h-12 w-12 place-items-center rounded-full bg-muted">
                 <Upload className="h-5 w-5" />
               </span>
               <span className="max-w-40 leading-5">
-                {dragActive ? dropText : uploadText}
+                {uploading ? "正在上传..." : dragActive ? dropText : uploadText}
               </span>
             </button>
             <input
               ref={inputRef}
               type="file"
               accept={accept}
+              multiple={maxSelections > 1}
+              disabled={uploading}
               className="hidden"
-              onChange={(event) => {
-                const file = event.currentTarget.files?.[0] ?? null;
-                if (file) handleUploadFile(file);
+              onChange={async (event) => {
+                for (const file of Array.from(event.currentTarget.files ?? []).slice(
+                  0,
+                  maxSelections,
+                )) {
+                  await handleUploadFile(file);
+                }
                 event.currentTarget.value = "";
               }}
             />
@@ -307,7 +358,7 @@ export function AssetPickerDialog({
                       "flex h-8 shrink-0 items-center justify-center rounded-lg px-2.5 text-xs transition-colors",
                       sourceFilter === filter.value
                         ? "bg-accent text-foreground"
-                        : "text-muted-foreground hover:bg-accent/70 hover:text-foreground"
+                        : "text-muted-foreground hover:bg-accent/70 hover:text-foreground",
                     )}
                   >
                     {filter.label}
@@ -317,13 +368,18 @@ export function AssetPickerDialog({
                   <input
                     type="checkbox"
                     checked={onlyMine}
-                    onChange={(event) => setOnlyMine(event.currentTarget.checked)}
+                    onChange={(event) =>
+                      setOnlyMine(event.currentTarget.checked)
+                    }
                     className="h-3.5 w-3.5 rounded border-border bg-background"
                   />
                   只看我的
                 </label>
-                <Badge variant="muted" className="h-6 shrink-0 rounded-md px-2 text-[11px]">
-                  {selectedAssetId ? 1 : 0}/1
+                <Badge
+                  variant="muted"
+                  className="h-6 shrink-0 rounded-md px-2 text-[11px]"
+                >
+                  {selectedIds.length}/{maxSelections}
                 </Badge>
               </div>
               {localError && (
@@ -354,15 +410,22 @@ export function AssetPickerDialog({
                   <ScrollArea className="h-full">
                     <div className="grid grid-cols-3 gap-2 p-0.5 sm:grid-cols-4 lg:grid-cols-6">
                       {visibleAssets.map((asset) => {
-                        const selected = asset.id === selectedAssetId;
+                        const selected = selectedIds.includes(asset.id);
                         const duration = formatDuration(asset);
                         const fileSize = formatFileSize(asset.fileSize);
                         const statusLabel = assetStatusLabel(asset.status);
-                        const disabledReason = validateAssetAgainstModel(
+                        const assetDisabledReason = validateAssetAgainstModel(
                           asset,
                           kind,
-                          capabilities
+                          capabilities,
                         );
+                        const selectionLimitReached =
+                          !selected && selectedIds.length >= maxSelections;
+                        const disabledReason =
+                          assetDisabledReason ??
+                          (selectionLimitReached
+                            ? `当前最多选择 ${maxSelections} 个素材`
+                            : null);
                         const selectable = !disabledReason;
                         return (
                           <button
@@ -379,7 +442,7 @@ export function AssetPickerDialog({
                                 ? "border-primary ring-1 ring-primary"
                                 : "border-border/60 hover:border-primary/50",
                               !selectable &&
-                                "cursor-not-allowed opacity-60 hover:border-border/60"
+                                "cursor-not-allowed opacity-60 hover:border-border/60",
                             )}
                           >
                             <GradientThumb

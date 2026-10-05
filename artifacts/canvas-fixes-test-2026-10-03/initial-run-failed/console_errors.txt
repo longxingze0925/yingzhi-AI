@@ -1,0 +1,4 @@
+[console.error] Failed to load resource: the server responded with a status of 401 (Unauthorized)
+[console.error] Failed to load resource: the server responded with a status of 401 (Unauthorized)
+[requestfailed] GET http://localhost:3002/studio/canvas/06f7be02-086d-4bd8-b979-ee4526834adf?_rsc=mhdiq net::ERR_ABORTED
+[requestfailed] GET http://localhost:3002/studio/canvas/b375efb1-91d4-4927-9e3c-1fcdee772b8a?_rsc=neazx net::ERR_ABORTED

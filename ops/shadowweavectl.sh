@@ -2,7 +2,6 @@
 set -Eeuo pipefail
 
 APP_NAME="shadowweave"
-BACKEND_SERVICE="shadowweave-backend"
 WEB_SERVICE="shadowweave-web"
 
 SHADOWWEAVE_REPO="${SHADOWWEAVE_REPO:-longxingze0925/yingzhi-AI}"
@@ -11,17 +10,12 @@ INSTALL_DIR="${SHADOWWEAVE_INSTALL_DIR:-/opt/shadowweave}"
 CONFIG_DIR="${SHADOWWEAVE_CONFIG_DIR:-/etc/shadowweave}"
 STATE_DIR="${SHADOWWEAVE_STATE_DIR:-/var/lib/shadowweave}"
 SERVICE_USER="${SHADOWWEAVE_USER:-shadowweave}"
-BACKEND_HOST="${SHADOWWEAVE_BACKEND_HOST:-127.0.0.1}"
-BACKEND_PORT="${SHADOWWEAVE_BACKEND_PORT:-18777}"
 FRONTEND_HOST="${SHADOWWEAVE_FRONTEND_HOST:-127.0.0.1}"
 FRONTEND_PORT="${SHADOWWEAVE_FRONTEND_PORT:-3000}"
-PUBLIC_API_BASE="${NEXT_PUBLIC_API_BASE_URL-}"
+PUBLIC_API_BASE="${NEXT_PUBLIC_API_BASE_URL:-/api}"
 DEMO_FALLBACK="${NEXT_PUBLIC_DEMO_FALLBACK:-0}"
-AISAAS_BASE_URL="${AISAAS_BASE_URL:-https://ht.0000.icu}"
-AISAAS_SERVER_KEY="${AISAAS_SERVER_KEY:-}"
-AISAAS_MOCK="${AISAAS_MOCK:-}"
-SESSION_COOKIE="${SHADOWWEAVE_SESSION_COOKIE:-shadowweave_session}"
-SESSION_TTL_SECONDS="${SHADOWWEAVE_SESSION_TTL_SECONDS:-604800}"
+NEW_API_UPSTREAM="${NEW_API_UPSTREAM:-https://new.0000.icu}"
+NEW_API_HOST="${NEW_API_HOST:-}"
 DOMAIN="${SHADOWWEAVE_DOMAIN:-_}"
 SKIP_NGINX="${SHADOWWEAVE_SKIP_NGINX:-0}"
 
@@ -76,18 +70,6 @@ install_node() {
   apt-get install -y nodejs
 }
 
-install_rust() {
-  if command -v cargo >/dev/null 2>&1; then
-    log "cargo $(cargo --version | awk '{print $2}') is ready"
-    return
-  fi
-
-  log "installing Rust toolchain"
-  curl --proto '=https' --tlsv1.2 -fsSL https://sh.rustup.rs | sh -s -- -y --profile minimal
-  # shellcheck disable=SC1090
-  source "$HOME/.cargo/env"
-}
-
 ensure_toolchain() {
   if ! command -v apt-get >/dev/null 2>&1; then
     die "only Debian/Ubuntu apt-based servers are supported by this installer"
@@ -95,7 +77,6 @@ ensure_toolchain() {
 
   apt_install_base
   install_node
-  install_rust
   require_cmd npm
   require_cmd git
   require_cmd systemctl
@@ -123,37 +104,20 @@ clone_or_update_repo() {
   fi
 }
 
-resolve_aisaas_mode() {
-  if [[ -z "$AISAAS_SERVER_KEY" && -t 0 && "${AISAAS_MOCK,,}" != "true" && "${AISAAS_MOCK}" != "1" ]]; then
-    printf 'AiSaaS Server Key (leave empty to install mock mode): '
-    read -r -s AISAAS_SERVER_KEY
-    printf '\n'
+normalize_new_api_settings() {
+  NEW_API_UPSTREAM="${NEW_API_UPSTREAM%/}"
+  [[ "$NEW_API_UPSTREAM" == http://* || "$NEW_API_UPSTREAM" == https://* ]] || die "NEW_API_UPSTREAM must start with http:// or https://"
+  if [[ -z "$NEW_API_HOST" ]]; then
+    NEW_API_HOST="${NEW_API_UPSTREAM#*://}"
+    NEW_API_HOST="${NEW_API_HOST%%/*}"
   fi
-
-  if [[ -z "$AISAAS_MOCK" ]]; then
-    if [[ -n "$AISAAS_SERVER_KEY" ]]; then
-      AISAAS_MOCK="false"
-    else
-      AISAAS_MOCK="true"
-    fi
-  fi
+  [[ -n "$NEW_API_HOST" && "$NEW_API_HOST" != *[[:space:]/]* ]] || die "NEW_API_HOST is invalid"
 }
 
 write_env_files() {
-  resolve_aisaas_mode
+  normalize_new_api_settings
   mkdir -p "$CONFIG_DIR"
   chmod 750 "$CONFIG_DIR"
-
-  cat >"$CONFIG_DIR/backend.env" <<EOF
-HOST=${BACKEND_HOST}
-PORT=${BACKEND_PORT}
-AISAAS_BASE_URL=${AISAAS_BASE_URL}
-AISAAS_SERVER_KEY=${AISAAS_SERVER_KEY}
-AISAAS_MOCK=${AISAAS_MOCK}
-SHADOWWEAVE_SESSION_COOKIE=${SESSION_COOKIE}
-SHADOWWEAVE_SESSION_TTL_SECONDS=${SESSION_TTL_SECONDS}
-RUST_LOG=shadowweave_backend=info,backend=info,tower_http=info
-EOF
 
   cat >"$CONFIG_DIR/web.env" <<EOF
 NODE_ENV=production
@@ -168,7 +132,7 @@ NEXT_PUBLIC_API_BASE_URL=${PUBLIC_API_BASE}
 NEXT_PUBLIC_DEMO_FALLBACK=${DEMO_FALLBACK}
 EOF
 
-  chmod 640 "$CONFIG_DIR/backend.env" "$CONFIG_DIR/web.env" "$INSTALL_DIR/.env.production"
+  chmod 640 "$CONFIG_DIR/web.env" "$INSTALL_DIR/.env.production"
 }
 
 build_app() {
@@ -177,39 +141,13 @@ build_app() {
 
   log "building frontend"
   (cd "$INSTALL_DIR" && npm run build)
-
-  log "building backend"
-  # shellcheck disable=SC1090
-  [[ -f "$HOME/.cargo/env" ]] && source "$HOME/.cargo/env"
-  (cd "$INSTALL_DIR/backend" && cargo build --release)
 }
 
 write_systemd_units() {
-  cat >"/etc/systemd/system/${BACKEND_SERVICE}.service" <<EOF
-[Unit]
-Description=Shadowweave Rust backend
-After=network-online.target
-Wants=network-online.target
-
-[Service]
-Type=simple
-User=${SERVICE_USER}
-Group=${SERVICE_USER}
-WorkingDirectory=${INSTALL_DIR}/backend
-EnvironmentFile=${CONFIG_DIR}/backend.env
-ExecStart=${INSTALL_DIR}/backend/target/release/backend
-Restart=always
-RestartSec=3
-NoNewPrivileges=true
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
   cat >"/etc/systemd/system/${WEB_SERVICE}.service" <<EOF
 [Unit]
 Description=Shadowweave Next.js frontend
-After=network-online.target ${BACKEND_SERVICE}.service
+After=network-online.target
 Wants=network-online.target
 
 [Service]
@@ -233,6 +171,7 @@ write_nginx_site() {
     log "skipping nginx configuration"
     return
   fi
+  normalize_new_api_settings
 
   cat >"/etc/nginx/sites-available/shadowweave.conf" <<EOF
 server {
@@ -242,20 +181,25 @@ server {
     client_max_body_size 64m;
 
     proxy_http_version 1.1;
-    proxy_set_header Host \$host;
     proxy_set_header X-Real-IP \$remote_addr;
     proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
     proxy_set_header X-Forwarded-Proto \$scheme;
 
     location /api/ {
-        proxy_pass http://${BACKEND_HOST}:${BACKEND_PORT};
+        proxy_pass ${NEW_API_UPSTREAM};
+        proxy_set_header Host ${NEW_API_HOST};
+        proxy_ssl_server_name on;
+        proxy_ssl_name ${NEW_API_HOST};
     }
 
     location = /healthz {
-        proxy_pass http://${BACKEND_HOST}:${BACKEND_PORT}/healthz;
+        access_log off;
+        default_type text/plain;
+        return 200 "ok\n";
     }
 
     location / {
+        proxy_set_header Host \$host;
         proxy_set_header Upgrade \$http_upgrade;
         proxy_set_header Connection "upgrade";
         proxy_pass http://${FRONTEND_HOST}:${FRONTEND_PORT};
@@ -274,7 +218,6 @@ fix_permissions() {
 
 start_services() {
   systemctl daemon-reload
-  systemctl enable --now "$BACKEND_SERVICE"
   systemctl enable --now "$WEB_SERVICE"
 
   if [[ "$SKIP_NGINX" != "1" && "${SKIP_NGINX,,}" != "true" ]]; then
@@ -284,18 +227,21 @@ start_services() {
 }
 
 smoke_test() {
-  log "checking backend health"
-  curl -fsS "http://${BACKEND_HOST}:${BACKEND_PORT}/healthz" >/dev/null
+  normalize_new_api_settings
+  log "checking New API upstream"
+  curl -fsS "${NEW_API_UPSTREAM}/api/status" >/dev/null
 
   log "checking frontend"
   curl -fsS -I "http://${FRONTEND_HOST}:${FRONTEND_PORT}" >/dev/null
 
   if [[ "$SKIP_NGINX" != "1" && "${SKIP_NGINX,,}" != "true" ]]; then
-    log "checking nginx entry"
+    log "checking nginx entry and same-origin API proxy"
     if [[ "$DOMAIN" == "_" ]]; then
       curl -fsS -I "http://127.0.0.1/" >/dev/null
+      curl -fsS "http://127.0.0.1/api/status" >/dev/null
     else
       curl -fsS -I -H "Host: ${DOMAIN}" "http://127.0.0.1/" >/dev/null
+      curl -fsS -H "Host: ${DOMAIN}" "http://127.0.0.1/api/status" >/dev/null
     fi
   fi
 }
@@ -315,7 +261,6 @@ install_app() {
 
   log "installation complete"
   log "frontend service: systemctl status ${WEB_SERVICE}"
-  log "backend service:  systemctl status ${BACKEND_SERVICE}"
   if [[ "$SKIP_NGINX" == "1" || "${SKIP_NGINX,,}" == "true" ]]; then
     log "open: http://${FRONTEND_HOST}:${FRONTEND_PORT}"
   else
@@ -325,7 +270,7 @@ install_app() {
 
 restart_app() {
   need_root
-  systemctl restart "$BACKEND_SERVICE" "$WEB_SERVICE"
+  systemctl restart "$WEB_SERVICE"
   if [[ "$SKIP_NGINX" != "1" && "${SKIP_NGINX,,}" != "true" ]]; then
     systemctl reload nginx || true
   fi
@@ -333,11 +278,11 @@ restart_app() {
 }
 
 status_app() {
-  systemctl --no-pager --full status "$BACKEND_SERVICE" "$WEB_SERVICE" || true
+  systemctl --no-pager --full status "$WEB_SERVICE" || true
 }
 
 logs_app() {
-  journalctl -u "$BACKEND_SERVICE" -u "$WEB_SERVICE" -f
+  journalctl -u "$WEB_SERVICE" -f
 }
 
 print_usage() {
@@ -354,9 +299,9 @@ Common env:
   SHADOWWEAVE_INSTALL_DIR=/opt/shadowweave
   SHADOWWEAVE_STATE_DIR=/var/lib/shadowweave
   SHADOWWEAVE_DOMAIN=example.com
-  AISAAS_BASE_URL=https://ht.0000.icu
-  AISAAS_SERVER_KEY=aissk_xxx
-  NEXT_PUBLIC_API_BASE_URL=        # empty means same-origin /api through nginx
+  NEW_API_UPSTREAM=https://new.0000.icu
+  NEW_API_HOST=new.0000.icu
+  NEXT_PUBLIC_API_BASE_URL=/api
   SHADOWWEAVE_SKIP_NGINX=1
 EOF
 }

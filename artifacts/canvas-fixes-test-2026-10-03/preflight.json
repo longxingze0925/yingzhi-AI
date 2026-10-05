@@ -1,0 +1,75 @@
+{
+  "url": "http://localhost:3002/login?next=%2Fstudio%2Fcanvas",
+  "title": "影织 Shadowweave · AI 图片与视频创作平台",
+  "body": "用一句话，编织影像\n全部图片与视频模型，影视级画质\n统一账号与余额，多端实时同步\n失败任务自动退款，消费记录可追踪\n作品云端同步，多端创作\n影织\nSHADOWWEAVE\n欢迎回来\n\n登录以继续你的创作之旅\n\n登录\n注册\n邮箱登录\n邮箱地址\n密码\n登录\n\n继续即表示同意平台的服务条款与隐私政策",
+  "inputs": [
+    {
+      "type": "email",
+      "name": "",
+      "placeholder": "you@example.com",
+      "autocomplete": "email"
+    },
+    {
+      "type": "password",
+      "name": "",
+      "placeholder": "请输入密码",
+      "autocomplete": "current-password"
+    }
+  ],
+  "buttons": [
+    "",
+    "登录",
+    "注册",
+    "登录"
+  ],
+  "logs": {
+    "console": [
+      {
+        "type": "info",
+        "text": "%cDownload the React DevTools for a better development experience: https://reactjs.org/link/react-devtools font-weight:bold"
+      },
+      {
+        "type": "error",
+        "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+      },
+      {
+        "type": "error",
+        "text": "Failed to load resource: the server responded with a status of 401 (Unauthorized)"
+      },
+      {
+        "type": "verbose",
+        "text": "[DOM] Password field is not contained in a form: (More info: https://goo.gl/9p2vKq) %o"
+      }
+    ],
+    "pageErrors": [],
+    "requests": [
+      {
+        "url": "http://localhost:3002/login?next=%2Fstudio%2Fcanvas&_rsc=tlsy5",
+        "method": "GET",
+        "failure": "net::ERR_ABORTED"
+      }
+    ],
+    "responses": [
+      {
+        "status": 401,
+        "url": "http://localhost:3002/api/studio/bootstrap"
+      },
+      {
+        "status": 200,
+        "url": "http://localhost:3002/api/status"
+      },
+      {
+        "status": 401,
+        "url": "http://localhost:3002/api/studio/auth/refresh"
+      },
+      {
+        "status": 200,
+        "url": "http://localhost:3002/api/status"
+      },
+      {
+        "status": 200,
+        "url": "http://localhost:3002/api/status"
+      }
+    ]
+  }
+}

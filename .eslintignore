@@ -1,0 +1,7 @@
+# Infinite canvas is paused; keep its route placeholders linted, but skip the dormant implementation.
+app/studio/canvas/_upstream-deps/
+app/studio/canvas/agent/
+app/studio/canvas/components/
+app/studio/canvas/stores/
+app/studio/canvas/utils/
+app/studio/canvas/**/canvas-client-page.tsx

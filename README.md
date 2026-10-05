@@ -1,162 +1,123 @@
-# 影织 Shadowweave · AI 图片与视频创作平台
+# 影织 Shadowweave · AI 图片、视频与音频创作平台
 
-> 用一句话，编织影像。专业级 AI 文生图 / 图生图 / 文生视频创作平台。
+> 用一句话，编织影像。
 
-明暗双主题、电影感高级视觉，完整可运行的前端骨架。后端已在 `backend/` 下启动 Rust 第一版，用于承接前端并调用 AiSaaS Server API。
+影织是创作前端；账户、登录注册、余额、兑换码、代理分润、租户隔离、模型路由、生成计费与失败退款统一由 New API 提供。浏览器只访问影织同源的 `/api/*`，入口代理再把这些请求转发到 New API，总站上游地址和密钥不会下发给浏览器。
 
 ## 技术栈
 
-- **框架**：Next.js 14（App Router）+ React 18 + TypeScript
-- **样式**：Tailwind CSS + shadcn/ui 风格组件（Radix 原子组件）
-- **主题**：next-themes（暗色优先，支持跟随系统）
-- **动效**：framer-motion
-- **状态**：zustand（生成任务队列）
-- **图标**：lucide-react
-- **后端**：Rust + Axum（`backend/`）
+- Next.js 14（App Router）+ React 18 + TypeScript
+- Tailwind CSS + Radix UI
+- Zustand
+- New API Studio API（统一后端）
 
-## 快速开始
+## 本地开发
 
 ```bash
-npm install      # 安装依赖
-npm run dev      # 本地开发：http://localhost:3000
-npm run build    # 生产构建
-npm start        # 运行生产构建
+npm ci
+NEXT_PUBLIC_API_BASE_URL=https://new.0000.icu \
+npm run dev
 ```
 
-前端默认请求本地后端 `http://127.0.0.1:18777`。如需改地址：
+如果使用跨域直连，New API 必须允许对应前端 Origin。更接近生产的做法是让本地反向代理把 `/api/*` 转发至 New API，并保持 `NEXT_PUBLIC_API_BASE_URL=/api`。
 
-```bash
-NEXT_PUBLIC_API_BASE_URL=http://127.0.0.1:18777 npm run dev
+## 生产请求路径
+
+```text
+用户浏览器
+  -> 影织域名
+  -> Caddy / Nginx
+       /       -> 影织 Web
+       /api/*  -> New API
+  -> New API 的同一用户、余额、租户与计费数据
 ```
 
-后端本地启动：
+生产镜像默认使用：
 
-```bash
-cd backend
-cargo run        # 默认 mock AiSaaS：http://127.0.0.1:18777
+```text
+NEXT_PUBLIC_API_BASE_URL=/api
+NEXT_PUBLIC_DEMO_FALLBACK=0
 ```
 
-## 镜像一键安装
+反向代理必须配置：
 
-推荐生产部署走 GitHub Actions 构建镜像，服务器只拉 GHCR 镜像运行：
+```env
+NEW_API_UPSTREAM=https://new.0000.icu
+NEW_API_HOST=new.0000.icu
+```
+
+`NEW_API_HOST` 必须填写 New API 总站域名，不能填写影织域名。这样 New API 会按总站身份读取同一份用户和余额数据，而不会把影织域名误判成另一个代理租户。
+
+New API 开启安全刷新 Cookie 时，还必须把影织公网 Origin 加入 New API 的 `SESSION_COOKIE_TRUSTED_URL`，例如：
+
+```env
+SESSION_COOKIE_TRUSTED_URL=https://studio.example.com
+```
+
+## 镜像安装
+
+GitHub Actions 只构建 Web 镜像：
+
+```text
+ghcr.io/<owner>/<repo>-web
+```
+
+安装命令：
 
 ```bash
+NEW_API_UPSTREAM='https://new.0000.icu' \
+NEW_API_HOST='new.0000.icu' \
 bash <(curl -Ls https://raw.githubusercontent.com/longxingze0925/yingzhi-AI/main/ops/install.sh)
 ```
 
-运行后会进入影织安装 / 运维菜单；首次安装会提示填写 AiSaaS Server Key，不填写则按 mock 模式启动。默认拉取 GHCR 上已经构建好的 `yingzhi-AI-web` / `yingzhi-AI-backend` 镜像。
+安装器支持：本机、IP、自动 HTTPS、自有证书、已有反向代理。Caddy 模式会自动把 `/api/*` 转发到 New API；外部反代模式会生成 `reverse-proxy.nginx.example.conf`。
 
-安装访问方式和 AiSaaS 安装器保持一致：
-
-1. 不使用域名，仅本机访问
-2. 不使用域名，使用服务器 IP 访问
-3. 使用域名，自动申请 HTTPS 证书
-4. 使用域名，使用自有证书
-5. 已有反向代理 / 负载均衡
-
-域名模式使用 Caddy 作为入口代理，自动证书模式会监听服务器 `80/443` 并由 Caddy 申请和续期证书；自有证书模式会把 `fullchain.pem` 和 `privkey.pem` 复制到安装目录。外部反向代理模式不启动 Caddy，只把 backend/web 绑定到本机端口并生成 `reverse-proxy.nginx.example.conf`。
-
-如果 GHCR 镜像是私有的，执行前提供一个只有 `read:packages` 权限的 GitHub token：
+常用命令：
 
 ```bash
-GHCR_USERNAME='longxingze0925' \
-GHCR_TOKEN='github_pat_xxx' \
-bash <(curl -Ls https://raw.githubusercontent.com/longxingze0925/yingzhi-AI/main/ops/install.sh)
+yingzhi status
+yingzhi logs
+yingzhi smoke
+yingzhi change-upstream
+yingzhi update
 ```
 
-后续仍然执行同一条命令即可进入菜单；安装器也会写入本地命令：
+## 源码安装
 
 ```bash
-sudo yingzhi
-sudo shadowweave
-sudo bash /opt/shadowweave/yingzhictl.sh status
-```
-
-菜单包含更新、状态、日志、证书管理、修改 AiSaaS Server Key、诊断、重启和卸载。安装器会等待后端和前端健康检查通过后再判定成功；如果检查失败，会自动输出 backend / web / caddy 最近日志，方便定位镜像、Key、DNS、证书、端口或反代问题。
-
-## 源码一键安装
-
-备用方案：服务器直接拉源码并本机编译。服务器建议使用 Debian/Ubuntu，脚本会安装 Node.js 20、Rust、构建前后端、写入 systemd 服务，并默认用 Nginx 做同域反代。当前生产推荐优先使用上面的镜像一键安装。
-
-```bash
-AISAAS_SERVER_KEY='aissk_xxx' \
-SHADOWWEAVE_DOMAIN='your-domain.com' \
+SHADOWWEAVE_DOMAIN='studio.example.com' \
+NEW_API_UPSTREAM='https://new.0000.icu' \
+NEW_API_HOST='new.0000.icu' \
 bash <(curl -Ls https://raw.githubusercontent.com/longxingze0925/yingzhi-AI/main/ops/install.sh) source
 ```
 
-如果仓库名或分支不同：
-
-```bash
-SHADOWWEAVE_REPO='your-github-user/your-repo' \
-SHADOWWEAVE_REF='main' \
-AISAAS_SERVER_KEY='aissk_xxx' \
-SHADOWWEAVE_DOMAIN='your-domain.com' \
-bash <(curl -Ls https://raw.githubusercontent.com/your-github-user/your-repo/main/ops/install.sh) source
-```
-
-常用维护命令：
-
-```bash
-sudo bash /opt/shadowweave/ops/shadowweavectl.sh status
-sudo bash /opt/shadowweave/ops/shadowweavectl.sh logs
-sudo bash /opt/shadowweave/ops/shadowweavectl.sh restart
-```
+源码安装只编译并运行 Next.js Web，不安装或运行旧 Rust 后端。
 
 ## 页面结构
 
 | 路由 | 说明 |
 | --- | --- |
-| `/` | 首页营销页：Hero / 作品墙 / 能力 / 工作流 / 定价 / CTA |
-| `/login` | 登录 / 注册（邮箱、手机号、第三方占位） |
-| `/studio` | 工作台入口（重定向至灵感广场） |
-| `/studio/explore` | 灵感广场：分类筛选 + 瀑布流 + 作品详情 |
-| `/studio/image` | 图片生成：文生图 / 图生图，参数面板 + 生成画布 |
-| `/studio/video` | 视频生成：文生视频 / 图生视频，时长 / 运镜 |
-| `/studio/assets` | 我的作品：图片 / 视频 / 收藏 |
-| `/studio/library` | 素材资产库：文件夹 + 上传 + 素材网格 |
-| `/studio/settings` | 账号与会员：资料 / 套餐算力 / 用量 / API |
+| `/` | 首页 |
+| `/login` | New API 统一账号登录 |
+| `/studio/explore` | 灵感广场 |
+| `/studio/image` | 图片生成 |
+| `/studio/video` | 视频生成 |
+| `/studio/audio` | 音频生成 |
+| `/studio/assets` | 我的作品 |
+| `/studio/library` | 素材库 |
+| `/studio/settings` | 账号、余额与用量 |
 
-## 目录概览
+## 当前 Studio API
 
-```
-app/                  # 路由与页面（App Router）
-backend/              # Rust 后端：影织业务 API -> AiSaaS Server API
-components/
-  ui/                 # 基础组件（button/card/dialog/select…）
-  brand/              # Logo、渐变占位、光晕背景
-  marketing/          # 首页区块
-  studio/             # 工作台：侧栏/顶栏/参数面板/生成画布…
-  shared/             # 通用组件（MediaCard / Reveal）
-  theme/              # 主题 Provider 与切换
-lib/
-  api/                # 数据访问层（types / client）—— 对接后端的单一替换点
-  store/              # zustand 状态
-data/mock/            # 占位数据（作品、模型、定价、用户）
-```
+影织当前使用以下 New API 路径：
 
-## 对接 Rust 后端
+- `/api/studio/auth/*`
+- `/api/studio/bootstrap`
+- `/api/studio/wallet`、`/groups`、`/usage`、`/credential`
+- `/api/studio/ai/models`、`/ai/styles`
+- `/api/studio/generation/jobs*`
+- `/api/studio/assets*`
+- `/api/studio/works*`、`/gallery`、`/favorites`
+- `/api/studio/topup*`
 
-前端所有真实数据请求集中在 **`lib/api/client.ts`**，浏览器只请求影织 Rust 后端；AiSaaS Server Key 只放在后端环境变量里。真实模式下登录、余额、模型、生成任务、资产、作品、收藏、发布、下载登记都经由后端代理到 AiSaaS。后端只读取 `AISAAS_BASE_URL` / `AISAAS_SERVER_KEY` / `AISAAS_MOCK`。
-
-Rust 后端当前提供：
-
-- `GET /healthz`
-- `POST /api/auth/login`
-- `GET /api/auth/me`
-- `POST /api/auth/logout`
-- `GET /api/me`
-- `GET /api/me/usage`
-- `GET /api/ai/models?type=image|video|audio`
-- `GET /api/gallery?type=image|video|audio`
-- `GET /api/assets`
-- `POST /api/assets/upload-file`
-- `POST /api/generation/jobs`
-- `GET /api/generation/jobs`
-- `GET /api/generation/jobs/{id}`
-- `GET /api/works`
-
-## 设计说明
-
-- 品牌色：紫电 → 品红 渐变，青蓝高光（CSS 变量 `--brand-*`，明暗各一套）
-- 占位图：`components/brand/gradient-thumb.tsx` 用确定性渐变 + 噪点生成，无外链依赖
-- 真实支付、个人资料保存、API Key 轮换仍需 AiSaaS 对应业务接口开放后接入
+生成时由 New API 在服务端创建和持有影织专属 Token；Token 明文不会返回浏览器。生成、扣费、退款、日志和租户归属均沿用 New API 的真实链路。

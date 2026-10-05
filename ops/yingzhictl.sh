@@ -14,11 +14,9 @@ DIGEST_FILE="${SHADOWWEAVE_DIGEST_FILE:-compose.digests.yaml}"
 PIN_DIGESTS="${SHADOWWEAVE_PIN_DIGESTS:-1}"
 
 WEB_IMAGE="${SHADOWWEAVE_WEB_IMAGE:-ghcr.io/${SHADOWWEAVE_REPO,,}-web:latest}"
-BACKEND_IMAGE="${SHADOWWEAVE_BACKEND_IMAGE:-ghcr.io/${SHADOWWEAVE_REPO,,}-backend:latest}"
 CADDY_IMAGE="${CADDY_IMAGE:-caddy:2}"
-AISAAS_BASE_URL="${AISAAS_BASE_URL:-https://ht.0000.icu}"
-AISAAS_SERVER_KEY="${AISAAS_SERVER_KEY:-}"
-AISAAS_MOCK="${AISAAS_MOCK:-}"
+NEW_API_UPSTREAM="${NEW_API_UPSTREAM:-https://new.0000.icu}"
+NEW_API_HOST="${NEW_API_HOST:-}"
 GHCR_USERNAME="${GHCR_USERNAME:-}"
 GHCR_TOKEN="${GHCR_TOKEN:-}"
 
@@ -300,18 +298,14 @@ safe_refresh_source() {
   rm -rf "$tmp"
 }
 
-resolve_aisaas_mode() {
-  if [[ -z "$AISAAS_SERVER_KEY" && -t 0 && "${AISAAS_MOCK,,}" != "true" && "$AISAAS_MOCK" != "1" ]]; then
-    AISAAS_SERVER_KEY="$(ask_secret_optional 'AiSaaS Server Key，留空则使用 mock 模式')"
+normalize_new_api_settings() {
+  NEW_API_UPSTREAM="${NEW_API_UPSTREAM%/}"
+  [[ "$NEW_API_UPSTREAM" == http://* || "$NEW_API_UPSTREAM" == https://* ]] || die "New API 地址必须以 http:// 或 https:// 开头。"
+  if [[ -z "$NEW_API_HOST" ]]; then
+    NEW_API_HOST="${NEW_API_UPSTREAM#*://}"
+    NEW_API_HOST="${NEW_API_HOST%%/*}"
   fi
-
-  if [[ -z "$AISAAS_MOCK" ]]; then
-    if [[ -n "$AISAAS_SERVER_KEY" ]]; then
-      AISAAS_MOCK="false"
-    else
-      AISAAS_MOCK="true"
-    fi
-  fi
+  [[ -n "$NEW_API_HOST" && "$NEW_API_HOST" != *[[:space:]/]* ]] || die "New API Host 无效。"
 }
 
 write_env_file() {
@@ -319,41 +313,34 @@ write_env_file() {
   local public_url="$2"
   local host_bind="$3"
   local http_port="$4"
-  local backend_port="$5"
-  local web_port="$6"
+  local web_port="$5"
   local env_path="$INSTALL_DIR/$ENV_FILE"
 
+  normalize_new_api_settings
   if [[ ! -f "$env_path" ]]; then
-    resolve_aisaas_mode
     umask 077
     cat > "$env_path" <<EOF
 COMPOSE_HOST_BIND=${host_bind}
 SHADOWWEAVE_HTTP_PORT=${http_port}
-SHADOWWEAVE_BACKEND_HOST_PORT=${backend_port}
 SHADOWWEAVE_WEB_HOST_PORT=${web_port}
 SHADOWWEAVE_PUBLIC_URL=${public_url}
 SHADOWWEAVE_WEB_IMAGE=${WEB_IMAGE}
-SHADOWWEAVE_BACKEND_IMAGE=${BACKEND_IMAGE}
 CADDY_IMAGE=${CADDY_IMAGE}
-AISAAS_BASE_URL=${AISAAS_BASE_URL}
-AISAAS_SERVER_KEY=${AISAAS_SERVER_KEY}
-AISAAS_MOCK=${AISAAS_MOCK}
-SHADOWWEAVE_SESSION_COOKIE=${SHADOWWEAVE_SESSION_COOKIE:-shadowweave_session}
-SHADOWWEAVE_SESSION_TTL_SECONDS=${SHADOWWEAVE_SESSION_TTL_SECONDS:-604800}
+NEW_API_UPSTREAM=${NEW_API_UPSTREAM}
+NEW_API_HOST=${NEW_API_HOST}
 EOF
   else
-    warn "已保留现有 $ENV_FILE，AiSaaS Server Key 不会被覆盖。"
+    warn "已保留现有 $ENV_FILE 中的 New API 地址。"
   fi
 
   set_env_value "$env_path" COMPOSE_HOST_BIND "$host_bind"
   set_env_value "$env_path" SHADOWWEAVE_HTTP_PORT "$http_port"
-  set_env_value "$env_path" SHADOWWEAVE_BACKEND_HOST_PORT "$backend_port"
   set_env_value "$env_path" SHADOWWEAVE_WEB_HOST_PORT "$web_port"
   set_env_value "$env_path" SHADOWWEAVE_PUBLIC_URL "$public_url"
   set_env_value "$env_path" SHADOWWEAVE_WEB_IMAGE "$WEB_IMAGE"
-  set_env_value "$env_path" SHADOWWEAVE_BACKEND_IMAGE "$BACKEND_IMAGE"
   set_env_value "$env_path" CADDY_IMAGE "$CADDY_IMAGE"
-  set_env_value "$env_path" AISAAS_BASE_URL "$(get_env_value AISAAS_BASE_URL "$env_path" || printf '%s' "$AISAAS_BASE_URL")"
+  set_env_value "$env_path" NEW_API_UPSTREAM "$(get_env_value NEW_API_UPSTREAM "$env_path" || printf '%s' "$NEW_API_UPSTREAM")"
+  set_env_value "$env_path" NEW_API_HOST "$(get_env_value NEW_API_HOST "$env_path" || printf '%s' "$NEW_API_HOST")"
   chmod 600 "$env_path"
 }
 
@@ -402,11 +389,13 @@ EOF
   cat >> "$INSTALL_DIR/Caddyfile" <<'EOF'
 
     handle /api* {
-        reverse_proxy backend:18777
+        reverse_proxy {$NEW_API_UPSTREAM} {
+            header_up Host {$NEW_API_HOST}
+        }
     }
 
     handle /healthz {
-        reverse_proxy backend:18777
+        respond "ok" 200
     }
 
     handle {
@@ -421,10 +410,11 @@ services:
   caddy:
     image: ${CADDY_IMAGE:-caddy:2}
     depends_on:
-      backend:
-        condition: service_healthy
       web:
         condition: service_healthy
+    environment:
+      NEW_API_UPSTREAM: ${NEW_API_UPSTREAM:?NEW_API_UPSTREAM must be set}
+      NEW_API_HOST: ${NEW_API_HOST:?NEW_API_HOST must be set}
     ports:
       - "80:80"
       - "443:443"
@@ -445,10 +435,11 @@ services:
   caddy:
     image: ${CADDY_IMAGE:-caddy:2}
     depends_on:
-      backend:
-        condition: service_healthy
       web:
         condition: service_healthy
+    environment:
+      NEW_API_UPSTREAM: ${NEW_API_UPSTREAM:?NEW_API_UPSTREAM must be set}
+      NEW_API_HOST: ${NEW_API_HOST:?NEW_API_HOST must be set}
     ports:
       - "${COMPOSE_HOST_BIND:-127.0.0.1}:${SHADOWWEAVE_HTTP_PORT:-13080}:80"
     volumes:
@@ -466,13 +457,13 @@ EOF
 
 write_external_proxy_files() {
   local domain="$1"
-  local backend_port="$2"
-  local web_port="$3"
+  local web_port="$2"
+  local new_api_upstream new_api_host
+  new_api_upstream="$(get_env_value NEW_API_UPSTREAM)"
+  new_api_host="$(get_env_value NEW_API_HOST)"
+
   cat > "$INSTALL_DIR/compose.proxy.yml" <<'EOF'
 services:
-  backend:
-    ports:
-      - "${COMPOSE_HOST_BIND:-127.0.0.1}:${SHADOWWEAVE_BACKEND_HOST_PORT:-18077}:18777"
   web:
     ports:
       - "${COMPOSE_HOST_BIND:-127.0.0.1}:${SHADOWWEAVE_WEB_HOST_PORT:-13000}:3000"
@@ -489,19 +480,19 @@ server {
     client_max_body_size 64m;
 
     location /api/ {
-        proxy_pass http://127.0.0.1:${backend_port};
-        proxy_set_header Host \$host;
+        proxy_pass ${new_api_upstream};
+        proxy_set_header Host ${new_api_host};
+        proxy_ssl_server_name on;
+        proxy_ssl_name ${new_api_host};
         proxy_set_header X-Real-IP \$remote_addr;
         proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto https;
     }
 
-    location /healthz {
-        proxy_pass http://127.0.0.1:${backend_port}/healthz;
-        proxy_set_header Host \$host;
-        proxy_set_header X-Real-IP \$remote_addr;
-        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto https;
+    location = /healthz {
+        access_log off;
+        default_type text/plain;
+        return 200 "ok\n";
     }
 
     location / {
@@ -617,7 +608,6 @@ wait_for_http() {
 diagnose_stack() {
   warn "服务未通过健康检测，输出最近日志用于定位。"
   compose_base ps || true
-  compose_base logs --tail=120 backend || true
   compose_base logs --tail=120 web || true
   compose_base logs --tail=120 caddy || true
 }
@@ -626,23 +616,23 @@ run_smoke() {
   log "运行冒烟检测"
   in_install_dir
 
-  local mode public_url backend_port web_port http_port
+  local mode public_url web_port http_port new_api_upstream
   mode="$(get_env_value MODE "$INSTALL_DIR/$STATE_FILE" || true)"
   public_url="$(get_env_value PUBLIC_URL "$INSTALL_DIR/$STATE_FILE" || true)"
-  backend_port="$(get_env_value SHADOWWEAVE_BACKEND_HOST_PORT || printf '18077')"
   web_port="$(get_env_value SHADOWWEAVE_WEB_HOST_PORT || printf '13000')"
   http_port="$(get_env_value SHADOWWEAVE_HTTP_PORT || printf '13080')"
+  new_api_upstream="$(get_env_value NEW_API_UPSTREAM)"
 
   compose_base ps
 
   if [[ "$mode" == "external-proxy" ]]; then
-    if ! wait_for_http "http://127.0.0.1:${backend_port}/healthz" "影织后端直连" 60; then
-      diagnose_stack
-      die "影织后端直连检查失败。"
-    fi
     if ! wait_for_http "http://127.0.0.1:${web_port}/" "影织前端直连" 40; then
       diagnose_stack
       die "影织前端直连检查失败。"
+    fi
+    if ! wait_for_http "${new_api_upstream}/api/status" "New API 上游" 20; then
+      diagnose_stack
+      die "New API 上游检查失败。"
     fi
     if [[ -n "$public_url" && "$public_url" == https://* ]]; then
       wait_for_http "$public_url" "公网 HTTPS" 20 || warn "公网 HTTPS 检查失败，请检查外部反向代理。"
@@ -653,18 +643,23 @@ run_smoke() {
   [[ -n "$public_url" ]] || die "缺少访问地址，无法检测。"
   if [[ "$public_url" == https://* ]]; then
     wait_for_http "$public_url" "公网 HTTPS" 40 || warn "公网 HTTPS 检查失败，请检查 DNS、防火墙和证书状态。"
+    wait_for_http "${public_url}/api/status" "New API 同源代理" 20 || warn "New API 同源代理检查失败，请检查上游地址与 Host。"
     return
   fi
 
   local local_http_url
   local_http_url="$(http_url "127.0.0.1" "$http_port")"
-  if ! wait_for_http "${local_http_url}/healthz" "影织后端健康检查" 60; then
+  if ! wait_for_http "${local_http_url}/healthz" "影织入口健康检查" 60; then
     diagnose_stack
-    die "影织后端健康检查失败。"
+    die "影织入口健康检查失败。"
   fi
   if ! wait_for_http "${local_http_url}/" "影织前端" 40; then
     diagnose_stack
     die "影织前端检查失败。"
+  fi
+  if ! wait_for_http "${local_http_url}/api/status" "New API 同源代理" 20; then
+    diagnose_stack
+    die "New API 同源代理检查失败。"
   fi
 }
 
@@ -691,8 +686,7 @@ configure_access_files() {
   local domain="$2"
   local cert="${3:-}"
   local key="${4:-}"
-  local backend_port="${5:-18077}"
-  local web_port="${6:-13000}"
+  local web_port="${5:-13000}"
 
   rm -f "$INSTALL_DIR/compose.proxy.yml" "$INSTALL_DIR/Caddyfile" "$INSTALL_DIR/reverse-proxy.nginx.example.conf"
   case "$mode" in
@@ -706,7 +700,7 @@ configure_access_files() {
       write_caddy_files "$domain" "custom" "$cert" "$key"
       ;;
     external-proxy)
-      write_external_proxy_files "$domain" "$backend_port" "$web_port"
+      write_external_proxy_files "$domain" "$web_port"
       ;;
     *)
       die "未知访问方式：$mode"
@@ -734,8 +728,7 @@ install_flow() {
   local choice
   read -r choice
 
-  local mode public_url host_bind http_port backend_port web_port domain cert key detected_ip
-  backend_port="18077"
+  local mode public_url host_bind http_port web_port domain cert key detected_ip
   web_port="13000"
 
   case "$choice" in
@@ -783,7 +776,6 @@ install_flow() {
       [[ -n "$domain" ]] || die "必须填写域名。"
       host_bind="127.0.0.1"
       http_port="0"
-      backend_port="$(ask "后端直连端口" "$backend_port")"
       web_port="$(ask "前端直连端口" "$web_port")"
       public_url="https://${domain}"
       ;;
@@ -795,8 +787,8 @@ install_flow() {
 
   log "准备安装目录"
   safe_refresh_source
-  write_env_file "$mode" "$public_url" "$host_bind" "$http_port" "$backend_port" "$web_port"
-  configure_access_files "$mode" "${domain:-}" "${cert:-}" "${key:-}" "$backend_port" "$web_port"
+  write_env_file "$mode" "$public_url" "$host_bind" "$http_port" "$web_port"
+  configure_access_files "$mode" "${domain:-}" "${cert:-}" "${key:-}" "$web_port"
   write_state "$mode" "$public_url" "${domain:-}"
   install_local_command
   docker_login_if_needed
@@ -933,20 +925,21 @@ restart_flow() {
   run_smoke
 }
 
-change_key_flow() {
+change_upstream_flow() {
   require_root
   migrate_legacy_install
   is_installed || die "$APP_NAME 尚未安装。"
-  local key mock
-  key="$(ask_secret_optional '新的 AiSaaS Server Key，留空则切换 mock 模式')"
-  if [[ -n "$key" ]]; then
-    mock="false"
-  else
-    mock="true"
+  local upstream host
+  upstream="$(ask "New API 地址（不要带 /api）" "$(get_env_value NEW_API_UPSTREAM)")"
+  host="$(ask "New API 总站 Host" "$(get_env_value NEW_API_HOST)")"
+  NEW_API_UPSTREAM="$upstream"
+  NEW_API_HOST="$host"
+  normalize_new_api_settings
+  set_env_value "$INSTALL_DIR/$ENV_FILE" NEW_API_UPSTREAM "$NEW_API_UPSTREAM"
+  set_env_value "$INSTALL_DIR/$ENV_FILE" NEW_API_HOST "$NEW_API_HOST"
+  if [[ -f "$INSTALL_DIR/Caddyfile" ]]; then
+    compose_base up -d --force-recreate caddy
   fi
-  set_env_value "$INSTALL_DIR/$ENV_FILE" AISAAS_SERVER_KEY "$key"
-  set_env_value "$INSTALL_DIR/$ENV_FILE" AISAAS_MOCK "$mock"
-  compose_base up -d --force-recreate backend
   run_smoke
 }
 
@@ -1005,14 +998,11 @@ cert_flow() {
       [[ -n "$domain" ]] || die "必须填写域名。"
       set_env_value "$ENV_FILE" COMPOSE_HOST_BIND "127.0.0.1"
       set_env_value "$ENV_FILE" SHADOWWEAVE_PUBLIC_URL "https://${domain}"
-      local backend_port web_port
-      backend_port="$(get_env_value SHADOWWEAVE_BACKEND_HOST_PORT || printf '18077')"
+      local web_port
       web_port="$(get_env_value SHADOWWEAVE_WEB_HOST_PORT || printf '13000')"
-      backend_port="$(ask "后端直连端口" "$backend_port")"
       web_port="$(ask "前端直连端口" "$web_port")"
-      set_env_value "$ENV_FILE" SHADOWWEAVE_BACKEND_HOST_PORT "$backend_port"
       set_env_value "$ENV_FILE" SHADOWWEAVE_WEB_HOST_PORT "$web_port"
-      configure_access_files "external-proxy" "$domain" "" "" "$backend_port" "$web_port"
+      configure_access_files "external-proxy" "$domain" "" "" "$web_port"
       write_state "external-proxy" "https://${domain}" "$domain"
       prepare_images
       compose_base up -d --remove-orphans
@@ -1069,7 +1059,7 @@ main_menu() {
 2) 查看状态
 3) 查看日志
 4) 证书管理
-5) 修改 AiSaaS Server Key
+5) 修改 New API 地址
 6) 运行诊断
 7) 重启服务
 8) 卸载
@@ -1083,7 +1073,7 @@ EOF
         2) status_flow; pause ;;
         3) logs_flow ;;
         4) cert_flow; pause ;;
-        5) change_key_flow; pause ;;
+        5) change_upstream_flow; pause ;;
         6) doctor_flow; pause ;;
         7) restart_flow; pause ;;
         8) uninstall_flow; pause ;;
@@ -1116,7 +1106,7 @@ case "${1:-menu}" in
   status) status_flow ;;
   logs) logs_flow ;;
   smoke) require_root; migrate_legacy_install; is_installed || die "$APP_NAME 尚未安装。"; run_smoke ;;
-  change-key) change_key_flow ;;
+  change-upstream) change_upstream_flow ;;
   cert) cert_flow ;;
   doctor) doctor_flow ;;
   uninstall) uninstall_flow ;;
